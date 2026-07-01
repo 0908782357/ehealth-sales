@@ -432,6 +432,104 @@
     .insight-arrow { color: var(--navy); opacity: 0.3; }
     .insight-arrow svg { width: 40px; height: 40px; }
 
+    /* ===== PARTNER PAGE ===== */
+    .partner-hero {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%);
+      padding: 80px 0;
+    }
+    .partner-hero .section-label { color: var(--green); }
+    .partner-hero h1 { color: white; margin-bottom: 16px; }
+    .partner-hero p { color: rgba(255,255,255,0.75); font-size: 1.125rem; max-width: 640px; margin: 0; }
+    .partner-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+    }
+    .partner-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 32px 20px 24px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid var(--gray-200);
+    }
+    .partner-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--navy-bg);
+    }
+    .partner-logo-wrap {
+      width: 160px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .partner-img {
+      max-width: 140px;
+      max-height: 56px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      filter: grayscale(20%) opacity(0.85);
+      transition: filter 0.2s;
+    }
+    .partner-card:hover .partner-img {
+      filter: grayscale(0%) opacity(1);
+    }
+    .partner-img-icon {
+      max-width: 72px;
+      max-height: 72px;
+      border-radius: 14px;
+    }
+    .partner-name {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 4px !important;
+    }
+    .partner-desc {
+      font-size: 0.8rem;
+      color: var(--gray-500);
+      margin: 0 !important;
+      line-height: 1.4;
+    }
+    .partner-text-logo {
+      border-radius: 14px;
+      background: #00051A;
+      width: 72px;
+      height: 72px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .ehc-badge {
+      font-size: 1.625rem;
+      font-weight: 800;
+      color: #6DC52D;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      font-family: 'Montserrat', sans-serif;
+    }
+    .ehc-sub {
+      font-size: 0.45rem;
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.03em;
+      font-weight: 500;
+      margin-top: 3px;
+    }
+    .partner-intro {
+      max-width: 680px;
+      margin: 0 auto 56px;
+      text-align: center;
+    }
+
     /* ===== RESPONSIVE ===== */
     @media (max-width: 900px) {
       .hero-inner, .grid-2, .leistung-inner, .kontakt-grid, .footer-grid { grid-template-columns: 1fr; }
@@ -444,6 +542,10 @@
       .cta-inner { flex-direction: column; text-align: center; }
       .cta-actions { justify-content: center; }
       .footer-bottom { flex-direction: column; gap: 12px; }
+      .partner-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+      .partner-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -474,6 +576,7 @@
         <a href="#" id="nav-home" class="active" onclick="showPage('home'); return false;">Startseite</a>
         <a href="#" id="nav-leistungen" onclick="showPage('leistungen'); return false;">Leistungen</a>
         <a href="#" id="nav-ueber-uns" onclick="showPage('ueber-uns'); return false;">Über uns</a>
+        <a href="#" id="nav-partner" onclick="showPage('partner'); return false;">Partner</a>
         <a href="#" id="nav-kontakt" onclick="showPage('kontakt'); return false;">Kontakt</a>
       </div>
       <div class="nav-cta">
@@ -1218,6 +1321,128 @@
   </section>
 </div><!-- /page-datenschutz -->
 
+<!-- ======================================================= -->
+<!-- PAGE: PARTNER                                            -->
+<!-- ======================================================= -->
+<div id="page-partner" class="page">
+
+  <!-- HERO -->
+  <section class="partner-hero">
+    <div class="container">
+      <span class="section-label">Unser Netzwerk</span>
+      <h1 style="margin-bottom:16px;">Unsere Partner</h1>
+      <p>Gemeinsam mit führenden Unternehmen im Gesundheitswesen schaffen wir ganzheitliche Lösungen für Ihre digitale Transformation in der Telematik Infrastruktur.</p>
+    </div>
+  </section>
+
+  <!-- PARTNER GRID -->
+  <section class="section" style="background: var(--gray-50);">
+    <div class="container">
+      <div class="section-header centered">
+        <span class="section-label">Starkes Netzwerk</span>
+        <h2>Vertrauen durch Partnerschaft</h2>
+        <p>Unsere Partner sind führende Unternehmen und Spezialisten der Gesundheits-IT – gemeinsam decken wir das gesamte Spektrum moderner TI-Lösungen ab.</p>
+      </div>
+
+      <div class="partner-grid">
+
+        <!-- Bechtle -->
+        <div class="partner-card">
+          <div class="partner-logo-wrap">
+            <img src="logos/bechtle.svg" alt="Bechtle" class="partner-img">
+          </div>
+          <p class="partner-name">Bechtle AG</p>
+          <p class="partner-desc">IT-Systemhaus &amp; IT-E-Commerce</p>
+        </div>
+
+        <!-- Cherry -->
+        <div class="partner-card">
+          <div class="partner-logo-wrap">
+            <img src="logos/cherry.svg" alt="Cherry" class="partner-img">
+          </div>
+          <p class="partner-name">Cherry GmbH</p>
+          <p class="partner-desc">Medizinische Eingabegeräte &amp; TI-Hardware</p>
+        </div>
+
+        <!-- Prof. Valmed -->
+        <div class="partner-card">
+          <div class="partner-logo-wrap">
+            <img src="logos/profvalmed.svg" alt="Prof. Valmed" class="partner-img">
+          </div>
+          <p class="partner-name">Prof. Valmed</p>
+          <p class="partner-desc">Digitale Gesundheitslösungen</p>
+        </div>
+
+        <!-- Concat -->
+        <div class="partner-card">
+          <div class="partner-logo-wrap">
+            <img src="logos/concat.png" alt="Concat AG" class="partner-img">
+          </div>
+          <p class="partner-name">Concat AG</p>
+          <p class="partner-desc">IT-Systemintegration &amp; Infrastruktur</p>
+        </div>
+
+        <!-- TI Healthcare -->
+        <div class="partner-card">
+          <div class="partner-logo-wrap">
+            <img src="logos/ti-healthcare.png" alt="TI Healthcare" class="partner-img">
+          </div>
+          <p class="partner-name">TI Healthcare GmbH</p>
+          <p class="partner-desc">Telematik Infrastruktur Lösungen</p>
+        </div>
+
+        <!-- ehex – Die eHealth Experten -->
+        <div class="partner-card">
+          <div class="partner-logo-wrap">
+            <img src="logos/ehex.png" alt="ehex" class="partner-img partner-img-icon">
+          </div>
+          <p class="partner-name">ehex GmbH</p>
+          <p class="partner-desc">Die eHealth Experten · TI Gateway</p>
+        </div>
+
+        <!-- infinity managed Service GmbH -->
+        <div class="partner-card">
+          <div class="partner-logo-wrap">
+            <img src="logos/infinity.svg" alt="infinity managed Service" class="partner-img partner-img-icon">
+          </div>
+          <p class="partner-name">infinity managed Service GmbH</p>
+          <p class="partner-desc">Managed IT &amp; Cloud Services</p>
+        </div>
+
+        <!-- ehealth Connect GmbH -->
+        <div class="partner-card">
+          <div class="partner-logo-wrap">
+            <div class="partner-text-logo">
+              <span class="ehc-badge">ehc</span>
+              <span class="ehc-sub">eHealth-Connect</span>
+            </div>
+          </div>
+          <p class="partner-name">ehealth Connect GmbH</p>
+          <p class="partner-desc">Verknüpfte eHealth Ecosysteme</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section style="padding: 80px 0; background: white;">
+    <div class="container">
+      <div class="cta-banner">
+        <div class="cta-inner">
+          <div class="cta-content">
+            <h2 style="color:white;">Werden Sie Teil unseres Netzwerks</h2>
+            <p style="color:rgba(255,255,255,0.75); margin:0;">Interessiert an einer Partnerschaft mit ehealth Sales? Sprechen Sie uns an – wir freuen uns auf die Zusammenarbeit.</p>
+          </div>
+          <div class="cta-actions">
+            <a href="#" class="btn btn-white" onclick="showPage('kontakt'); return false;">Kontakt aufnehmen</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /page-partner -->
 
 <!-- ===== FOOTER ===== -->
 <footer class="site-footer">
@@ -1248,6 +1473,7 @@
         <h4>Unternehmen</h4>
         <a href="#" onclick="showPage('ueber-uns'); return false;">Über uns</a>
         <a href="#" onclick="showPage('ueber-uns'); return false;">Gründer</a>
+        <a href="#" onclick="showPage('partner'); return false;">Partner</a>
         <a href="#" onclick="showPage('kontakt'); return false;">Kontakt</a>
       </div>
       <div class="footer-col">
