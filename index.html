@@ -689,6 +689,53 @@
     @media (max-width: 480px) {
       .partner-grid { grid-template-columns: 1fr; }
     }
+
+    /* ===== LÖSUNGEN ===== */
+    .loesungen-hero { background: var(--navy); color: white; padding: 80px 0 64px; }
+    .loesungen-hero .overline { color: var(--green); }
+    .loesungen-hero h1 { color: white; margin-bottom: 16px; }
+    .loesungen-hero p { color: rgba(255,255,255,0.75); font-size: 1.15rem; max-width: 560px; }
+
+    .loesungen-filter-section { background: white; border-bottom: 1px solid var(--gray-200); padding: 20px 0; position: sticky; top: 100px; z-index: 10; }
+    .loesungen-filter { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn { padding: 8px 18px; border-radius: 999px; border: 1.5px solid var(--gray-200); background: white; color: var(--gray-500); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all .18s; }
+    .filter-btn:hover { border-color: var(--navy); color: var(--navy); }
+    .filter-btn.active { background: var(--navy); color: white; border-color: var(--navy); }
+
+    .loesungen-grid-section { padding: 56px 0 80px; background: var(--gray-50); }
+    .loesungen-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+
+    .loesung-card { background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); padding: 28px; display: flex; flex-direction: column; gap: 16px; transition: box-shadow .2s, transform .2s; }
+    .loesung-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+    .loesung-card-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .loesung-logo-wrap { height: 36px; display: flex; align-items: center; }
+    .loesung-logo-wrap img { height: 36px; width: auto; max-width: 110px; object-fit: contain; }
+    .loesung-logo-text { font-size: 0.75rem; font-weight: 700; color: white; background: var(--navy); padding: 4px 10px; border-radius: 6px; }
+    .loesung-kategorie-badge { font-size: 0.72rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+    .kat-ti           { background: #e0e7ff; color: #3730a3; }
+    .kat-kommunikation{ background: #dcfce7; color: #166534; }
+    .kat-ki           { background: #fef9c3; color: #854d0e; }
+    .kat-management   { background: #fce7f3; color: #9d174d; }
+    .kat-hardware     { background: #e0f2fe; color: #0c4a6e; }
+
+    .loesung-name { font-size: 1.2rem; font-weight: 700; color: var(--navy); margin: 0; }
+    .loesung-hersteller { font-size: 0.82rem; color: var(--gray-400); margin-top: -10px; }
+    .loesung-beschreibung { font-size: 0.9rem; color: var(--gray-500); line-height: 1.6; flex: 1; }
+
+    .loesung-gruppen-label { font-size: 0.72rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: .05em; }
+    .loesung-gruppen { display: flex; flex-wrap: wrap; gap: 5px; }
+    .loesung-gruppe-tag { font-size: 0.72rem; color: var(--navy); background: #eef0f8; padding: 3px 8px; border-radius: 5px; }
+
+    .loesung-card-footer { border-top: 1px solid var(--gray-100); padding-top: 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .loesung-card-footer .btn { font-size: 0.82rem; padding: 8px 16px; }
+    .loesung-reseller { font-size: 0.75rem; color: var(--gray-400); }
+
+    .loesungen-cta { background: var(--navy); padding: 64px 0; text-align: center; }
+    .loesungen-cta h2 { color: white; margin-bottom: 12px; }
+    .loesungen-cta p { color: rgba(255,255,255,0.75); margin-bottom: 28px; }
+
+    @media (max-width: 960px) { .loesungen-cards { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 600px) { .loesungen-cards { grid-template-columns: 1fr; } .loesungen-filter { gap: 6px; } .filter-btn { font-size: 0.78rem; padding: 6px 14px; } }
   </style>
 </head>
 <body>
@@ -703,6 +750,7 @@
       <div class="nav-links">
         <a href="#" id="nav-home" class="active" onclick="showPage('home'); return false;">Startseite</a>
         <a href="#" id="nav-leistungen" onclick="showPage('leistungen'); return false;">Leistungen</a>
+        <a href="#" id="nav-loesungen" onclick="showPage('loesungen'); return false;">Lösungen</a>
         <a href="#" id="nav-ueber-uns" onclick="showPage('ueber-uns'); return false;">Über uns</a>
         <a href="#" id="nav-partner" onclick="showPage('partner'); return false;">Partner</a>
         <a href="#" id="nav-produktfinder" onclick="showPage('produktfinder'); return false;">Produktfinder</a>
@@ -1725,6 +1773,51 @@
 
 </div><!-- /page-produktfinder -->
 
+<!-- ======================================================= -->
+<!-- PAGE: LÖSUNGEN                                           -->
+<!-- ======================================================= -->
+<div id="page-loesungen" class="page">
+
+  <section class="loesungen-hero">
+    <div class="container">
+      <span class="overline">UNSER PORTFOLIO</span>
+      <h1>Unsere Lösungen</h1>
+      <p>12 zertifizierte Produkte für die digitale Transformation im Gesundheitswesen – von der TI-Anbindung bis zur KI-gestützten Dokumentation.</p>
+    </div>
+  </section>
+
+  <div class="loesungen-filter-section">
+    <div class="container">
+      <div class="loesungen-filter">
+        <button class="filter-btn active" onclick="filterLoesungen('alle', this)">Alle (12)</button>
+        <button class="filter-btn" onclick="filterLoesungen('ti', this)">TI-Infrastruktur</button>
+        <button class="filter-btn" onclick="filterLoesungen('kommunikation', this)">Kommunikation</button>
+        <button class="filter-btn" onclick="filterLoesungen('ki', this)">KI &amp; Dokumentation</button>
+        <button class="filter-btn" onclick="filterLoesungen('management', this)">Praxismanagement</button>
+        <button class="filter-btn" onclick="filterLoesungen('hardware', this)">Hardware</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="loesungen-grid-section">
+    <div class="container">
+      <div class="loesungen-cards" id="loesungen-cards"></div>
+    </div>
+  </section>
+
+  <section class="loesungen-cta">
+    <div class="container">
+      <h2>Das richtige Produkt für Ihre Einrichtung?</h2>
+      <p>Nutzen Sie unseren Produktfinder und wir beraten Sie individuell.</p>
+      <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+        <a href="#" class="btn btn-primary" onclick="showPage('produktfinder'); return false;">Zum Produktfinder</a>
+        <a href="#" class="btn btn-secondary" onclick="showPage('kontakt'); return false;">Beratung anfragen</a>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /page-loesungen -->
+
 <!-- ===== FOOTER ===== -->
 <footer class="site-footer">
   <div class="container">
@@ -1780,9 +1873,94 @@
     document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
     const navLink = document.getElementById('nav-' + pageId);
     if (navLink) navLink.classList.add('active');
+    // Render Lösungen on first visit
+    if (pageId === 'loesungen') renderLoesungen('alle');
   }
 
   /* ===== PRODUKTFINDER DATA ===== */
+  // ===== LÖSUNGEN PAGE =====
+  const LOESUNGEN_DATA = [
+    { nr:1,  hersteller:'ehex',         produkt:'TI Gateway',     kategorie:'ti',            beschreibung:'Zentraler Zugangspunkt zur Telematikinfrastruktur – sicher, zertifiziert und für alle Leistungserbringer geeignet.', verfuegbar:[4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27] },
+    { nr:2,  hersteller:'ehex',         produkt:'HSM-B',           kategorie:'ti',            beschreibung:'Hardware Security Module für kryptografische Schlüsselverwaltung – höchste Sicherheitsstandards in der TI.', verfuegbar:[5,9,10,11,12,13,14,20,21,22] },
+    { nr:3,  hersteller:'ehex',         produkt:'easyTI',          kategorie:'ti',            beschreibung:'Cloudbasierte TI-Anbindung ohne eigenen Konnektor – einfach, flexibel und kosteneffizient.', verfuegbar:[6,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27] },
+    { nr:4,  hersteller:'ehex',         produkt:'easyTI Hub',      kategorie:'ti',            beschreibung:'Zentraler TI-Hub für mehrere Standorte – eine Anbindung für die gesamte Einrichtung.', verfuegbar:[6,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27] },
+    { nr:5,  hersteller:'Arvato',       produkt:'KIM',             kategorie:'kommunikation', beschreibung:'Kommunikation im Medizinwesen – der sichere E-Mail-Dienst der TI für Befunde, Briefe und Dokumente.', verfuegbar:[4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27] },
+    { nr:6,  hersteller:'Awesome',      produkt:'TIM',             kategorie:'kommunikation', beschreibung:'TI-Messenger für sichere Sofortnachrichten zwischen Leistungserbringern – DSGVO-konform und TI-integriert.', verfuegbar:[4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27] },
+    { nr:7,  hersteller:'Prof. Valmed', produkt:'KI Arztbrief',   kategorie:'ki',            beschreibung:'KI-gestützte Arztbrief-Erstellung als zertifiziertes Medizinprodukt – spart Zeit und erhöht die Dokumentationsqualität.', verfuegbar:[4,5,7,8] },
+    { nr:8,  hersteller:'Cherry',       produkt:'TMS',             kategorie:'management',    beschreibung:'Token Management System für sichere Authentifizierung und zentrale Kartenverwaltung in Ihrer Einrichtung.', verfuegbar:[4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27] },
+    { nr:9,  hersteller:'ehc',          produkt:'Stele',           kategorie:'management',    beschreibung:'Digitale Empfangsstele für automatisierten Patientencheck-in – reduziert Wartezeiten und entlastet das Personal.', verfuegbar:[4,5,7,8,21] },
+    { nr:10, hersteller:'Medivise',     produkt:'Medivise Box',    kategorie:'hardware',      beschreibung:'Kompaktes System für digitales Medikationsmanagement – sicher, vernetzt und intuitiv zu bedienen.', verfuegbar:[4,5,7,8] },
+    { nr:11, hersteller:'ehc',          produkt:'Online Services', kategorie:'management',    beschreibung:'Digitale Online-Services für Apotheken – Rezeptmanagement, Reservierung und Kundenkommunikation.', verfuegbar:[7] },
+    { nr:12, hersteller:'Samsung',      produkt:'Tablett',         kategorie:'hardware',      beschreibung:'Robuste medizinische Tablets für den professionellen Einsatz im Gesundheitswesen.', verfuegbar:[4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27] }
+  ];
+
+  const BERUFSGRUPPEN_NAMES = {
+    4:'Ärzte', 5:'Zahnärzte', 6:'Psychotherapeuten', 7:'Apotheken', 8:'Krankenhäuser',
+    9:'Physiotherapeuten', 10:'Ergotherapeuten', 11:'Logopäden', 12:'Podologen',
+    13:'Ernährungstherapeuten', 14:'Sanitätshäuser', 15:'Orthopädieschuhmacher',
+    16:'Orthopädietechniker', 17:'Zahntechniker', 18:'Augenoptiker', 19:'Hörakustiker',
+    20:'Hilfsmittelhersteller', 21:'Pflegeeinrichtungen', 22:'Pflegedienste',
+    23:'Rehakliniken', 24:'Hebammen', 25:'Rettungsdienste', 26:'Krankentransport', 27:'Arbeitsmedizin'
+  };
+
+  const KATEGORIE_LABELS = {
+    ti:'TI-Infrastruktur', kommunikation:'Kommunikation', ki:'KI & Dokumentation',
+    management:'Praxismanagement', hardware:'Hardware'
+  };
+
+  const LOESUNG_LOGOS = {
+    'ehex':         { type:'img', src:'logos/ehex.png' },
+    'Prof. Valmed': { type:'img', src:'logos/profvalmed.jpg' },
+    'Cherry':       { type:'img', src:'logos/cherry.svg' },
+    'Arvato':       { type:'img', src:'logos/arvato.png' },
+    'Samsung':      { type:'img', src:'logos/samsung.webp' },
+    'Awesome':      { type:'img', src:'logos/awesome.jpg' }
+  };
+
+  function loesungLogoHTML(name) {
+    const l = LOESUNG_LOGOS[name];
+    if (l) return `<img src="${l.src}" alt="${name}">`;
+    return `<span class="loesung-logo-text">${name}</span>`;
+  }
+
+  function renderLoesungen(filter) {
+    const container = document.getElementById('loesungen-cards');
+    if (!container) return;
+    const items = filter === 'alle' ? LOESUNGEN_DATA : LOESUNGEN_DATA.filter(p => p.kategorie === filter);
+    container.innerHTML = items.map(p => {
+      const gruppen = p.verfuegbar.length >= 20
+        ? '<span class="loesung-gruppe-tag">Alle Leistungserbringer</span>'
+        : p.verfuegbar.slice(0, 5).map(c => `<span class="loesung-gruppe-tag">${BERUFSGRUPPEN_NAMES[c] || c}</span>`).join('') +
+          (p.verfuegbar.length > 5 ? `<span class="loesung-gruppe-tag">+${p.verfuegbar.length - 5} weitere</span>` : '');
+      return `
+      <div class="loesung-card" data-kat="${p.kategorie}">
+        <div class="loesung-card-header">
+          <div class="loesung-logo-wrap">${loesungLogoHTML(p.hersteller)}</div>
+          <span class="loesung-kategorie-badge kat-${p.kategorie}">${KATEGORIE_LABELS[p.kategorie]}</span>
+        </div>
+        <div>
+          <div class="loesung-name">${p.produkt}</div>
+          <div class="loesung-hersteller">${p.hersteller}</div>
+        </div>
+        <div class="loesung-beschreibung">${p.beschreibung}</div>
+        <div>
+          <div class="loesung-gruppen-label">Geeignet für</div>
+          <div class="loesung-gruppen">${gruppen}</div>
+        </div>
+        <div class="loesung-card-footer">
+          <a href="#" class="btn btn-primary" onclick="showPage('produktfinder'); return false;">Anfragen</a>
+          <span class="loesung-reseller">Vertrieb: ${p.hersteller === 'ehex' || p.hersteller === 'Arvato' || p.hersteller === 'Samsung' ? 'Diverse' : p.hersteller === 'Awesome' || p.hersteller === 'Samsung' ? 'Concat' : p.hersteller}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function filterLoesungen(kat, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    renderLoesungen(kat);
+  }
+
   const HERSTELLER_LOGOS = {
     'ehex':         { type: 'img', src: 'logos/ehex.png' },
     'Prof. Valmed': { type: 'img', src: 'logos/profvalmed.jpg' },
