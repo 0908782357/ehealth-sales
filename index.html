@@ -1909,6 +1909,27 @@
 
   function wizSubmit(e) {
     e.preventDefault();
+    const name     = document.getElementById('wiz-name').value;
+    const firma    = document.getElementById('wiz-firma').value;
+    const email    = document.getElementById('wiz-email').value;
+    const telefon  = document.getElementById('wiz-telefon').value;
+    const nachricht = document.getElementById('wiz-nachricht').value;
+    const produkte = Object.values(wizSelected).map(p => `- ${p.produkt} (${p.hersteller})`).join('\n');
+
+    const subject = encodeURIComponent('Produktanfrage über Website');
+    const body = encodeURIComponent(
+      `Neue Produktanfrage von der ehealth Sales Website\n` +
+      `${'='.repeat(44)}\n\n` +
+      `Name:        ${name}\n` +
+      `Unternehmen: ${firma || '—'}\n` +
+      `E-Mail:      ${email}\n` +
+      `Telefon:     ${telefon || '—'}\n\n` +
+      `Ausgewählte Produkte:\n${produkte}\n\n` +
+      (nachricht ? `Nachricht:\n${nachricht}\n` : '')
+    );
+
+    window.location.href = `mailto:anfrage@ehealth-sales.de?subject=${subject}&body=${body}`;
+
     document.getElementById('wiz-step3-content').style.display = 'none';
     document.getElementById('wiz-success').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
