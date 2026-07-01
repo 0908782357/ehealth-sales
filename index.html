@@ -117,7 +117,7 @@
     }
     .nav-inner {
       display: flex; align-items: center; justify-content: space-between;
-      height: 72px; gap: 32px;
+      height: 100px; gap: 32px;
     }
     .logo-wrap { display: flex; align-items: center; gap: 14px; cursor: pointer; flex-shrink: 0; }
     .logo-icon { width: 48px; height: 48px; }
@@ -530,6 +530,148 @@
       text-align: center;
     }
 
+    /* ===== PRODUKTFINDER WIZARD ===== */
+    .wizard-hero {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%);
+      padding: 80px 0;
+    }
+    .wizard-hero .section-label { color: var(--green); }
+    .wizard-hero h1 { color: white; margin-bottom: 16px; }
+    .wizard-hero p { color: rgba(255,255,255,0.75); font-size: 1.125rem; max-width: 640px; margin: 0; }
+
+    .wizard-body { padding: 64px 0; background: var(--gray-50); min-height: 500px; }
+
+    /* Step 1 – Berufsgruppen */
+    .wizard-step { display: none; }
+    .wizard-step.active { display: block; }
+
+    .bg-section-label {
+      font-size: 0.7rem; font-weight: 800; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--gray-500);
+      margin: 32px 0 12px;
+    }
+    .bg-section-label:first-child { margin-top: 0; }
+
+    .bg-grid {
+      display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;
+    }
+    .bg-btn {
+      background: white; border: 1.5px solid var(--gray-200);
+      border-radius: 8px; padding: 10px 18px;
+      font-family: 'Inter', sans-serif; font-size: 0.9rem; font-weight: 500;
+      color: var(--gray-700); cursor: pointer;
+      transition: all 0.15s; text-align: left;
+    }
+    .bg-btn:hover {
+      border-color: var(--navy); color: var(--navy);
+      background: var(--navy-bg); transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+    .bg-btn.selected {
+      border-color: var(--navy); background: var(--navy);
+      color: white; box-shadow: var(--shadow-md);
+    }
+
+    /* Step 2 – Results */
+    .wizard-back-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      color: var(--navy); font-weight: 600; font-size: 0.9rem;
+      cursor: pointer; margin-bottom: 32px;
+      padding: 8px 0; background: none; border: none; font-family: 'Inter', sans-serif;
+    }
+    .wizard-back-btn:hover { color: var(--navy-light); }
+    .wizard-back-btn svg { width: 16px; height: 16px; }
+
+    .wizard-result-header { margin-bottom: 32px; }
+    .wizard-result-header h2 { color: var(--navy); margin-bottom: 8px; }
+    .wizard-result-header p { color: var(--gray-500); font-size: 0.95rem; margin: 0; }
+
+    .result-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .result-card {
+      background: white; border-radius: var(--radius); padding: 24px;
+      box-shadow: var(--shadow-sm); border: 1px solid var(--gray-200);
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .result-card.verfuegbar { border-top: 3px solid var(--green); }
+    .result-card.bald { border-top: 3px solid #F59E0B; }
+
+    .result-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: 0.75rem; font-weight: 700; padding: 4px 10px;
+      border-radius: 20px; width: fit-content;
+    }
+    .result-badge.verfuegbar { background: rgba(109,197,45,0.12); color: var(--green-dark); }
+    .result-badge.bald { background: rgba(245,158,11,0.12); color: #B45309; }
+    .result-badge svg { width: 12px; height: 12px; }
+
+    .result-produkt { font-size: 1.1rem; font-weight: 700; color: var(--navy); font-family: 'Montserrat', sans-serif; }
+    .result-hersteller { min-height: 40px; display: flex; align-items: center; }
+    .result-hersteller-logo { max-height: 36px; max-width: 120px; object-fit: contain; }
+    .result-hersteller-name { font-size: 0.85rem; font-weight: 600; color: var(--gray-700); }
+    .result-hersteller-badge {
+      font-size: 1rem; font-weight: 800; color: #6DC52D;
+      background: #00051A; border-radius: 6px; padding: 4px 10px;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .wizard-empty {
+      text-align: center; padding: 64px 0; color: var(--gray-500);
+    }
+    .wizard-empty svg { width: 48px; height: 48px; margin: 0 auto 16px; color: var(--gray-200); display: block; }
+
+    .result-card { cursor: pointer; position: relative; user-select: none; }
+    .result-card.selected-card { border-color: var(--navy) !important; background: var(--navy-bg); box-shadow: var(--shadow-md); }
+    .result-card-checkbox {
+      position: absolute; top: 16px; right: 16px;
+      width: 22px; height: 22px; border-radius: 6px;
+      border: 2px solid var(--gray-200); background: white;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; flex-shrink: 0;
+    }
+    .result-card.selected-card .result-card-checkbox {
+      background: var(--navy); border-color: var(--navy);
+    }
+    .result-card.selected-card .result-card-checkbox::after {
+      content: ''; display: block; width: 12px; height: 7px;
+      border-left: 2.5px solid white; border-bottom: 2.5px solid white;
+      transform: rotate(-45deg) translateY(-2px);
+    }
+
+    .wizard-weiter-bar {
+      margin-top: 32px; padding: 20px 24px;
+      background: white; border-radius: var(--radius);
+      border: 1px solid var(--gray-200);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; box-shadow: var(--shadow-sm);
+    }
+    .wiz-count-label { font-size: 0.9rem; color: var(--gray-500); }
+    .wiz-count-label strong { color: var(--navy); }
+
+    /* Step 3 */
+    .wiz-summary-box {
+      background: var(--navy-bg); border-radius: var(--radius);
+      padding: 24px; margin-bottom: 32px;
+    }
+    .wiz-summary-box h3 { color: var(--navy); font-size: 1rem; margin-bottom: 16px; }
+    .wiz-summary-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--gray-200);
+      font-size: 0.9rem;
+    }
+    .wiz-summary-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .wiz-summary-item svg { width: 16px; height: 16px; color: var(--green); flex-shrink: 0; }
+    .wiz-summary-item strong { color: var(--navy); }
+    .wiz-summary-item span { color: var(--gray-500); font-size: 0.8rem; }
+
+    .wiz-contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .wiz-success { text-align: center; padding: 48px 24px; }
+    .wiz-success svg { width: 56px; height: 56px; color: var(--green); margin: 0 auto 16px; display: block; }
+    .wiz-success h2 { color: var(--navy); margin-bottom: 12px; }
+    .wiz-success p { color: var(--gray-500); }
+
+    @media (max-width: 900px) { .result-grid { grid-template-columns: 1fr 1fr; } .wiz-contact-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { .result-grid { grid-template-columns: 1fr; } }
+
     /* ===== RESPONSIVE ===== */
     @media (max-width: 900px) {
       .hero-inner, .grid-2, .leistung-inner, .kontakt-grid, .footer-grid { grid-template-columns: 1fr; }
@@ -555,28 +697,15 @@
 <header class="site-header">
   <div class="container">
     <nav class="nav-inner">
-      <div class="logo-wrap" onclick="showPage('home')">
-        <!-- Puzzle Logo SVG -->
-        <svg class="logo-icon" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Bottom-left piece -->
-          <path d="M2 27 L2 50 L25 50 L25 41.5 C23 41.5 21 39.5 21 37.5 C21 35.5 23 33.5 25 33.5 L25 27 Z" fill="#3C4A7C"/>
-          <!-- Bottom-right piece -->
-          <path d="M25 27 L25 33.5 C27 33.5 29 35.5 29 37.5 C29 39.5 27 41.5 25 41.5 L25 50 L48 50 L48 27 Z" fill="#3C4A7C"/>
-          <!-- Top-left piece -->
-          <path d="M2 4 L2 27 L25 27 L25 20.5 C23 20.5 21 18.5 21 16.5 C21 14.5 23 12.5 25 12.5 L25 4 Z" fill="#3C4A7C"/>
-          <!-- Top-right piece (elevated/offset) -->
-          <path d="M28 1 L28 10.5 C30 10.5 32 12.5 32 14.5 C32 16.5 30 18.5 28 18.5 L28 25 L50 25 L50 1 Z" fill="#3C4A7C"/>
-        </svg>
-        <div class="logo-text-wrap">
-          <span class="logo-ehs">EHS</span>
-          <span class="logo-tagline">— E-Health Sales —</span>
-        </div>
+      <div class="logo-wrap" onclick="showPage('home')" style="padding: 0;">
+        <img src="ehs-logo.jpg" alt="ehealth Sales GmbH" style="height: 88px; width: auto; display: block;">
       </div>
       <div class="nav-links">
         <a href="#" id="nav-home" class="active" onclick="showPage('home'); return false;">Startseite</a>
         <a href="#" id="nav-leistungen" onclick="showPage('leistungen'); return false;">Leistungen</a>
         <a href="#" id="nav-ueber-uns" onclick="showPage('ueber-uns'); return false;">Über uns</a>
         <a href="#" id="nav-partner" onclick="showPage('partner'); return false;">Partner</a>
+        <a href="#" id="nav-produktfinder" onclick="showPage('produktfinder'); return false;">Produktfinder</a>
         <a href="#" id="nav-kontakt" onclick="showPage('kontakt'); return false;">Kontakt</a>
       </div>
       <div class="nav-cta">
@@ -1348,75 +1477,75 @@
 
         <!-- Bechtle -->
         <div class="partner-card">
-          <div class="partner-logo-wrap">
+          <a href="https://www.bechtle.com/public-sector/healthcare" target="_blank" rel="noopener noreferrer" class="partner-logo-wrap">
             <img src="logos/bechtle.svg" alt="Bechtle" class="partner-img">
-          </div>
+          </a>
           <p class="partner-name">Bechtle AG</p>
-          <p class="partner-desc">IT-Systemhaus &amp; IT-E-Commerce</p>
+          <p class="partner-desc">IT-Systemhaus für das Gesundheitswesen</p>
         </div>
 
         <!-- Cherry -->
         <div class="partner-card">
-          <div class="partner-logo-wrap">
+          <a href="https://www.cherry.de/de-de/produkte/software-services/cherry-tms" target="_blank" rel="noopener noreferrer" class="partner-logo-wrap">
             <img src="logos/cherry.svg" alt="Cherry" class="partner-img">
-          </div>
+          </a>
           <p class="partner-name">Cherry GmbH</p>
-          <p class="partner-desc">Medizinische Eingabegeräte &amp; TI-Hardware</p>
+          <p class="partner-desc">TMS Lösung</p>
         </div>
 
         <!-- Prof. Valmed -->
         <div class="partner-card">
-          <div class="partner-logo-wrap">
-            <img src="logos/profvalmed.svg" alt="Prof. Valmed" class="partner-img">
-          </div>
+          <a href="https://profvalmed.com" target="_blank" rel="noopener noreferrer" class="partner-logo-wrap">
+            <img src="logos/profvalmed.jpg" alt="Prof. Valmed" class="partner-img">
+          </a>
           <p class="partner-name">Prof. Valmed</p>
-          <p class="partner-desc">Digitale Gesundheitslösungen</p>
+          <p class="partner-desc">Zertifiziertes Medizinprodukt</p>
         </div>
 
         <!-- Concat -->
         <div class="partner-card">
-          <div class="partner-logo-wrap">
+          <a href="https://www.concat.de" target="_blank" rel="noopener noreferrer" class="partner-logo-wrap">
             <img src="logos/concat.png" alt="Concat AG" class="partner-img">
-          </div>
+          </a>
           <p class="partner-name">Concat AG</p>
-          <p class="partner-desc">IT-Systemintegration &amp; Infrastruktur</p>
+          <p class="partner-desc">IT-Systemintegration &amp; mobile Lösungen</p>
         </div>
 
         <!-- TI Healthcare -->
         <div class="partner-card">
-          <div class="partner-logo-wrap">
+          <a href="https://www.ti-healthcare.de" target="_blank" rel="noopener noreferrer" class="partner-logo-wrap">
             <img src="logos/ti-healthcare.png" alt="TI Healthcare" class="partner-img">
-          </div>
+          </a>
           <p class="partner-name">TI Healthcare GmbH</p>
           <p class="partner-desc">Telematik Infrastruktur Lösungen</p>
         </div>
 
         <!-- ehex – Die eHealth Experten -->
         <div class="partner-card">
-          <div class="partner-logo-wrap">
+          <a href="https://ehex.de" target="_blank" rel="noopener noreferrer" class="partner-logo-wrap">
             <img src="logos/ehex.png" alt="ehex" class="partner-img partner-img-icon">
-          </div>
+          </a>
           <p class="partner-name">ehex GmbH</p>
           <p class="partner-desc">Die eHealth Experten · TI Gateway</p>
         </div>
 
         <!-- infinity managed Service GmbH -->
         <div class="partner-card">
-          <div class="partner-logo-wrap">
+          <a href="https://infinity-managed.services" target="_blank" rel="noopener noreferrer" class="partner-logo-wrap">
             <img src="logos/infinity.svg" alt="infinity managed Service" class="partner-img partner-img-icon">
-          </div>
+          </a>
           <p class="partner-name">infinity managed Service GmbH</p>
           <p class="partner-desc">Managed IT &amp; Cloud Services</p>
         </div>
 
         <!-- ehealth Connect GmbH -->
         <div class="partner-card">
-          <div class="partner-logo-wrap">
+          <a href="https://www.ehealth-connect.de" target="_blank" rel="noopener noreferrer" class="partner-logo-wrap">
             <div class="partner-text-logo">
               <span class="ehc-badge">ehc</span>
               <span class="ehc-sub">eHealth-Connect</span>
             </div>
-          </div>
+          </a>
           <p class="partner-name">ehealth Connect GmbH</p>
           <p class="partner-desc">Verknüpfte eHealth Ecosysteme</p>
         </div>
@@ -1444,22 +1573,165 @@
 
 </div><!-- /page-partner -->
 
+<!-- ======================================================= -->
+<!-- PAGE: PRODUKTFINDER                                      -->
+<!-- ======================================================= -->
+<div id="page-produktfinder" class="page">
+
+  <section class="wizard-hero">
+    <div class="container">
+      <span class="section-label">Produktfinder</span>
+      <h1 style="margin-bottom:16px;">Welche Produkte passen zu Ihnen?</h1>
+      <p>Wählen Sie Ihre Berufsgruppe und finden Sie alle verfügbaren Produkte aus unserem Portfolio auf einen Blick.</p>
+    </div>
+  </section>
+
+  <section class="wizard-body">
+    <div class="container">
+
+      <!-- STEP 1: Berufsgruppe wählen -->
+      <div id="wiz-step1" class="wizard-step active">
+        <div class="section-header" style="margin-bottom:40px;">
+          <span class="section-label">Schritt 1 von 2</span>
+          <h2 style="color:var(--navy);">Bitte wählen Sie Ihre Berufsgruppe</h2>
+          <p>Klicken Sie auf Ihre Berufsgruppe, um passende Produkte zu sehen.</p>
+        </div>
+
+        <div class="bg-section-label">Arztpraxen &amp; Einrichtungen</div>
+        <div class="bg-grid">
+          <button class="bg-btn" onclick="selectBG(4, 'Ärzte')">Ärzte</button>
+          <button class="bg-btn" onclick="selectBG(5, 'Zahnärzte')">Zahnärzte</button>
+          <button class="bg-btn" onclick="selectBG(6, 'Psychotherapeuten')">Psychotherapeuten</button>
+          <button class="bg-btn" onclick="selectBG(7, 'Apotheke')">Apotheke</button>
+          <button class="bg-btn" onclick="selectBG(8, 'Krankenhaus')">Krankenhaus</button>
+          <button class="bg-btn" onclick="selectBG(23, 'Rehakliniken')">Rehakliniken</button>
+        </div>
+
+        <div class="bg-section-label">Heilmittelerbringer</div>
+        <div class="bg-grid">
+          <button class="bg-btn" onclick="selectBG(9, 'Physiotherapeuten')">Physiotherapeuten</button>
+          <button class="bg-btn" onclick="selectBG(10, 'Ergotherapeuten')">Ergotherapeuten</button>
+          <button class="bg-btn" onclick="selectBG(11, 'Logopäden')">Logopäden</button>
+          <button class="bg-btn" onclick="selectBG(12, 'Podologen')">Podologen</button>
+          <button class="bg-btn" onclick="selectBG(13, 'Ernährungstherapeutische Praxis')">Ernährungstherapeutische Praxis</button>
+        </div>
+
+        <div class="bg-section-label">Hilfsmittelerbringer</div>
+        <div class="bg-grid">
+          <button class="bg-btn" onclick="selectBG(14, 'Sanitätshäuser')">Sanitätshäuser</button>
+          <button class="bg-btn" onclick="selectBG(15, 'Orthopädieschuhmacher')">Orthopädieschuhmacher</button>
+          <button class="bg-btn" onclick="selectBG(16, 'Orthopädietechniker')">Orthopädietechniker</button>
+          <button class="bg-btn" onclick="selectBG(17, 'Zahntechniker')">Zahntechniker</button>
+          <button class="bg-btn" onclick="selectBG(18, 'Augenoptiker')">Augenoptiker</button>
+          <button class="bg-btn" onclick="selectBG(19, 'Hörakustiker')">Hörakustiker</button>
+          <button class="bg-btn" onclick="selectBG(20, 'Hersteller von medizinischen Hilfsmitteln')">Hersteller von med. Hilfsmitteln</button>
+        </div>
+
+        <div class="bg-section-label">Pflege</div>
+        <div class="bg-grid">
+          <button class="bg-btn" onclick="selectBG(21, 'Pflegeeinrichtungen')">Pflegeeinrichtungen</button>
+          <button class="bg-btn" onclick="selectBG(22, 'Pflegedienste')">Pflegedienste</button>
+        </div>
+
+        <div class="bg-section-label">Sonstige Leistungserbringer</div>
+        <div class="bg-grid">
+          <button class="bg-btn" onclick="selectBG(24, 'Hebammen')">Hebammen</button>
+          <button class="bg-btn" onclick="selectBG(25, 'Rettungsdienste')">Rettungsdienste</button>
+          <button class="bg-btn" onclick="selectBG(26, 'Krankentransportunternehmen')">Krankentransportunternehmen</button>
+          <button class="bg-btn" onclick="selectBG(27, 'Arbeitsmedizin')">Arbeitsmedizin</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Ergebnisse -->
+      <div id="wiz-step2" class="wizard-step">
+        <button class="wizard-back-btn" onclick="wizBack()">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          Andere Berufsgruppe wählen
+        </button>
+        <div class="wizard-result-header">
+          <h2 id="wiz-result-title"></h2>
+          <p id="wiz-result-sub"></p>
+        </div>
+        <div id="wiz-results" class="result-grid"></div>
+        <div class="wizard-weiter-bar" id="wiz-weiter-bar" style="display:none;">
+          <span class="wiz-count-label"><strong id="wiz-count">0</strong> Produkt(e) ausgewählt</span>
+          <button class="btn btn-primary" onclick="wizToStep3()">Weiter zur Anfrage →</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Anfrage -->
+      <div id="wiz-step3" class="wizard-step">
+        <button class="wizard-back-btn" onclick="wizBackToStep2()">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          Zurück zur Produktauswahl
+        </button>
+
+        <div id="wiz-step3-content">
+          <div class="wizard-result-header">
+            <h2>Ihre Produktanfrage</h2>
+            <p>Bitte hinterlassen Sie Ihre Kontaktdaten — wir melden uns schnellstmöglich bei Ihnen.</p>
+          </div>
+
+          <div class="wiz-summary-box">
+            <h3>Ausgewählte Produkte</h3>
+            <div id="wiz-summary-list"></div>
+          </div>
+
+          <form onsubmit="wizSubmit(event)" style="background:white; border-radius:var(--radius-lg); padding:36px; box-shadow:var(--shadow-md);">
+            <div class="wiz-contact-grid" style="margin-bottom:16px;">
+              <div class="form-group" style="margin:0;">
+                <label>Name *</label>
+                <input type="text" id="wiz-name" required placeholder="Ihr Name">
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Unternehmen</label>
+                <input type="text" id="wiz-firma" placeholder="Ihre Einrichtung / Praxis">
+              </div>
+            </div>
+            <div class="wiz-contact-grid" style="margin-bottom:16px;">
+              <div class="form-group" style="margin:0;">
+                <label>E-Mail *</label>
+                <input type="email" id="wiz-email" required placeholder="ihre@email.de">
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label>Telefon</label>
+                <input type="tel" id="wiz-telefon" placeholder="+49 ...">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Nachricht (optional)</label>
+              <textarea id="wiz-nachricht" rows="3" placeholder="Haben Sie weitere Fragen oder Anmerkungen?"></textarea>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" id="wiz-dsgvo" required>
+              <label for="wiz-dsgvo">Ich stimme der Verarbeitung meiner Daten gemäß der <a href="#" onclick="showPage('datenschutz'); return false;">Datenschutzerklärung</a> zu. *</label>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width:100%;">Anfrage absenden</button>
+          </form>
+        </div>
+
+        <div id="wiz-success" class="wiz-success" style="display:none;">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <h2>Anfrage gesendet!</h2>
+          <p>Vielen Dank für Ihr Interesse. Wir werden uns in Kürze bei Ihnen melden.</p>
+          <button class="btn btn-primary" style="margin-top:24px;" onclick="wizReset()">Neue Anfrage starten</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+</div><!-- /page-produktfinder -->
+
 <!-- ===== FOOTER ===== -->
 <footer class="site-footer">
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand">
-        <div class="logo-wrap" onclick="showPage('home')" style="margin-bottom:0">
-          <svg class="logo-icon" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2 27 L2 50 L25 50 L25 41.5 C23 41.5 21 39.5 21 37.5 C21 35.5 23 33.5 25 33.5 L25 27 Z" fill="rgba(255,255,255,0.15)"/>
-            <path d="M25 27 L25 33.5 C27 33.5 29 35.5 29 37.5 C29 39.5 27 41.5 25 41.5 L25 50 L48 50 L48 27 Z" fill="rgba(255,255,255,0.15)"/>
-            <path d="M2 4 L2 27 L25 27 L25 20.5 C23 20.5 21 18.5 21 16.5 C21 14.5 23 12.5 25 12.5 L25 4 Z" fill="rgba(255,255,255,0.15)"/>
-            <path d="M28 1 L28 10.5 C30 10.5 32 12.5 32 14.5 C32 16.5 30 18.5 28 18.5 L28 25 L50 25 L50 1 Z" fill="rgba(255,255,255,0.15)"/>
-          </svg>
-          <div class="logo-text-wrap">
-            <span class="logo-ehs">EHS</span>
-            <span class="logo-tagline">— E-Health Sales —</span>
-          </div>
+        <div onclick="showPage('home')" style="cursor:pointer; margin-bottom:0; display:inline-block; background:white; border-radius:8px; padding:8px 14px;">
+          <img src="ehs-logo.jpg" alt="ehealth Sales GmbH" style="height: 44px; width: auto; display: block;">
         </div>
         <p style="margin-top:20px">Ihr kompetenter Partner für Telematik-Infrastruktur, TI Gateway und digitale Lösungen im deutschen Gesundheitswesen.</p>
       </div>
@@ -1508,6 +1780,147 @@
     document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
     const navLink = document.getElementById('nav-' + pageId);
     if (navLink) navLink.classList.add('active');
+  }
+
+  /* ===== PRODUKTFINDER DATA ===== */
+  const HERSTELLER_LOGOS = {
+    'ehex':         { type: 'img', src: 'logos/ehex.png' },
+    'Prof. Valmed': { type: 'img', src: 'logos/profvalmed.jpg' },
+    'Cherry':       { type: 'img', src: 'logos/cherry.svg' },
+    'ehc':          { type: 'text', label: 'ehc' },
+    'Arvato':       { type: 'img', src: 'logos/arvato.png' },
+    'Samsung':      { type: 'img', src: 'logos/samsung.webp' },
+    'Awesome':      { type: 'img', src: 'logos/awesome.jpg' }
+  };
+
+  function herstellerHTML(name) {
+    const logo = HERSTELLER_LOGOS[name];
+    if (!logo) return `<span class="result-hersteller-name">${name}</span>`;
+    if (logo.type === 'img') return `<img src="${logo.src}" alt="${name}" class="result-hersteller-logo">`;
+    return `<span class="result-hersteller-badge">${logo.label}</span>`;
+  }
+
+  const PRODUCTS = [
+    { nr:1,  hersteller:'ehex',         reseller:'Diverse', produkt:'TI Gateway',        verfuegbar:[4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27], bald:[] },
+    { nr:2,  hersteller:'ehex',         reseller:'Diverse', produkt:'HSM-B',              verfuegbar:[5,9,10,11,12,13,14,20,21,22],                                        bald:[4,6,15,16,17,18,19] },
+    { nr:3,  hersteller:'ehex',         reseller:'Diverse', produkt:'easyTI',             verfuegbar:[6,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27],          bald:[] },
+    { nr:4,  hersteller:'ehex',         reseller:'Diverse', produkt:'easyTI Hub',         verfuegbar:[6,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27],          bald:[] },
+    { nr:5,  hersteller:'Arvato',       reseller:'Diverse', produkt:'KIM',                verfuegbar:[4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27],  bald:[] },
+    { nr:6,  hersteller:'Awesome',      reseller:'Concat',  produkt:'TIM',                verfuegbar:[4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27],  bald:[] },
+    { nr:7,  hersteller:'Prof. Valmed', reseller:'ehs',     produkt:'KI Arztbrief',       verfuegbar:[4,5,7,8],                                                             bald:[] },
+    { nr:8,  hersteller:'Cherry',       reseller:'ehs',     produkt:'TMS',                verfuegbar:[4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27],  bald:[] },
+    { nr:9,  hersteller:'ehc',          reseller:'ehc',     produkt:'Stele',              verfuegbar:[4,5,7,8,21],                                                          bald:[] },
+    { nr:10, hersteller:'Medivise',     reseller:'ehc',     produkt:'Medivise Box',       verfuegbar:[4,5,7,8],                                                             bald:[] },
+    { nr:11, hersteller:'ehc',          reseller:'ehc',     produkt:'Online Services',    verfuegbar:[7],                                                                   bald:[] },
+    { nr:12, hersteller:'Samsung',      reseller:'Concat',  produkt:'Tablett',            verfuegbar:[4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27],  bald:[] }
+  ];
+
+  let wizSelected = {}; // nr → product object
+
+  function updateWeiterBar() {
+    const count = Object.keys(wizSelected).length;
+    document.getElementById('wiz-count').textContent = count;
+    document.getElementById('wiz-weiter-bar').style.display = count > 0 ? 'flex' : 'none';
+  }
+
+  function toggleCard(card, nr, prod) {
+    if (card.classList.contains('selected-card')) {
+      card.classList.remove('selected-card');
+      delete wizSelected[nr];
+    } else {
+      card.classList.add('selected-card');
+      wizSelected[nr] = prod;
+    }
+    updateWeiterBar();
+  }
+
+  function selectBG(col, name) {
+    document.querySelectorAll('.bg-btn').forEach(b => b.classList.remove('selected'));
+    if (event && event.target) event.target.classList.add('selected');
+    wizSelected = {};
+
+    const verfuegbar = PRODUCTS.filter(p => p.verfuegbar.includes(col));
+    const bald       = PRODUCTS.filter(p => p.bald.includes(col));
+
+    document.getElementById('wiz-result-title').textContent = 'Produkte für: ' + name;
+    document.getElementById('wiz-result-sub').textContent =
+      verfuegbar.length + ' sofort verfügbare' + (bald.length ? ' · ' + bald.length + ' bald verfügbare' : '') + ' Produkte — bitte auswählen';
+
+    const grid = document.getElementById('wiz-results');
+    grid.innerHTML = '';
+    updateWeiterBar();
+
+    if (!verfuegbar.length && !bald.length) {
+      grid.innerHTML = '<div class="wizard-empty"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg><p>Für diese Berufsgruppe sind aktuell keine Produkte verfügbar.</p></div>';
+    } else {
+      [...verfuegbar.map(p => ({...p, status:'verfuegbar'})), ...bald.map(p => ({...p, status:'bald'}))].forEach(p => {
+        const prodData = JSON.stringify({produkt: p.produkt, hersteller: p.hersteller, status: p.status}).replace(/"/g, '&quot;');
+        grid.innerHTML += `
+          <div class="result-card ${p.status}" onclick="toggleCard(this, ${p.nr}, ${JSON.stringify({produkt:p.produkt, hersteller:p.hersteller, status:p.status}).replace(/"/g,'&quot;')})">
+            <div class="result-card-checkbox"></div>
+            <div>
+              <span class="result-badge ${p.status}">
+                ${p.status === 'verfuegbar'
+                  ? '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Verfügbar'
+                  : '<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Bald verfügbar'}
+              </span>
+            </div>
+            <div class="result-produkt">${p.produkt}</div>
+            <div class="result-hersteller">${herstellerHTML(p.hersteller)}</div>
+          </div>`;
+      });
+    }
+
+    document.getElementById('wiz-step1').classList.remove('active');
+    document.getElementById('wiz-step2').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function wizBack() {
+    document.getElementById('wiz-step2').classList.remove('active');
+    document.getElementById('wiz-step1').classList.add('active');
+    document.querySelectorAll('.bg-btn').forEach(b => b.classList.remove('selected'));
+    wizSelected = {};
+    updateWeiterBar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function wizToStep3() {
+    const items = Object.values(wizSelected);
+    if (!items.length) return;
+    const list = document.getElementById('wiz-summary-list');
+    list.innerHTML = items.map(p => `
+      <div class="wiz-summary-item">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        <div><strong>${p.produkt}</strong> <span>— ${p.hersteller} · ${p.status === 'verfuegbar' ? 'Verfügbar' : 'Bald verfügbar'}</span></div>
+      </div>`).join('');
+    document.getElementById('wiz-step2').classList.remove('active');
+    document.getElementById('wiz-step3').classList.add('active');
+    document.getElementById('wiz-step3-content').style.display = 'block';
+    document.getElementById('wiz-success').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function wizBackToStep2() {
+    document.getElementById('wiz-step3').classList.remove('active');
+    document.getElementById('wiz-step2').classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function wizSubmit(e) {
+    e.preventDefault();
+    document.getElementById('wiz-step3-content').style.display = 'none';
+    document.getElementById('wiz-success').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function wizReset() {
+    wizSelected = {};
+    document.getElementById('wiz-step3').classList.remove('active');
+    document.getElementById('wiz-step1').classList.add('active');
+    document.querySelectorAll('.bg-btn').forEach(b => b.classList.remove('selected'));
+    updateWeiterBar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function handleFormSubmit(e) {
