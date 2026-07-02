@@ -613,18 +613,18 @@
     /* Zieldesign Diagram */
     .zieldesign-section { background: white; border-radius: var(--radius-lg); padding: 40px; box-shadow: var(--shadow-md); }
     .zieldesign-section > h3 { color: var(--navy); font-size: 1.25rem; margin-bottom: 32px; text-align: center; }
-    .zd-wrapper { max-width: 680px; margin: 0 auto; }
+    .zd-wrapper { max-width: 960px; margin: 0 auto; }
+    .zd-content-row { display: grid; grid-template-columns: 1fr 300px; gap: 32px; align-items: center; }
     .zd-customer { background: var(--navy); color: white; border-radius: var(--radius); padding: 14px 24px; text-align: center; }
     .zd-customer-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.55); }
     .zd-customer-name { font-size: 1.125rem; font-weight: 700; margin-top: 2px; }
     .zd-arrow { width: 2px; height: 28px; background: var(--gray-200); margin: 0 auto; position: relative; }
     .zd-arrow::after { content:''; position:absolute; bottom:-6px; left:-4px; border: 5px solid transparent; border-top: 6px solid var(--gray-200); }
-    .zd-layers { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+    .zd-layers { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
     .zd-layer { border-radius: var(--radius); padding: 14px 16px; border: 1.5px solid var(--gray-200); }
     .zd-layer-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--navy); margin-bottom: 8px; }
     .zd-layer-product { font-size: 0.8rem; color: var(--gray-600); padding: 3px 0; display: flex; align-items: center; gap: 6px; }
     .zd-layer-product::before { content:''; width:6px; height:6px; border-radius:50%; background: var(--green); flex-shrink:0; }
-    .zd-layer-row { display: flex; align-items: center; gap: 16px; }
     .zd-medivise-logo-side { height: 300px; width: auto; object-fit: contain; flex-shrink: 0; }
     .zd-layer-product.bald { color: var(--gray-400); }
     .zd-layer-product.bald::before { background: #F59E0B; }
@@ -2546,11 +2546,13 @@
     const tiProds = groups['ti'] || [];
     const otherGroups = Object.entries(groups).filter(([k]) => k !== 'ti');
 
+    let mediviseEntry = null;
     const layersHTML = otherGroups.map(([k, prods]) => {
-      const medivise = prods.find(p => p.name === 'Medivise Box');
+      const med = prods.find(p => p.name === 'Medivise Box');
+      if (med) mediviseEntry = med;
       const rest = prods.filter(p => p.name !== 'Medivise Box');
-
-      const box = `
+      if (!rest.length) return '';
+      return `
         <div class="zd-layer" style="background:${KATEGORIE_COLOR[k]||'#f9fafb'}">
           <div class="zd-layer-title">${KATEGORIE_LABEL[k]||k}</div>
           ${rest.map(p => `
@@ -2558,19 +2560,13 @@
               ${p.name}${p.status === 'bald' ? ' <span class="zd-bald-tag">bald</span>' : ''}
             </div>`).join('')}
         </div>`;
-
-      if (medivise) {
-        const baldTag = medivise.status === 'bald' ? ' <span class="zd-bald-tag">bald</span>' : '';
-        return `
-        <div class="zd-layer-row">
-          ${rest.length ? box : `<div class="zd-layer" style="background:${KATEGORIE_COLOR[k]||'#f9fafb'}"><div class="zd-layer-title">${KATEGORIE_LABEL[k]||k}</div></div>`}
-          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-            <img src="logos/medivise.png" alt="Medivise Box" class="zd-medivise-logo-side">${baldTag}
-          </div>
-        </div>`;
-      }
-      return box;
     }).join('');
+
+    const mediviseHTML = mediviseEntry ? `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;">
+        <img src="logos/medivise.png" alt="Medivise Box" class="zd-medivise-logo-side">
+        ${mediviseEntry.status === 'bald' ? '<span class="zd-bald-tag">bald</span>' : ''}
+      </div>` : '';
 
     const tiBlock = tiProds.length ? `
       <div class="zd-arrow"></div>
@@ -2590,7 +2586,10 @@
           <div class="zd-customer-name">${name}</div>
         </div>
         <div class="zd-arrow"></div>
-        <div class="zd-layers">${layersHTML || '<div class="zd-layer"><div class="zd-layer-title">Keine weiteren Lösungsebenen</div></div>'}</div>
+        <div class="zd-content-row">
+          <div class="zd-layers">${layersHTML || '<div class="zd-layer"><div class="zd-layer-title">Keine weiteren Lösungsebenen</div></div>'}</div>
+          ${mediviseHTML}
+        </div>
         ${tiBlock}
         <div class="zd-arrow"></div>
         <div class="zd-gematik"><div class="zd-gematik-label">Telematikinfrastruktur (gematik)</div></div>
