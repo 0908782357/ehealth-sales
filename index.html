@@ -624,6 +624,7 @@
     .zd-layer-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--navy); margin-bottom: 8px; }
     .zd-layer-product { font-size: 0.8rem; color: var(--gray-600); padding: 3px 0; display: flex; align-items: center; gap: 6px; }
     .zd-layer-product::before { content:''; width:6px; height:6px; border-radius:50%; background: var(--green); flex-shrink:0; }
+    .zd-product-logo { height: 18px; width: auto; object-fit: contain; vertical-align: middle; margin-left: 4px; }
     .zd-layer-product.bald { color: var(--gray-400); }
     .zd-layer-product.bald::before { background: #F59E0B; }
     .zd-bald-tag { font-size: 0.65rem; font-weight: 700; color: #B45309; background: #FEF3C7; border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
@@ -2361,7 +2362,8 @@
     'Cherry':       { type:'img', src:'logos/cherry.svg' },
     'Arvato':       { type:'img', src:'logos/arvato.png' },
     'Samsung':      { type:'img', src:'logos/samsung.webp' },
-    'Awesome':      { type:'img', src:'logos/awesome.jpg' }
+    'Awesome':      { type:'img', src:'logos/awesome.jpg' },
+    'Medivise':     { type:'img', src:'logos/medivise.png' }
   };
 
   function loesungLogoHTML(name) {
@@ -2538,7 +2540,7 @@
     items.forEach(p => {
       const k = p.kategorie || 'sonstige';
       if (!groups[k]) groups[k] = [];
-      groups[k].push({ name: p.produkt, status: p.status });
+      groups[k].push({ name: p.produkt, status: p.status, hersteller: p.hersteller });
     });
     const tiProds = groups['ti'] || [];
     const otherGroups = Object.entries(groups).filter(([k]) => k !== 'ti');
@@ -2546,10 +2548,14 @@
     const layersHTML = otherGroups.map(([k, prods]) => `
       <div class="zd-layer" style="background:${KATEGORIE_COLOR[k]||'#f9fafb'}">
         <div class="zd-layer-title">${KATEGORIE_LABEL[k]||k}</div>
-        ${prods.map(p => `
+        ${prods.map(p => {
+          const logo = LOESUNG_LOGOS[p.hersteller];
+          const logoHtml = logo ? `<img src="${logo.src}" alt="${p.hersteller}" class="zd-product-logo">` : '';
+          return `
           <div class="zd-layer-product${p.status === 'bald' ? ' bald' : ''}">
-            ${p.name}${p.status === 'bald' ? ' <span class="zd-bald-tag">bald</span>' : ''}
-          </div>`).join('')}
+            ${p.name}${logoHtml}${p.status === 'bald' ? ' <span class="zd-bald-tag">bald</span>' : ''}
+          </div>`;
+        }).join('')}
       </div>`).join('');
 
     const tiBlock = tiProds.length ? `
