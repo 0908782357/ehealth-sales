@@ -624,7 +624,7 @@
     .zd-layer-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--navy); margin-bottom: 8px; }
     .zd-layer-product { font-size: 0.8rem; color: var(--gray-600); padding: 3px 0; display: flex; align-items: center; gap: 6px; }
     .zd-layer-product::before { content:''; width:6px; height:6px; border-radius:50%; background: var(--green); flex-shrink:0; }
-    .zd-product-logo { height: 18px; width: auto; object-fit: contain; vertical-align: middle; margin-left: 4px; }
+    .zd-medivise-logo { height: 20px; width: auto; object-fit: contain; vertical-align: middle; }
     .zd-layer-product.bald { color: var(--gray-400); }
     .zd-layer-product.bald::before { background: #F59E0B; }
     .zd-bald-tag { font-size: 0.65rem; font-weight: 700; color: #B45309; background: #FEF3C7; border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
@@ -2549,11 +2549,12 @@
       <div class="zd-layer" style="background:${KATEGORIE_COLOR[k]||'#f9fafb'}">
         <div class="zd-layer-title">${KATEGORIE_LABEL[k]||k}</div>
         ${prods.map(p => {
-          const logo = LOESUNG_LOGOS[p.hersteller];
-          const logoHtml = logo ? `<img src="${logo.src}" alt="${p.hersteller}" class="zd-product-logo">` : '';
+          const label = p.name === 'Medivise Box'
+            ? `<img src="logos/medivise.png" alt="Medivise Box" class="zd-medivise-logo">`
+            : p.name;
           return `
           <div class="zd-layer-product${p.status === 'bald' ? ' bald' : ''}">
-            ${p.name}${logoHtml}${p.status === 'bald' ? ' <span class="zd-bald-tag">bald</span>' : ''}
+            ${label}${p.status === 'bald' ? ' <span class="zd-bald-tag">bald</span>' : ''}
           </div>`;
         }).join('')}
       </div>`).join('');
