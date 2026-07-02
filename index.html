@@ -2618,7 +2618,6 @@
       // Lösungsebene: alle passenden Produkte als Gesamtübersicht (kein typ-Filter)
       renderLoesungsebene(wizBGCol, wizBGName, products);
     } else {
-      if (wizFilterTyp !== 'beides') products = products.filter(p => p.typ === wizFilterTyp);
       renderResults(wizBGCol, wizBGName, products);
       document.getElementById('wiz-step1b').classList.remove('active');
       document.getElementById('wiz-step2').classList.add('active');
