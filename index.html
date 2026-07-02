@@ -1821,7 +1821,6 @@
           <h2 id="wiz2b-title" style="color:var(--navy);"></h2>
           <p id="wiz2b-sub"></p>
         </div>
-        <div id="wiz2b-cards" class="wiz2b-cards"></div>
         <div class="zieldesign-section">
           <h3>Ihr Zieldesign</h3>
           <div id="wiz2b-diagram"></div>
@@ -2582,14 +2581,6 @@
       status: p.verfuegbar.includes(col) ? 'verfuegbar' : 'bald',
       ...(LOESUNGEN_DATA.find(l => l.produkt === p.produkt) || {})
     }));
-
-    document.getElementById('wiz2b-cards').innerHTML = enriched.map(p => `
-      <div class="wiz2b-card">
-        <div class="wiz2b-card-tag">${KATEGORIE_LABEL[p.kategorie] || ''}</div>
-        <div class="wiz2b-card-name">${p.produkt}</div>
-        <div class="wiz2b-card-desc">${p.beschreibung || ''}</div>
-        <div class="wiz2b-card-hersteller">${herstellerHTML(p.hersteller)}</div>
-      </div>`).join('');
 
     renderZieldesign(col, name, enriched);
 
