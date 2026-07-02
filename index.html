@@ -2624,13 +2624,14 @@
 
   function applyFilters() {
     let products = PRODUCTS.filter(p => p.verfuegbar.includes(wizBGCol) || p.bald.includes(wizBGCol));
-    if (wizFilterTyp !== 'beides') products = products.filter(p => p.typ === wizFilterTyp);
     if (wizFilterMob === 'stationaer') products = products.filter(p => p.stationaer);
     if (wizFilterMob === 'mobil')      products = products.filter(p => p.mobil);
 
     if (wizFilterTyp === 'loesung') {
+      // Lösungsebene: alle passenden Produkte als Gesamtübersicht (kein typ-Filter)
       renderLoesungsebene(wizBGCol, wizBGName, products);
     } else {
+      if (wizFilterTyp !== 'beides') products = products.filter(p => p.typ === wizFilterTyp);
       renderResults(wizBGCol, wizBGName, products);
       document.getElementById('wiz-step1b').classList.remove('active');
       document.getElementById('wiz-step2').classList.add('active');
