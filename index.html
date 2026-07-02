@@ -631,6 +631,7 @@
     .zd-bald-tag { font-size: 0.65rem; font-weight: 700; color: #B45309; background: #FEF3C7; border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
     .zd-ti-product-bald { opacity: 0.55; }
     .zd-ti-bald-tag { font-size: 0.65rem; font-weight: 700; color: #B45309; background: #FEF3C7; border-radius: 4px; padding: 1px 5px; vertical-align: middle; margin-left: 3px; }
+    .zd-ti-row { display: flex; align-items: center; justify-content: center; gap: 16px; }
     .zd-ti { background: var(--navy-bg); border: 2px solid var(--navy); border-radius: var(--radius); padding: 14px 24px; text-align: center; }
     .zd-ti-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--navy); }
     .zd-ti-products { margin-top: 6px; font-size: 0.82rem; color: var(--navy-light); }
@@ -2544,7 +2545,8 @@
       groups[k].push({ name: p.produkt, status: p.status, hersteller: p.hersteller });
     });
     const tiProds = groups['ti'] || [];
-    const otherGroups = Object.entries(groups).filter(([k]) => k !== 'ti');
+    const mgmtProds = groups['management'] || [];
+    const otherGroups = Object.entries(groups).filter(([k]) => k !== 'ti' && k !== 'management');
 
     let mediviseEntry = null;
     const layersHTML = otherGroups.map(([k, prods]) => {
@@ -2568,15 +2570,28 @@
         ${mediviseEntry.status === 'bald' ? '<span class="zd-bald-tag">bald</span>' : ''}
       </div>` : '';
 
-    const tiBlock = tiProds.length ? `
+    const mgmtBox = mgmtProds.length ? `
+      <div class="zd-layer" style="background:${KATEGORIE_COLOR['management']||'#fef3c7'}">
+        <div class="zd-layer-title">${KATEGORIE_LABEL['management']||'Praxismanagement'}</div>
+        ${mgmtProds.map(p => `
+          <div class="zd-layer-product${p.status === 'bald' ? ' bald' : ''}">
+            ${p.name}${p.status === 'bald' ? ' <span class="zd-bald-tag">bald</span>' : ''}
+          </div>`).join('')}
+      </div>` : '';
+
+    const tiBlock = (tiProds.length || mgmtProds.length) ? `
       <div class="zd-arrow"></div>
-      <div class="zd-ti">
-        <div class="zd-ti-label">TI-Infrastruktur</div>
-        <div class="zd-ti-products">${tiProds.map(p =>
-          p.status === 'bald'
-            ? `<span class="zd-ti-product-bald">${p.name}<span class="zd-ti-bald-tag">bald</span></span>`
-            : p.name
-        ).join(' &nbsp;·&nbsp; ')}</div>
+      <div class="zd-ti-row">
+        ${mgmtBox}
+        ${tiProds.length ? `
+        <div class="zd-ti">
+          <div class="zd-ti-label">TI-Infrastruktur</div>
+          <div class="zd-ti-products">${tiProds.map(p =>
+            p.status === 'bald'
+              ? `<span class="zd-ti-product-bald">${p.name}<span class="zd-ti-bald-tag">bald</span></span>`
+              : p.name
+          ).join(' &nbsp;·&nbsp; ')}</div>
+        </div>` : ''}
       </div>` : '';
 
     document.getElementById('wiz2b-diagram').innerHTML = `
