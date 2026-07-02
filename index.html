@@ -613,28 +613,34 @@
     /* Zieldesign Diagram */
     .zieldesign-section { background: white; border-radius: var(--radius-lg); padding: 40px; box-shadow: var(--shadow-md); }
     .zieldesign-section > h3 { color: var(--navy); font-size: 1.25rem; margin-bottom: 32px; text-align: center; }
-    .zd-wrapper { max-width: 960px; margin: 0 auto; }
-    .zd-content-row { display: grid; grid-template-columns: 1fr 300px; gap: 32px; align-items: center; }
-    .zd-customer { background: var(--navy); color: white; border-radius: var(--radius); padding: 14px 24px; text-align: center; }
-    .zd-customer-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.55); }
-    .zd-customer-name { font-size: 1.125rem; font-weight: 700; margin-top: 2px; }
-    .zd-arrow { width: 2px; height: 28px; background: var(--gray-200); margin: 0 auto; position: relative; }
-    .zd-arrow::after { content:''; position:absolute; bottom:-6px; left:-4px; border: 5px solid transparent; border-top: 6px solid var(--gray-200); }
-    .zd-layers { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
-    .zd-layer { border-radius: var(--radius); padding: 14px 16px; border: 1.5px solid var(--gray-200); }
-    .zd-layer-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--navy); margin-bottom: 8px; }
+    .zd-wrapper { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+    .zd-top-banner { background: var(--navy); color: white; border-radius: var(--radius); padding: 12px 24px; text-align: center; }
+    .zd-top-banner-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.55); }
+    .zd-top-banner-name { font-size: 1.1rem; font-weight: 700; margin-top: 2px; }
+    .zd-main { display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: start; }
+    .zd-left { display: flex; flex-direction: column; gap: 10px; }
+    .zd-komm-band { background: #d1fae5; border-radius: var(--radius); padding: 14px 16px; border: 1.5px solid var(--gray-200); }
+    .zd-komm-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--navy); margin-bottom: 10px; }
+    .zd-komm-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .zd-komm-chip { font-size: 0.8rem; color: white; background: #059669; border-radius: 20px; padding: 4px 14px; font-weight: 600; }
+    .zd-komm-chip.bald { background: var(--gray-300); color: var(--gray-500); }
+    .zd-boxes-row { display: flex; flex-wrap: wrap; gap: 10px; }
+    .zd-layer { border-radius: var(--radius); padding: 14px 16px; border: 1.5px solid var(--gray-200); min-width: 120px; }
+    .zd-layer-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--navy); margin-bottom: 8px; }
     .zd-layer-product { font-size: 0.8rem; color: var(--gray-600); padding: 3px 0; display: flex; align-items: center; gap: 6px; }
     .zd-layer-product::before { content:''; width:6px; height:6px; border-radius:50%; background: var(--green); flex-shrink:0; }
-    .zd-medivise-logo-side { height: 300px; width: auto; object-fit: contain; flex-shrink: 0; }
     .zd-layer-product.bald { color: var(--gray-400); }
     .zd-layer-product.bald::before { background: #F59E0B; }
+    .zd-illustration { display: flex; align-items: center; justify-content: center; }
+    .zd-medivise-logo-side { height: 220px; width: auto; object-fit: contain; }
+    .zd-bottom-bar { background: var(--navy-bg); border: 2px solid var(--navy); border-radius: var(--radius); padding: 14px 24px; display: flex; align-items: stretch; gap: 16px; }
+    .zd-ti-mgmt { border-right: 1.5px solid var(--gray-300); padding-right: 16px; min-width: 120px; }
+    .zd-ti-main { flex: 1; text-align: center; }
+    .zd-ti-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--navy); margin-bottom: 6px; }
+    .zd-ti-products { font-size: 0.82rem; color: var(--navy-light); }
     .zd-bald-tag { font-size: 0.65rem; font-weight: 700; color: #B45309; background: #FEF3C7; border-radius: 4px; padding: 1px 5px; white-space: nowrap; }
     .zd-ti-product-bald { opacity: 0.55; }
     .zd-ti-bald-tag { font-size: 0.65rem; font-weight: 700; color: #B45309; background: #FEF3C7; border-radius: 4px; padding: 1px 5px; vertical-align: middle; margin-left: 3px; }
-    .zd-ti { background: var(--navy-bg); border: 2px solid var(--navy); border-radius: var(--radius); padding: 14px 24px; text-align: center; }
-    .zd-ti-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--navy); }
-    .zd-ti-products { margin-top: 6px; font-size: 0.82rem; color: var(--navy-light); }
-    .zd-ti-divider { border: none; border-top: 1px solid var(--gray-200); margin: 10px 0; }
     .zd-gematik { border: 2px dashed var(--gray-200); border-radius: var(--radius); padding: 12px 24px; text-align: center; }
     .zd-gematik-label { font-size: 0.8rem; color: var(--gray-400); letter-spacing: 0.03em; }
     .wiz2b-cta { text-align: center; margin-top: 48px; display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
@@ -2544,66 +2550,103 @@
       if (!groups[k]) groups[k] = [];
       groups[k].push({ name: p.produkt, status: p.status, hersteller: p.hersteller });
     });
-    const tiProds = groups['ti'] || [];
-    const mgmtProds = groups['management'] || [];
-    const otherGroups = Object.entries(groups).filter(([k]) => k !== 'ti' && k !== 'management');
 
-    let mediviseEntry = null;
-    const layersHTML = otherGroups.map(([k, prods]) => {
-      const med = prods.find(p => p.name === 'Medivise Box');
-      if (med) mediviseEntry = med;
-      const rest = prods.filter(p => p.name !== 'Medivise Box');
-      if (!rest.length) return '';
-      return `
+    const tiProds    = groups['ti']            || [];
+    const mgmtProds  = groups['management']    || [];
+    const kommProds  = groups['kommunikation'] || [];
+    const hwProds    = groups['hardware']      || [];
+    const medivise   = hwProds.find(p => p.name === 'Medivise Box');
+    const hwOthers   = hwProds.filter(p => p.name !== 'Medivise Box');
+    const extraGroups = Object.entries(groups).filter(([k]) =>
+      !['ti','management','kommunikation','hardware'].includes(k));
+
+    // Kommunikation — horizontal band with chips
+    const kommBand = kommProds.length ? `
+      <div class="zd-komm-band">
+        <div class="zd-komm-label">Kommunikation</div>
+        <div class="zd-komm-chips">
+          ${kommProds.map(p => `
+            <div class="zd-komm-chip${p.status === 'bald' ? ' bald' : ''}">
+              ${p.name}${p.status === 'bald' ? ' <span class="zd-bald-tag">bald</span>' : ''}
+            </div>`).join('')}
+        </div>
+      </div>` : '';
+
+    // Category boxes (KI, Hardware others, extra)
+    const boxItems = [];
+    extraGroups.forEach(([k, prods]) => {
+      if (!prods.length) return;
+      const logo = LOESUNG_LOGOS[prods[0]?.hersteller];
+      const logoHtml = logo ? `<img src="${logo.src}" alt="${prods[0].hersteller}" style="height:24px;width:auto;display:block;margin:8px 0 0;">` : '';
+      boxItems.push(`
         <div class="zd-layer" style="background:${KATEGORIE_COLOR[k]||'#f9fafb'}">
           <div class="zd-layer-title">${KATEGORIE_LABEL[k]||k}</div>
-          ${rest.map(p => `
+          ${prods.map(p => `
             <div class="zd-layer-product${p.status === 'bald' ? ' bald' : ''}">
               ${p.name}${p.status === 'bald' ? ' <span class="zd-bald-tag">bald</span>' : ''}
             </div>`).join('')}
-        </div>`;
-    }).join('');
+          ${logoHtml}
+        </div>`);
+    });
+    if (hwOthers.length) {
+      boxItems.push(`
+        <div class="zd-layer" style="background:${KATEGORIE_COLOR['hardware']||'#f0fdf4'}">
+          <div class="zd-layer-title">${KATEGORIE_LABEL['hardware']||'Hardware'}</div>
+          ${hwOthers.map(p => `
+            <div class="zd-layer-product${p.status === 'bald' ? ' bald' : ''}">
+              ${p.name}${p.status === 'bald' ? ' <span class="zd-bald-tag">bald</span>' : ''}
+            </div>`).join('')}
+        </div>`);
+    }
 
-    const mediviseHTML = mediviseEntry ? `
-      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;">
-        <img src="logos/medivise.png" alt="Medivise Box" class="zd-medivise-logo-side">
-        ${mediviseEntry.status === 'bald' ? '<span class="zd-bald-tag">bald</span>' : ''}
+    // Right illustration
+    const illustrationHTML = medivise ? `
+      <div class="zd-illustration">
+        <img src="logos/medivise.png" alt="Medivise Box" class="zd-medivise-logo-side"
+             ${medivise.status === 'bald' ? 'style="opacity:0.55"' : ''}>
+        ${medivise.status === 'bald' ? '<span class="zd-bald-tag" style="display:block;text-align:center;margin-top:6px">bald</span>' : ''}
       </div>` : '';
 
-    const mgmtSection = mgmtProds.length ? `
-      <hr class="zd-ti-divider">
-      <div class="zd-ti-label">${KATEGORIE_LABEL['management']||'Praxismanagement'}</div>
-      <div class="zd-ti-products">${mgmtProds.map(p =>
-        p.status === 'bald'
-          ? `<span class="zd-ti-product-bald">${p.name}<span class="zd-ti-bald-tag">bald</span></span>`
-          : p.name
-      ).join(' &nbsp;·&nbsp; ')}</div>` : '';
+    // Bottom bar: Praxismanagement | TI-Infrastruktur
+    const mgmtContent = mgmtProds.length ? `
+      <div class="zd-ti-mgmt">
+        <div class="zd-ti-label">${KATEGORIE_LABEL['management']||'Praxismanagement'}</div>
+        <div class="zd-ti-products">${mgmtProds.map(p =>
+          p.status === 'bald'
+            ? `<span class="zd-ti-product-bald">${p.name}<span class="zd-ti-bald-tag">bald</span></span>`
+            : p.name
+        ).join(' · ')}</div>
+      </div>` : '';
 
-    const tiBlock = (tiProds.length || mgmtProds.length) ? `
-      <div class="zd-arrow"></div>
-      <div class="zd-ti">
+    const tiContent = tiProds.length ? `
+      <div class="zd-ti-main">
         <div class="zd-ti-label">TI-Infrastruktur</div>
         <div class="zd-ti-products">${tiProds.map(p =>
           p.status === 'bald'
             ? `<span class="zd-ti-product-bald">${p.name}<span class="zd-ti-bald-tag">bald</span></span>`
             : p.name
         ).join(' &nbsp;·&nbsp; ')}</div>
-        ${mgmtSection}
+      </div>` : '';
+
+    const bottomBar = (tiProds.length || mgmtProds.length) ? `
+      <div class="zd-bottom-bar">
+        ${mgmtContent}${tiContent}
       </div>` : '';
 
     document.getElementById('wiz2b-diagram').innerHTML = `
       <div class="zd-wrapper">
-        <div class="zd-customer">
-          <div class="zd-customer-label">Ihre Einrichtung</div>
-          <div class="zd-customer-name">${name}</div>
+        <div class="zd-top-banner">
+          <div class="zd-top-banner-label">Ihre Einrichtung</div>
+          <div class="zd-top-banner-name">${name}</div>
         </div>
-        <div class="zd-arrow"></div>
-        <div class="zd-content-row">
-          <div class="zd-layers">${layersHTML || '<div class="zd-layer"><div class="zd-layer-title">Keine weiteren Lösungsebenen</div></div>'}</div>
-          ${mediviseHTML}
+        <div class="zd-main">
+          <div class="zd-left">
+            ${kommBand}
+            ${boxItems.length ? `<div class="zd-boxes-row">${boxItems.join('')}</div>` : ''}
+          </div>
+          ${illustrationHTML}
         </div>
-        ${tiBlock}
-        <div class="zd-arrow"></div>
+        ${bottomBar}
         <div class="zd-gematik"><div class="zd-gematik-label">Telematikinfrastruktur (gematik)</div></div>
       </div>`;
   }
