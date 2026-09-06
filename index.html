@@ -710,6 +710,18 @@
     .gesetze-item strong { display:block; color:var(--navy); margin-bottom:3px; }
     .gesetze-item span { color:#374151; }
     .gesetze-disclaimer { margin:16px 0 0; font-size:0.78rem; color:#6b7280; border-top:1px solid #dbeafe; padding-top:12px; }
+    /* Gesetzliche Hinweise in step1b */
+    #wiz1b-gesetze { margin-top:28px; text-align:left; }
+    .wiz1b-gesetze-title { font-size:0.72rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--navy); margin-bottom:10px; }
+    .wiz1b-hint-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 14px; background:#f0f4ff; border-radius:8px; margin-bottom:6px; cursor:pointer; transition:background 0.15s; border:1.5px solid #dbeafe; }
+    .wiz1b-hint-row:hover { background:#dbeafe; }
+    .wiz1b-hint-text { font-size:0.82rem; color:var(--navy); font-weight:500; line-height:1.4; }
+    .wiz1b-hint-more { font-size:0.75rem; color:var(--navy); opacity:0.6; white-space:nowrap; flex-shrink:0; }
+    /* Gesetz-Popup */
+    #gesetz-popup-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; display:flex; align-items:center; justify-content:center; padding:20px; }
+    #gesetz-popup { background:white; border-radius:16px; max-width:580px; width:100%; max-height:80vh; overflow-y:auto; padding:32px; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
+    #gesetz-popup-close { position:absolute; top:16px; right:16px; background:none; border:none; cursor:pointer; color:var(--gray-400); padding:4px; }
+    #gesetz-popup h3 { color:var(--navy); margin:0 0 20px; font-size:1.1rem; padding-right:32px; }
     #wiz-step1b .wizard-back-btn { text-align: left; }
     #wiz-step1b .section-header { text-align: center; }
     .filter-block { margin-bottom: 40px; }
@@ -2142,8 +2154,22 @@
           </div>
         </div>
 
+        <div id="wiz1b-gesetze" style="display:none;"></div>
+
         <div style="margin-top:40px;">
           <button class="btn btn-primary" onclick="applyFilters()">Ergebnis anzeigen →</button>
+        </div>
+      </div>
+
+      <!-- Gesetz-Popup -->
+      <div id="gesetz-popup-overlay" style="display:none;" onclick="closeGesetzPopup(event)">
+        <div id="gesetz-popup">
+          <button id="gesetz-popup-close" onclick="closeGesetzPopup()" aria-label="Schließen">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+          <h3 id="gesetz-popup-titel"></h3>
+          <div id="gesetz-popup-body"></div>
+          <p class="gesetze-disclaimer">Diese Übersicht dient der Orientierung und ist nicht rechtsverbindlich. Für eine individuelle Beratung sprechen Sie uns gerne an.</p>
         </div>
       </div>
 
@@ -3234,6 +3260,93 @@
     if (chk) { chk.style.borderColor = 'var(--navy)'; chk.style.background = 'var(--navy)'; chk.innerHTML = chkSvg; }
   }
 
+  const TOPIC_HINWEISE = {
+    ti: {
+      einzeiler: '📡 Anschlusspflicht TI nach § 306 ff. SGB V – gilt für Vertragsärzte, Zahnärzte, Apotheken & weitere Leistungserbringer',
+      titel: 'Telematikinfrastruktur – Gesetzliche Vorgaben',
+      items: [
+        { icon:'📡', titel:'TI-Anschlusspflicht (§ 306 ff. SGB V)', text:'Vertragsärzte, Zahnärzte, Apotheken und weitere Leistungserbringer sind gesetzlich verpflichtet, sich an die Telematikinfrastruktur anzubinden. Nichtangebundene Einrichtungen riskieren Honorarkürzungen.' },
+        { icon:'🛡️', titel:'DSGVO – Datenschutz-Grundverordnung', text:'Patientendaten sind nach Art. 9 DSGVO besonders schützenswürdig. Technische und organisatorische Maßnahmen (TOMs) sowie ein Verzeichnis der Verarbeitungstätigkeiten sind gesetzlich vorgeschrieben.' }
+      ]
+    },
+    security: {
+      einzeiler: '🔒 § 390 SGB V · NIS2-Richtlinie · DSGVO – Cybersicherheitspflichten für alle Gesundheitseinrichtungen',
+      titel: 'Cybersecurity – Gesetzliche Vorgaben',
+      items: [
+        { icon:'⚖️', titel:'§ 390 SGB V – Sichere Praxis', text:'Vertragsärztliche Einrichtungen müssen verbindliche IT-Sicherheitsmaßnahmen umsetzen und nachweisen. Die Umsetzungsfrist läuft bereits – ehs begleitet Sie gezielt mit dem Leistungspaket Sichere Praxis nach § 390 SGB V.' },
+        { icon:'🔒', titel:'NIS2-Richtlinie / BSIG', text:'Die EU-weite NIS2-Richtlinie verschärft Cybersicherheitspflichten im Gesundheitswesen: Risikomanagement, Meldepflichten bei Vorfällen und Mindest-Sicherheitsstandards sind verpflichtend.' },
+        { icon:'🛡️', titel:'DSGVO – Datenschutz-Grundverordnung', text:'Patientendaten sind nach Art. 9 DSGVO besonders schützenswürdig. Technische und organisatorische Maßnahmen (TOMs) sowie ein Verzeichnis der Verarbeitungstätigkeiten sind gesetzlich vorgeschrieben.' }
+      ]
+    },
+    telemedizin: {
+      einzeiler: '📱 Telemedizinische Leistungen unterliegen ärztlichem Berufsrecht & Fernbehandlungsregeln (MBO-Ä)',
+      titel: 'Telemedizin – Gesetzliche Vorgaben',
+      items: [
+        { icon:'📱', titel:'Fernbehandlung (MBO-Ä § 7 Abs. 4)', text:'Ärzte dürfen Patienten im Einzelfall auch ohne persönlichen Kontakt beraten und behandeln – sofern dies medizinisch vertretbar ist und die notwendige Sorgfalt gewährleistet bleibt.' },
+        { icon:'🛡️', titel:'DSGVO bei digitaler Kommunikation', text:'Telemedizinische Kommunikation mit Patientendaten erfordert sichere, DSGVO-konforme Kanäle. Der Einsatz zertifizierter Telematik-Dienste (z.B. KIM) ist empfohlen.' }
+      ]
+    },
+    it_infrastruktur: {
+      einzeiler: '🖥️ BSI IT-Grundschutz & DSGVO-Anforderungen gelten für alle patientendatenverarbeitenden Systeme',
+      titel: 'IT-Infrastruktur – Gesetzliche Vorgaben',
+      items: [
+        { icon:'🖥️', titel:'BSI IT-Grundschutz', text:'Das BSI empfiehlt und für kritische Infrastrukturen fordert es IT-Grundschutzmaßnahmen. Gesundheitseinrichtungen ab bestimmten Größen gelten als KRITIS und unterliegen erweiterten Pflichten.' },
+        { icon:'🛡️', titel:'DSGVO – Technisch-organisatorische Maßnahmen', text:'Alle Systeme, die Patientendaten verarbeiten, müssen dem Stand der Technik entsprechende Schutzmaßnahmen aufweisen (Art. 32 DSGVO).' }
+      ]
+    },
+    modern_work: {
+      einzeiler: '☁️ Cloud-Nutzung & Kollaborationstools unterliegen DSGVO-Anforderungen bei Verarbeitung von Patientendaten',
+      titel: 'Modern Work – Gesetzliche Vorgaben',
+      items: [
+        { icon:'☁️', titel:'Cloud-Nutzung & DSGVO', text:'Bei der Nutzung von Cloud-Diensten mit Patientendaten ist ein Auftragsverarbeitungsvertrag (AVV) nach Art. 28 DSGVO erforderlich. Datenübertragungen in Drittländer sind gesondert zu prüfen.' },
+        { icon:'📧', titel:'Sichere Kommunikation', text:'Für die Übermittlung von Patientdaten über E-Mail oder Messenger-Dienste gelten strenge Anforderungen. Der TI-Dienst KIM ist der einzige gesetzlich anerkannte Kanal für sicheren Datenaustausch.' }
+      ]
+    },
+    prozess_digital: {
+      einzeiler: '📋 Digitalisierungsgebot (KHZG, DiGA) & ePA-Pflicht treiben Prozessdigitalisierung im Gesundheitswesen',
+      titel: 'Prozessdigitalisierung – Gesetzliche Vorgaben',
+      items: [
+        { icon:'📋', titel:'KHZG – Krankenhauszukunftsgesetz', text:'Krankenhäuser sind verpflichtet, Gelder aus dem Krankenhauszukunftsfonds für digitale Prozesse einzusetzen. Fördertatbestände umfassen u.a. Patientenportale und digitale Pflege-/Behandlungsdokumentation.' },
+        { icon:'📱', titel:'ePA – Elektronische Patientenakte (§ 342 SGB V)', text:'Seit 2025 erhalten gesetzlich Versicherte automatisch eine elektronische Patientenakte. Leistungserbringer müssen die Akte lesen und befüllen können.' }
+      ]
+    }
+  };
+
+  function updateWiz1bGesetze() {
+    const el = document.getElementById('wiz1b-gesetze');
+    const hints = wizFilterPraeferenz
+      .filter(k => TOPIC_HINWEISE[k])
+      .map(k => TOPIC_HINWEISE[k]);
+    if (!hints.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
+    el.innerHTML = '<div class="wiz1b-gesetze-title">Gesetzliche Hinweise</div>'
+      + hints.map((h, i) => {
+          const key = wizFilterPraeferenz.filter(k => TOPIC_HINWEISE[k])[i];
+          return `<div class="wiz1b-hint-row" onclick="openGesetzPopup('${key}')">
+            <span class="wiz1b-hint-text">${h.einzeiler}</span>
+            <span class="wiz1b-hint-more">Mehr erfahren →</span>
+          </div>`;
+        }).join('');
+    el.style.display = '';
+  }
+
+  function openGesetzPopup(key) {
+    const h = TOPIC_HINWEISE[key];
+    if (!h) return;
+    document.getElementById('gesetz-popup-titel').textContent = h.titel;
+    document.getElementById('gesetz-popup-body').innerHTML = h.items.map(i =>
+      `<div class="gesetze-item"><span class="gesetze-icon">${i.icon}</span>
+       <div><strong>${i.titel}</strong><span>${i.text}</span></div></div>`
+    ).join('');
+    document.getElementById('gesetz-popup-overlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeGesetzPopup(e) {
+    if (e && e.target !== document.getElementById('gesetz-popup-overlay') && e.target !== document.getElementById('gesetz-popup-close') && !e.target.closest('#gesetz-popup-close')) return;
+    document.getElementById('gesetz-popup-overlay').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
   function togglePraeferenz(val, btn) {
     const idx = wizFilterPraeferenz.indexOf(val);
     if (idx === -1) {
@@ -3243,6 +3356,7 @@
       wizFilterPraeferenz.splice(idx, 1);
       btn.classList.remove('active');
     }
+    updateWiz1bGesetze();
   }
 
   function setFilterGesetze(val, btn) {
