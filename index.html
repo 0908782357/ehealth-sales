@@ -3586,6 +3586,7 @@
     document.getElementById('wiz-step1').classList.remove('active');
     document.getElementById('wiz-step1b').classList.add('active');
     renderTopicSelect();
+    updateWiz1bGesetze();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -3731,6 +3732,7 @@
     }
     renderTopicSelect();
     renderWizSummary();
+    updateWiz1bGesetze();
   }
 
   const KATEGORIE_LABEL = { ti:'TI-Infrastruktur', kommunikation:'Kommunikation', ki:'KI & Dokumentation', management:'Praxismanagement', hardware:'Hardware', security:'Security & IT', 'it-unterstuetzung':'IT Unterstützung' };
