@@ -3884,8 +3884,24 @@
     if (!name || !email) { alert('Bitte Name und E-Mail ausfüllen.'); return; }
     if (!dsgvo) { alert('Bitte der Datenschutzerklärung zustimmen.'); return; }
 
-    const products = Object.values(wizSelected).map(p => p.produkt).join(', ') ||
-      document.querySelectorAll('#wiz-results .offer-prod-name').length + ' Produkte aus Ergebnis';
+    // Ausgewählte Bundles sammeln
+    const selectedLines = [];
+    Object.entries(wizBundleSelected).forEach(([btnId, preis]) => {
+      if (!(preis > 0)) return;
+      const bundle = BUNDLES.find(b => b.id === btnId.replace('b_', ''));
+      if (bundle) selectedLines.push(bundle.name + ' (Paket)');
+    });
+    // Einzelprodukte mit Qty > 0
+    Object.entries(wizProductQty).forEach(([nr, qty]) => {
+      if (!qty) return;
+      const prod = PRODUCTS.find(p => p.nr === parseInt(nr));
+      if (!prod) return;
+      const label = prod.artikelnummer
+        ? `${prod.produkt} [${prod.artikelnummer}]${qty > 1 ? ' × ' + qty : ''}`
+        : `${prod.produkt}${qty > 1 ? ' × ' + qty : ''}`;
+      selectedLines.push(label);
+    });
+    const products = selectedLines.join(', ') || 'Produktanfrage';
 
     const payload = {
       name, email,
@@ -4027,8 +4043,9 @@
           hersteller:   p.hersteller,
           einheit:      p.reseller,
           produkt:      p.produkt,
-          beschreibung: p.beschreibung || null,
-          typ:          p.typ,
+          beschreibung:  p.beschreibung || null,
+          artikelnummer: p.artikelnummer || null,
+          typ:           p.typ,
           stationaer: p.stationaer,
           mobil:      p.mobil,
           verfuegbar: p.verfuegbar || [],

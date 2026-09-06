@@ -354,6 +354,10 @@
           <input type="text" id="f-reseller" placeholder="z.B. je Arzt, je Nutzer, pauschal">
         </div>
         <div class="form-group">
+          <label>Artikelnummer</label>
+          <input type="text" id="f-artikelnummer" placeholder="z.B. ART-1001">
+        </div>
+        <div class="form-group">
           <label>Detail-Page Slug</label>
           <input type="text" id="f-detail-page" placeholder="z.B. ti-gateway">
         </div>
@@ -860,7 +864,8 @@
       else document.getElementById('f-unternehmen-text').value = p.unternehmen || myFirma;
       document.getElementById('f-typ').value          = p.typ || 'loesung';
       document.getElementById('f-beschreibung').value = p.beschreibung || '';
-      document.getElementById('f-reseller').value     = p.reseller || '';
+      document.getElementById('f-reseller').value       = p.reseller || '';
+      document.getElementById('f-artikelnummer').value = p.artikelnummer || '';
       document.getElementById('f-detail-page').value  = p.detail_page || '';
       document.getElementById('f-stationaer').checked   = !!p.stationaer;
       document.getElementById('f-mobil').checked        = !!p.mobil;
@@ -897,7 +902,7 @@
         loadLoesungFields(p.loesung_inhalt || {});
       }
     } else {
-      ['f-produkt','f-hersteller','f-beschreibung','f-reseller','f-detail-page'].forEach(i => document.getElementById(i).value = '');
+      ['f-produkt','f-hersteller','f-beschreibung','f-reseller','f-artikelnummer','f-detail-page'].forEach(i => document.getElementById(i).value = '');
       if (userRole === 'admin') document.getElementById('f-unternehmen').value = '';
       document.getElementById('f-typ').value = '';
       document.getElementById('f-stationaer').checked  = true;
@@ -947,6 +952,7 @@
       typ,
       beschreibung:     document.getElementById('f-beschreibung').value.trim() || null,
       reseller:         document.getElementById('f-reseller').value.trim() || null,
+      artikelnummer:    document.getElementById('f-artikelnummer').value.trim() || null,
       detail_page:      document.getElementById('f-detail-page').value.trim() || null,
       stationaer:       document.getElementById('f-stationaer').checked,
       mobil:            document.getElementById('f-mobil').checked,
