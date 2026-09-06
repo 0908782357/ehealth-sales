@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eHS Portal – Mein Konto</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #3C4A7C; --green: #6DC52D; --navy-dark: #2d3a63;
+    --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0;
+    --gray-400: #94a3b8; --gray-500: #64748b; --gray-900: #0f172a;
+    --red: #ef4444;
+  }
+  body { font-family: 'Inter','Helvetica Neue',sans-serif; background: var(--gray-50); color: var(--gray-900); }
+  .topbar {
+    background: var(--navy); color: white; padding: 0 28px;
+    display: flex; align-items: center; justify-content: space-between; height: 60px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1rem; }
+  .topbar-brand img { height: 32px; border-radius: 6px; }
+  .topbar-brand span { opacity: 0.7; font-weight: 400; font-size: 0.78rem; margin-left: 4px; }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .user-chip { background: rgba(255,255,255,0.12); border-radius: 20px; padding: 5px 12px; font-size: 0.78rem; }
+  .btn-logout { background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 8px; padding: 7px 14px; font-size: 0.78rem; cursor: pointer; }
+  .btn-logout:hover { background: rgba(255,255,255,0.2); }
+
+  .layout { display: flex; min-height: calc(100vh - 60px); }
+  .sidebar {
+    width: 220px; flex-shrink: 0; background: white; border-right: 1px solid var(--gray-200);
+    padding: 24px 12px;
+  }
+  .nav-section { font-size: 0.62rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 10px; margin-bottom: 6px; margin-top: 20px; }
+  .nav-section:first-child { margin-top: 0; }
+  .nav-link {
+    display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px;
+    color: var(--gray-500); font-size: 0.85rem; font-weight: 500; text-decoration: none;
+    transition: all 0.15s; cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+  }
+  .nav-link:hover { background: var(--gray-100); color: var(--navy); }
+  .nav-link.active { background: #eef0f7; color: var(--navy); font-weight: 700; }
+  .nav-link svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .main { flex: 1; padding: 32px 36px; max-width: 860px; }
+  h1 { font-family: Montserrat, sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+  .page-sub { color: var(--gray-400); font-size: 0.85rem; margin-bottom: 28px; }
+
+  .section-card {
+    background: white; border-radius: 14px; padding: 28px 32px;
+    border: 1px solid var(--gray-200); box-shadow: 0 1px 6px rgba(0,0,0,0.04); margin-bottom: 24px;
+  }
+  .section-card h2 {
+    font-size: 1rem; font-weight: 700; color: var(--navy);
+    margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--gray-100);
+  }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid .full { grid-column: 1 / -1; }
+
+  label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--gray-500); margin-bottom: 5px; }
+  input, select, textarea {
+    width: 100%; padding: 9px 12px; border: 1.5px solid var(--gray-200); border-radius: 8px;
+    font-size: 0.88rem; color: var(--gray-900); background: white; outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--navy); }
+  input[readonly] { background: var(--gray-50); color: var(--gray-500); cursor: default; }
+  textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+
+  .form-group { display: flex; flex-direction: column; }
+
+  .actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn { padding: 10px 22px; border-radius: 9px; font-size: 0.85rem; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+  .btn-primary { background: var(--navy); color: white; }
+  .btn-primary:hover { background: var(--navy-dark); }
+  .btn-secondary { background: var(--gray-100); color: var(--gray-500); }
+  .btn-secondary:hover { background: var(--gray-200); }
+
+  .msg { font-size: 0.83rem; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; display: none; }
+  .msg.success { display: block; background: #dcfce7; color: #166534; }
+  .msg.error   { display: block; background: #fee2e2; color: #991b1b; }
+
+  .role-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em; margin-left: 8px;
+  }
+  .role-admin   { background: #fef3c7; color: #92400e; }
+  .role-partner { background: #dbeafe; color: #1e40af; }
+  .role-customer{ background: #f0fdf4; color: #166534; }
+
+  .divider { border: none; border-top: 1px solid var(--gray-100); margin: 4px 0 20px; }
+
+  .pw-hint { font-size: 0.75rem; color: var(--gray-400); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <img src="../ehs-logo.jpg" alt="EHS" onerror="this.style.display='none'">
+    eHS Partner Portal
+    <span>/ Mein Konto</span>
+  </div>
+  <div class="topbar-right">
+    <span class="user-chip" id="user-email">–</span>
+    <button class="btn-logout" onclick="logout()">Abmelden</button>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="nav-section">Navigation</div>
+    <a class="nav-link" href="dashboard.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-link" href="users.html" id="nav-users" style="display:none">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Nutzer
+    </a>
+    <a class="nav-link" id="nav-products" href="products.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+      Produkte
+    </a>
+    <a class="nav-link" href="shop.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+      Shop
+    </a>
+    <a class="nav-link" id="nav-orders" href="orders.html" style="display:none">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+      Bestellungen
+    </a>
+    <a class="nav-link" href="knowledge.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      Community
+    </a>
+    <div class="nav-section">Account</div>
+    <a class="nav-link active" href="profile.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+      Mein Konto
+    </a>
+    <a class="nav-link" href="../index.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      Zur Website
+    </a>
+  </nav>
+
+  <main class="main">
+    <h1>Mein Konto <span class="role-badge" id="role-badge"></span></h1>
+    <p class="page-sub">Persönliche Daten und Sicherheitseinstellungen verwalten</p>
+
+    <!-- Profildaten -->
+    <div class="section-card">
+      <h2>Persönliche Daten</h2>
+      <div id="profile-msg" class="msg"></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Vorname</label>
+          <input type="text" id="f-vorname" placeholder="Max">
+        </div>
+        <div class="form-group">
+          <label>Nachname</label>
+          <input type="text" id="f-nachname" placeholder="Mustermann">
+        </div>
+        <div class="form-group">
+          <label>E-Mail</label>
+          <input type="email" id="f-email" readonly>
+        </div>
+        <div class="form-group">
+          <label>Firma *</label>
+          <input type="text" id="f-firma" placeholder="Muster GmbH" required>
+        </div>
+        <div class="form-group">
+          <label>Telefon</label>
+          <input type="tel" id="f-telefon" placeholder="+49 123 456789">
+        </div>
+        <div class="form-group full">
+          <label>Straße & Hausnummer</label>
+          <input type="text" id="f-strasse" placeholder="Musterstraße 1">
+        </div>
+        <div class="form-group">
+          <label>PLZ</label>
+          <input type="text" id="f-plz" placeholder="12345">
+        </div>
+        <div class="form-group">
+          <label>Ort</label>
+          <input type="text" id="f-ort" placeholder="Musterstadt">
+        </div>
+        <div class="form-group full">
+          <label>Website</label>
+          <input type="url" id="f-website" placeholder="https://www.ihrefirma.de">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="saveProfile()">Speichern</button>
+      </div>
+    </div>
+
+    <!-- Logo -->
+    <div class="section-card" id="card-logo">
+      <h2>Firmenlogo</h2>
+      <p style="font-size:0.85rem;color:var(--gray-400);margin-bottom:16px;">Ihr Logo erscheint auf der Partnerseite der ehealth-sales.de und im Falle einer Alliance-Mitgliedschaft auf der Partnerseite der ehealth-alliance.de. Empfohlen: quadratisches Format, min. 200×200 px.</p>
+      <div id="logo-msg" class="msg"></div>
+      <div id="logo-upload-area" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+        <div id="logo-preview-wrap" style="width:120px;height:120px;border-radius:12px;border:2px dashed var(--gray-200);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--gray-50);flex-shrink:0;">
+          <img id="logo-preview" src="" style="width:100%;height:100%;object-fit:contain;display:none;" alt="Logo">
+          <span id="logo-placeholder" style="font-size:0.75rem;color:var(--gray-400);text-align:center;padding:8px;">Kein Logo</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <label class="btn btn-secondary" style="cursor:pointer;">
+            Logo auswählen
+            <input type="file" id="logo-file-input" accept="image/*" style="display:none;" onchange="previewLogo(this)">
+          </label>
+          <button class="btn btn-primary" id="logo-save-btn" onclick="saveLogo()" style="display:none;">Logo speichern</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Passwort -->
+    <div class="section-card">
+      <h2>Passwort</h2>
+      <div id="pw-msg" class="msg"></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Neues Passwort</label>
+          <input type="password" id="f-pw-new" placeholder="Mindestens 8 Zeichen" autocomplete="new-password">
+          <p class="pw-hint">Leer lassen, um das Passwort nicht zu ändern.</p>
+        </div>
+        <div class="form-group">
+          <label>Passwort bestätigen</label>
+          <input type="password" id="f-pw-confirm" placeholder="Passwort wiederholen" autocomplete="new-password">
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="savePassword()">Passwort ändern</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  const SUPABASE_URL  = 'https://focysklymhmcfwgxdtuk.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { flowType: 'implicit' } });
+
+  let currentUserId = null;
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'INITIAL_SESSION') {
+      if (!session) { window.location.href = 'index.html'; return; }
+      await init(session.user);
+    }
+  });
+
+  async function init(user) {
+    currentUserId = user.id;
+    document.getElementById('user-email').textContent = user.email;
+
+    // Rolle aus user_roles laden
+    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', user.id).single();
+    const role = roleRow?.role || 'partner';
+
+    const badge = document.getElementById('role-badge');
+    badge.textContent = { admin: 'Admin', partner: 'Partner', customer: 'Kunde' }[role] || role;
+    badge.className = `role-badge role-${role}`;
+
+    // Admin: Nutzer-Link einblenden
+    if (role === 'admin') {
+      document.getElementById('nav-users').style.display = '';
+      document.getElementById('nav-orders').style.display = '';
+    }
+    if (role === 'customer') {
+      document.getElementById('nav-products').style.display = 'none';
+    }
+    if (role !== 'admin') {
+      document.getElementById('f-firma').readOnly = true;
+      document.getElementById('f-firma').style.background = 'var(--gray-50)';
+      document.getElementById('f-firma').style.color = 'var(--gray-500)';
+    }
+
+    // Profil laden – per user_id (passend zur RLS-Policy)
+    const { data: profile } = await sb.from('user_profiles')
+      .select('*')
+      .eq('user_id', user.id)
+      .single();
+
+    if (profile) {
+      document.getElementById('f-vorname').value = profile.vorname || '';
+      document.getElementById('f-nachname').value = profile.nachname || '';
+      document.getElementById('f-email').value    = profile.email || user.email;
+      document.getElementById('f-firma').value    = profile.firma || '';
+      document.getElementById('f-telefon').value  = profile.telefon || '';
+      document.getElementById('f-strasse').value  = profile.strasse || '';
+      document.getElementById('f-plz').value      = profile.plz     || '';
+      document.getElementById('f-ort').value      = profile.ort     || '';
+      document.getElementById('f-website').value  = profile.website || '';
+      if (profile.logo_url) {
+        const img = document.getElementById('logo-preview');
+        img.src = profile.logo_url;
+        img.style.display = '';
+        document.getElementById('logo-placeholder').style.display = 'none';
+      }
+    } else {
+      document.getElementById('f-email').value = user.email;
+    }
+  }
+
+  async function saveProfile() {
+    const msg = document.getElementById('profile-msg');
+    msg.className = 'msg';
+
+    const firma = document.getElementById('f-firma').value.trim();
+    if (!firma) {
+      msg.textContent = 'Bitte Firma / Unternehmen ausfüllen.';
+      msg.className = 'msg error'; return;
+    }
+
+    const payload = {
+      vorname:  document.getElementById('f-vorname').value.trim(),
+      nachname: document.getElementById('f-nachname').value.trim(),
+      firma,
+      telefon:  document.getElementById('f-telefon').value.trim(),
+      strasse:  document.getElementById('f-strasse').value.trim(),
+      plz:      document.getElementById('f-plz').value.trim(),
+      ort:      document.getElementById('f-ort').value.trim(),
+      website:  document.getElementById('f-website').value.trim() || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error } = await sb.from('user_profiles')
+      .update(payload)
+      .eq('user_id', currentUserId);
+
+    if (error) {
+      msg.textContent = 'Fehler: ' + error.message;
+      msg.className = 'msg error';
+    } else {
+      msg.textContent = 'Profildaten gespeichert.';
+      msg.className = 'msg success';
+      setTimeout(() => { msg.className = 'msg'; }, 3000);
+    }
+  }
+
+  async function savePassword() {
+    const msg = document.getElementById('pw-msg');
+    msg.className = 'msg';
+
+    const pw        = document.getElementById('f-pw-new').value;
+    const pwConfirm = document.getElementById('f-pw-confirm').value;
+
+    if (!pw) {
+      msg.textContent = 'Bitte ein neues Passwort eingeben.';
+      msg.className = 'msg error'; return;
+    }
+    if (pw.length < 8) {
+      msg.textContent = 'Mindestens 8 Zeichen erforderlich.';
+      msg.className = 'msg error'; return;
+    }
+    if (pw !== pwConfirm) {
+      msg.textContent = 'Passwörter stimmen nicht überein.';
+      msg.className = 'msg error'; return;
+    }
+
+    const { error } = await sb.auth.updateUser({ password: pw });
+    if (error) {
+      msg.textContent = 'Fehler: ' + error.message;
+      msg.className = 'msg error';
+    } else {
+      msg.textContent = 'Passwort wurde erfolgreich geändert.';
+      msg.className = 'msg success';
+      document.getElementById('f-pw-new').value = '';
+      document.getElementById('f-pw-confirm').value = '';
+      setTimeout(() => { msg.className = 'msg'; }, 3000);
+    }
+  }
+
+  async function logout() {
+    await sb.auth.signOut();
+    window.location.href = 'index.html';
+  }
+
+  let pendingLogoFile = null;
+
+  function previewLogo(input) {
+    const file = input.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.getElementById('logo-preview');
+      img.src = e.target.result;
+      img.style.display = '';
+      document.getElementById('logo-placeholder').style.display = 'none';
+      pendingLogoFile = file;
+      document.getElementById('logo-save-btn').style.display = '';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function saveLogo() {
+    const msg = document.getElementById('logo-msg');
+    msg.className = 'msg';
+    if (!pendingLogoFile) return;
+
+    // Canvas-Crop: quadratisch, max 400px
+    const blob = await new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const image = new Image();
+        image.onload = () => {
+          const side = Math.min(image.width, image.height);
+          const canvas = document.createElement('canvas');
+          canvas.width = 400; canvas.height = 400;
+          canvas.getContext('2d').drawImage(
+            image,
+            (image.width - side) / 2, (image.height - side) / 2, side, side,
+            0, 0, 400, 400
+          );
+          canvas.toBlob(resolve, 'image/png', 0.92);
+        };
+        image.src = e.target.result;
+      };
+      reader.readAsDataURL(pendingLogoFile);
+    });
+
+    const { data: { session } } = await sb.auth.getSession();
+    const userId = session?.user?.id;
+    if (!userId) { msg.textContent = 'Nicht eingeloggt.'; msg.className = 'msg error'; return; }
+
+    const path = `logos/${userId}.png`;
+    const { error: uploadErr } = await sb.storage
+      .from('partner-logos')
+      .upload(path, blob, { contentType: 'image/png', upsert: true });
+
+    if (uploadErr) { msg.textContent = 'Upload-Fehler: ' + uploadErr.message; msg.className = 'msg error'; return; }
+
+    const { data: { publicUrl } } = sb.storage.from('partner-logos').getPublicUrl(path);
+
+    const { error: dbErr } = await sb.from('user_profiles')
+      .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
+      .eq('user_id', userId);
+
+    if (dbErr) { msg.textContent = 'Fehler: ' + dbErr.message; msg.className = 'msg error'; return; }
+
+    msg.textContent = 'Logo gespeichert!';
+    msg.className = 'msg success';
+    pendingLogoFile = null;
+    document.getElementById('logo-save-btn').style.display = 'none';
+    setTimeout(() => { msg.className = 'msg'; }, 3000);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eHS Compass</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter','Helvetica Neue',sans-serif; background: #f8fafc; color: #0f172a; }
+  .gate {
+    min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center;
+    padding: 40px 24px;
+  }
+  .gate-icon { font-size: 3rem; margin-bottom: 24px; }
+  .gate h1 { font-size: 1.8rem; font-weight: 800; color: #3C4A7C; margin-bottom: 12px; font-family: Montserrat, sans-serif; }
+  .gate p  { color: #64748b; font-size: 1rem; max-width: 440px; line-height: 1.6; margin-bottom: 28px; }
+  .btn { display: inline-block; padding: 13px 28px; border-radius: 10px; font-size: 0.95rem; font-weight: 700; text-decoration: none; background: #3C4A7C; color: white; transition: background 0.18s; cursor: pointer; border: none; }
+  .btn:hover { background: #2d3a63; }
+  .token-form { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; max-width: 360px; margin-bottom: 20px; }
+  .token-input { width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 1rem; font-family: monospace; text-align: center; letter-spacing: 0.04em; outline: none; }
+  .token-input:focus { border-color: #3C4A7C; }
+  .token-error { color: #ef4444; font-size: 0.82rem; }
+  .divider { color: #94a3b8; font-size: 0.82rem; margin: 4px 0; }
+  #compass-content { display: none; }
+</style>
+</head>
+<body>
+
+<!-- Token-Gate: wird ausgeblendet wenn gültiger Token -->
+<div id="gate" class="gate">
+  <div class="gate-icon">🧭</div>
+  <h1>eHS Compass</h1>
+  <p>Haben Sie bereits einen Zugangscode? Geben Sie ihn hier ein. Ohne Code können Sie Compass im Shop bestellen.</p>
+  <div class="token-form">
+    <input type="text" id="token-input" class="token-input" placeholder="Zugangscode eingeben" autocomplete="off" spellcheck="false">
+    <div id="token-error" class="token-error" style="display:none">Ungültiger oder abgelaufener Code.</div>
+    <button class="btn" onclick="submitToken()" style="width:100%">Zugang öffnen</button>
+  </div>
+  <div class="divider">oder</div>
+  <a href="../index.html?open=shop" class="btn" style="background:#64748b;margin-top:4px">Compass bestellen →</a>
+</div>
+
+
+<script>
+  const _SB_URL  = 'https://focysklymhmcfwgxdtuk.supabase.co';
+  const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
+  const sb = supabase.createClient(_SB_URL, _SB_ANON);
+
+  async function validateToken(token) {
+    const { data, error } = await sb
+      .from('access_tokens')
+      .select('valid')
+      .eq('token', token)
+      .single();
+    return !error && data?.valid === true;
+  }
+
+  function unlock() {
+    sessionStorage.setItem('compass_unlocked', '1');
+    window.location.href = 'app.html';
+  }
+
+  async function checkToken() {
+    const params = new URLSearchParams(window.location.search);
+    const token  = params.get('token');
+    if (!token) return;
+    if (await validateToken(token)) {
+      unlock();
+    }
+  }
+
+  async function submitToken() {
+    const input = document.getElementById('token-input');
+    const errEl = document.getElementById('token-error');
+    const token = input.value.trim();
+    errEl.style.display = 'none';
+    if (!token) { input.focus(); return; }
+    if (await validateToken(token)) {
+      unlock();
+    } else {
+      errEl.style.display = 'block';
+      input.focus();
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('token-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') submitToken();
+    });
+  });
+
+  checkToken();
+</script>
+</body>
+</html>

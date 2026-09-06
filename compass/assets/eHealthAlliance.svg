@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100" width="300" height="100" role="img" aria-label="eHealth Alliance">
+  <g fill="none" stroke-linecap="round">
+    <g stroke="#1C75BC" stroke-width="3.2" opacity="0.9">
+      <path d="M16 47 L28 21"/>
+      <path d="M28 21 L49 33"/>
+      <path d="M49 33 L74 14"/>
+      <path d="M16 47 L49 33"/>
+      <path d="M49 33 L61 57"/>
+      <path d="M16 47 L31 73"/>
+      <path d="M31 73 L61 57"/>
+      <path d="M31 73 L57 86"/>
+      <path d="M57 86 L61 57"/>
+      <path d="M61 57 L85 45"/>
+      <path d="M74 14 L85 45"/>
+      <path d="M74 14 L61 57"/>
+    </g>
+  </g>
+  <g>
+    <circle cx="16" cy="47" r="9"   fill="#17356B"/>
+    <circle cx="28" cy="21" r="6.5" fill="#00A6CE"/>
+    <circle cx="49" cy="33" r="5.5" fill="#2B9CD8"/>
+    <circle cx="74" cy="14" r="8"   fill="#52B848"/>
+    <circle cx="61" cy="57" r="7"   fill="#1C75BC"/>
+    <circle cx="31" cy="73" r="6"   fill="#17356B"/>
+    <circle cx="57" cy="86" r="5"   fill="#1C75BC"/>
+    <circle cx="85" cy="45" r="6.5" fill="#2B9CD8"/>
+  </g>
+  <text x="112" y="52" font-family="Outfit,'Segoe UI',Arial,sans-serif" font-size="42" font-weight="600" fill="#17356B" letter-spacing="-0.5">eHealth</text>
+  <text x="113" y="80" font-family="Outfit,'Segoe UI',Arial,sans-serif" font-size="25" font-weight="500" fill="#1C75BC" letter-spacing="0.5">Alliance</text>
+</svg>

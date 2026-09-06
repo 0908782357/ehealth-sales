@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eHS Portal – Login</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', 'Helvetica Neue', sans-serif;
+    background: #f1f5f9;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    background: white;
+    border-radius: 20px;
+    padding: 48px 44px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 8px 40px rgba(60,74,124,0.12);
+  }
+  .logo { text-align: center; margin-bottom: 32px; }
+  .logo img { height: 48px; }
+  .logo-fallback {
+    font-family: Montserrat, sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: #3C4A7C;
+    letter-spacing: -0.02em;
+  }
+  h1 {
+    font-family: Montserrat, sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    color: #1e293b;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    text-align: center;
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 32px;
+  }
+  .tabs {
+    display: flex;
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 28px;
+    gap: 4px;
+  }
+  .tab {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .tab.active {
+    background: white;
+    color: #3C4A7C;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  }
+  label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  input[type="email"], input[type="password"] {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    color: #1e293b;
+    outline: none;
+    transition: border-color 0.18s;
+    margin-bottom: 16px;
+    background: #fafafa;
+  }
+  input:focus { border-color: #3C4A7C; background: white; }
+  .btn {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .btn-primary {
+    background: #3C4A7C;
+    color: white;
+  }
+  .btn-primary:hover { background: #2d3a63; }
+  .btn-secondary {
+    background: #f1f5f9;
+    color: #3C4A7C;
+    margin-top: 10px;
+  }
+  .btn-secondary:hover { background: #e2e8f0; }
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    color: #cbd5e1;
+    font-size: 0.78rem;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e2e8f0;
+  }
+  .msg {
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .msg.success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; display: block; }
+  .msg.error   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; display: block; }
+  .back-link {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    color: #94a3b8;
+    font-size: 0.8rem;
+    text-decoration: none;
+  }
+  .back-link:hover { color: #3C4A7C; }
+</style>
+</head>
+<body>
+
+<!-- Ladebildschirm während Token-Austausch (Magic Link) -->
+<div id="auth-loading" style="position:fixed;inset:0;background:white;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;">
+  <svg style="width:40px;height:40px;animation:spin 1s linear infinite;color:#3C4A7C;" fill="none" viewBox="0 0 24 24">
+    <circle style="opacity:0.25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+    <path style="opacity:0.75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+  </svg>
+  <p style="color:#64748b;font-family:Inter,sans-serif;font-size:0.9rem;">Anmeldung wird verarbeitet…</p>
+</div>
+<style>@keyframes spin { to { transform: rotate(360deg); } }</style>
+
+<!-- Passwort-Schritt nach Magic-Link-Login -->
+<div id="pw-step" style="display:none;position:fixed;inset:0;background:white;z-index:9998;align-items:center;justify-content:center;flex-direction:column;padding:24px;">
+  <div class="card" style="display:block;max-width:420px;width:100%;">
+    <div class="logo">
+      <img src="../ehs-logo.jpg" alt="eHealth Sales" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+      <span class="logo-fallback" style="display:none">eHS</span>
+    </div>
+    <h1 style="margin-bottom:6px;">Passwort festlegen</h1>
+    <p class="subtitle" style="margin-bottom:20px;">Legen Sie jetzt ein Passwort fest, um sich zukünftig direkt anmelden zu können.</p>
+    <div id="pw-msg" class="msg"></div>
+    <label>Neues Passwort</label>
+    <input type="password" id="new-pw" placeholder="Mindestens 8 Zeichen" autocomplete="new-password">
+    <label style="margin-top:12px;">Passwort bestätigen</label>
+    <input type="password" id="new-pw-confirm" placeholder="Passwort wiederholen" autocomplete="new-password">
+    <button class="btn btn-primary" onclick="setInitialPassword()" style="margin-top:20px;">Passwort speichern</button>
+    <button class="btn btn-secondary" onclick="window.location.href='dashboard.html'" style="margin-top:8px;">Überspringen</button>
+  </div>
+</div>
+
+<div class="card" id="login-card" style="display:none;">
+  <div class="logo">
+    <img src="../ehs-logo.jpg" alt="eHealth Sales" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    <span class="logo-fallback" style="display:none">eHS</span>
+  </div>
+  <h1>Partner Portal</h1>
+  <p class="subtitle">Melden Sie sich an, um Ihre Produkte zu verwalten</p>
+
+  <div id="msg" class="msg"></div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('password')">Passwort</button>
+    <button class="tab" onclick="showTab('magic')">Code per E-Mail</button>
+  </div>
+
+  <!-- Passwort-Login -->
+  <div id="tab-password">
+    <label>E-Mail</label>
+    <input type="email" id="email-pw" placeholder="partner@example.de" autocomplete="email">
+    <label>Passwort</label>
+    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+    <button class="btn btn-primary" onclick="loginPassword()">Anmelden</button>
+    <div class="divider">oder</div>
+    <button class="btn btn-secondary" onclick="showTab('magic')">Code per E-Mail →</button>
+  </div>
+
+  <!-- OTP-Code -->
+  <div id="tab-magic" style="display:none">
+    <div id="otp-step-1">
+      <label>E-Mail</label>
+      <input type="email" id="email-magic" placeholder="partner@example.de" autocomplete="email">
+      <button class="btn btn-primary" onclick="sendOtp()">Code senden</button>
+      <p style="font-size:0.78rem;color:#94a3b8;margin-top:12px;text-align:center">
+        Sie erhalten einen 6-stelligen Code per E-Mail – kein Passwort nötig.
+      </p>
+    </div>
+    <div id="otp-step-2" style="display:none">
+      <p style="font-size:0.85rem;color:#374151;margin-bottom:16px;font-weight:500">
+        Code an <strong id="otp-email-display"></strong> gesendet.
+      </p>
+      <label>6-stelliger Code</label>
+      <input type="text" id="otp-code" placeholder="123456" maxlength="6" inputmode="numeric"
+        autocomplete="one-time-code"
+        style="letter-spacing:0.3em;font-size:1.4rem;text-align:center;font-weight:700">
+      <button class="btn btn-primary" onclick="verifyOtp()">Anmelden</button>
+      <button class="btn btn-secondary" onclick="resetOtp()">Andere E-Mail</button>
+    </div>
+  </div>
+
+  <a class="back-link" href="../index.html">← Zurück zur Website</a>
+</div>
+
+<script>
+  const SUPABASE_URL  = 'https://focysklymhmcfwgxdtuk.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
+
+  // Hash VOR createClient() prüfen – der SDK löscht den Hash beim Initialisieren
+  const fromMagicLink = window.location.hash.includes('access_token');
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { flowType: 'implicit' } });
+
+  const PORTAL_URL = 'https://ehealth-sales.de/admin/index.html';
+
+  function showLogin() {
+    document.getElementById('auth-loading').style.display = 'none';
+    document.getElementById('login-card').style.display = '';
+  }
+
+  function showPwStep() {
+    document.getElementById('auth-loading').style.display = 'none';
+    const el = document.getElementById('pw-step');
+    el.style.display = 'flex';
+    setTimeout(() => document.getElementById('new-pw')?.focus(), 50);
+  }
+
+  // Magic Link (implicit): Hash-Token wird von Supabase automatisch verarbeitet → SIGNED_IN
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session) {
+      const passwordSet = await claimProfile(session);
+      if (fromMagicLink && !passwordSet) {
+        showPwStep();
+      } else {
+        window.location.href = 'dashboard.html';
+      }
+    } else if (event === 'INITIAL_SESSION') {
+      if (session) {
+        // Bereits eingeloggt → direkt zum Dashboard
+        window.location.href = 'dashboard.html';
+      } else {
+        // Kein Token, kein Login → Login-Formular zeigen
+        showLogin();
+      }
+    }
+  });
+
+  // Fallback: nach 3 Sekunden Login zeigen, falls kein Auth-Event eintrifft
+  setTimeout(showLogin, 3000);
+
+  async function setInitialPassword() {
+    const pw        = document.getElementById('new-pw').value;
+    const pwConfirm = document.getElementById('new-pw-confirm').value;
+    const msg       = document.getElementById('pw-msg');
+    msg.className   = 'msg';
+    if (pw.length < 8) {
+      msg.textContent = 'Mindestens 8 Zeichen erforderlich.';
+      msg.className = 'msg error'; return;
+    }
+    if (pw !== pwConfirm) {
+      msg.textContent = 'Passwörter stimmen nicht überein.';
+      msg.className = 'msg error'; return;
+    }
+    const { error } = await sb.auth.updateUser({ password: pw });
+    if (error) { msg.textContent = error.message; msg.className = 'msg error'; return; }
+    // Profil als aktiv markieren
+    const { data: { session: s } } = await sb.auth.getSession();
+    if (s) {
+      await sb.from('user_profiles')
+        .update({ password_set: true, updated_at: new Date().toISOString() })
+        .eq('user_id', s.user.id);
+    }
+    msg.textContent = 'Passwort gespeichert! Weiterleitung…';
+    msg.className = 'msg success';
+    setTimeout(() => window.location.href = 'dashboard.html', 900);
+  }
+
+  function showMsg(text, type) {
+    const el = document.getElementById('msg');
+    el.textContent = text;
+    el.className = 'msg ' + type;
+  }
+
+  function showTab(t) {
+    document.getElementById('tab-password').style.display = t === 'password' ? 'block' : 'none';
+    document.getElementById('tab-magic').style.display    = t === 'magic'    ? 'block' : 'none';
+    document.querySelectorAll('.tab').forEach((b, i) => {
+      b.classList.toggle('active', (i === 0 && t === 'password') || (i === 1 && t === 'magic'));
+    });
+    document.getElementById('msg').className = 'msg';
+  }
+
+  async function claimProfile(session) {
+    if (!session) return true;
+    const { user } = session;
+    await sb.from('user_profiles')
+      .update({ user_id: user.id, updated_at: new Date().toISOString() })
+      .eq('email', user.email.toLowerCase())
+      .is('user_id', null);
+    const { data: profile } = await sb.from('user_profiles')
+      .select('rolle, password_set')
+      .eq('email', user.email.toLowerCase())
+      .single();
+    if (profile?.rolle) {
+      await sb.from('user_roles').upsert({ user_id: user.id, role: profile.rolle }, { onConflict: 'user_id', ignoreDuplicates: true });
+    }
+    return !!profile?.password_set;
+  }
+
+  async function loginPassword() {
+    const email    = document.getElementById('email-pw').value.trim();
+    const password = document.getElementById('password').value;
+    if (!email || !password) return showMsg('Bitte E-Mail und Passwort eingeben.', 'error');
+    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) return showMsg(error.message, 'error');
+    await claimProfile(data.session);
+    window.location.href = 'dashboard.html';
+  }
+
+  let otpEmail = '';
+
+  async function sendOtp() {
+    const email = document.getElementById('email-magic').value.trim();
+    if (!email) return showMsg('Bitte E-Mail-Adresse eingeben.', 'error');
+    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: PORTAL_URL } });
+    if (error) return showMsg(error.message, 'error');
+    otpEmail = email;
+    document.getElementById('otp-email-display').textContent = email;
+    document.getElementById('otp-step-1').style.display = 'none';
+    document.getElementById('otp-step-2').style.display = 'block';
+    document.getElementById('otp-code').focus();
+    document.getElementById('msg').className = 'msg';
+  }
+
+  async function verifyOtp() {
+    const token = document.getElementById('otp-code').value.trim().replace(/\s/g, '');
+    if (!token || token.length !== 6) return showMsg('Bitte den 6-stelligen Code eingeben.', 'error');
+    const { data, error } = await sb.auth.verifyOtp({ email: otpEmail, token, type: 'email' });
+    if (error) return showMsg('Code ungültig oder abgelaufen.', 'error');
+    await claimProfile(data.session);
+    window.location.href = 'dashboard.html';
+  }
+
+  function resetOtp() {
+    otpEmail = '';
+    document.getElementById('otp-step-1').style.display = 'block';
+    document.getElementById('otp-step-2').style.display = 'none';
+    document.getElementById('otp-code').value = '';
+    document.getElementById('email-magic').value = '';
+    document.getElementById('msg').className = 'msg';
+  }
+
+  // Enter-Taste
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const pwVisible = document.getElementById('tab-password').style.display !== 'none';
+    const step2Visible = document.getElementById('otp-step-2').style.display !== 'none';
+    if (pwVisible) loginPassword();
+    else if (step2Visible) verifyOtp();
+    else sendOtp();
+  });
+</script>
+</body>
+</html>

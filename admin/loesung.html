@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eHS Portal – Lösungsseite</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #3C4A7C; --green: #6DC52D; --navy-dark: #2d3a63;
+    --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0;
+    --gray-400: #94a3b8; --gray-500: #64748b; --gray-900: #0f172a;
+  }
+  body { font-family: 'Inter','Helvetica Neue',sans-serif; background: var(--gray-50); color: var(--gray-900); }
+
+  .topbar {
+    background: var(--navy); color: white; padding: 0 28px;
+    display: flex; align-items: center; justify-content: space-between; height: 60px;
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1rem; }
+  .topbar-brand img { height: 32px; border-radius: 6px; }
+  .topbar-brand span { opacity: 0.7; font-weight: 400; font-size: 0.78rem; margin-left: 4px; }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .user-chip { background: rgba(255,255,255,0.12); border-radius: 20px; padding: 5px 12px; font-size: 0.78rem; }
+  .btn-logout { background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 8px; padding: 7px 14px; font-size: 0.78rem; cursor: pointer; }
+  .btn-logout:hover { background: rgba(255,255,255,0.2); }
+
+  .page-wrap { max-width: 860px; margin: 0 auto; padding: 36px 24px 64px; }
+
+  .back-link { margin-bottom: 24px; }
+  .back-link a { color: var(--navy); font-size: 0.85rem; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+  .back-link a:hover { text-decoration: underline; }
+
+  /* Hero */
+  .hero { display: flex; align-items: center; gap: 28px; margin-bottom: 40px; background: white; border-radius: 20px; border: 1px solid var(--gray-200); box-shadow: 0 2px 16px rgba(0,0,0,0.06); padding: 28px 32px; }
+  .hero-img { width: 100px; height: 100px; border-radius: 12px; flex-shrink: 0; overflow: hidden; background: var(--gray-100); display: flex; align-items: center; justify-content: center; }
+  .hero-img img { width: 100%; height: 100%; object-fit: cover; }
+  .hero-img-placeholder { display: flex; align-items: center; justify-content: center; color: var(--gray-400); }
+  .hero-img-placeholder svg { width: 40px; height: 40px; }
+  .hero-name-block { flex: 1; min-width: 0; }
+  .hero-title { font-family: Montserrat, sans-serif; font-size: 1.7rem; font-weight: 800; color: var(--navy); line-height: 1.2; margin-bottom: 6px; }
+  .hero-hersteller { font-size: 0.84rem; color: var(--gray-400); }
+  .hero-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex-shrink: 0; min-width: 160px; align-self: flex-end; }
+  .hero-tags { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-end; }
+  .hero-tag { font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; }
+  .btn-order { display: inline-block; background: var(--green); color: white; font-weight: 700; font-size: 0.9rem; padding: 13px 28px; border-radius: 10px; text-decoration: none; border: none; cursor: pointer; transition: background 0.15s; }
+  .btn-order:hover { background: #5aac22; }
+
+  /* Teaser */
+  .teaser-section { background: var(--navy); color: white; border-radius: 16px; padding: 36px 40px; margin-bottom: 32px; }
+  .teaser-label { font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 10px; }
+  .teaser-text { font-size: 1.15rem; line-height: 1.75; color: rgba(255,255,255,0.92); font-weight: 400; }
+
+  /* Sections */
+  .content-section { background: white; border-radius: 16px; padding: 32px 36px; margin-bottom: 24px; border: 1px solid var(--gray-200); }
+  .section-title { font-family: Montserrat, sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--navy); margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid var(--green); display: inline-block; }
+  .desc-text { font-size: 0.92rem; line-height: 1.85; color: var(--gray-500); white-space: pre-wrap; }
+
+  /* Features */
+  .features-list { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .feature-item { display: flex; align-items: flex-start; gap: 10px; padding: 12px 16px; background: var(--gray-50); border-radius: 10px; border: 1px solid var(--gray-200); font-size: 0.875rem; color: var(--gray-900); font-weight: 500; }
+  .feature-check { flex-shrink: 0; width: 20px; height: 20px; background: var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+  .feature-check svg { width: 11px; height: 11px; stroke: white; }
+
+  /* CTA */
+  .cta-section { background: linear-gradient(135deg, #3C4A7C 0%, #2d3a63 100%); border-radius: 16px; padding: 36px 40px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+  .cta-text h2 { font-family: Montserrat, sans-serif; font-size: 1.15rem; font-weight: 800; color: white; margin-bottom: 6px; }
+  .cta-text p { font-size: 0.85rem; color: rgba(255,255,255,0.7); }
+  .btn-cta { background: var(--green); color: white; font-weight: 700; font-size: 0.9rem; padding: 13px 28px; border-radius: 10px; text-decoration: none; white-space: nowrap; transition: background 0.15s; display: inline-block; }
+  .btn-cta:hover { background: #5aac22; }
+
+  .order-hint { text-align: center; color: var(--gray-400); font-size: 0.85rem; }
+  .order-hint a { color: var(--navy); font-weight: 600; text-decoration: none; }
+  .order-hint a:hover { text-decoration: underline; }
+
+  .loading { text-align: center; padding: 80px 24px; color: var(--gray-400); }
+  .error-box { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; border-radius: 12px; padding: 24px; text-align: center; }
+
+  @media (max-width: 700px) {
+    .hero { flex-wrap: wrap; padding: 20px; gap: 16px; }
+    .hero-actions { align-items: flex-start; width: 100%; }
+    .hero-tags { justify-content: flex-start; }
+    .features-list { grid-template-columns: 1fr; }
+    .cta-section { flex-direction: column; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <img src="../ehs-logo.jpg" alt="EHS" onerror="this.style.display='none'">
+    eHS Partner Portal
+    <span id="topbar-sub">/ Lösungsseite</span>
+  </div>
+  <div class="topbar-right">
+    <span class="user-chip" id="user-email">–</span>
+    <button class="btn-logout" onclick="logout()">Abmelden</button>
+  </div>
+</div>
+
+<div class="page-wrap">
+  <div class="back-link">
+    <a href="shop.html">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      Zurück zum Shop
+    </a>
+  </div>
+
+  <div id="page-content">
+    <div class="loading">Lädt…</div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL  = 'https://focysklymhmcfwgxdtuk.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { flowType: 'implicit' } });
+
+  const THEMEN = {
+    ti: { label: 'Telematik Infrastruktur', color: '#3C4A7C' },
+    security: { label: 'Cybersecurity', color: '#E53E3E' },
+    telemedizin: { label: 'Telemedizin', color: '#38B2AC' },
+    it_infrastruktur: { label: 'IT Infrastruktur', color: '#4299E1' },
+    modern_work: { label: 'Modern Work', color: '#6DC52D' },
+    prozess_digital: { label: 'Prozess Digitalisierung', color: '#ED8936' },
+  };
+
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { window.location.href = 'index.html'; return; }
+    document.getElementById('user-email').textContent = session.user.email;
+
+    const params = new URLSearchParams(window.location.search);
+    const productId = params.get('id');
+    if (!productId) { showError('Kein Produkt angegeben.'); return; }
+
+    const { data: product, error } = await sb.from('products').select('*').eq('id', productId).single();
+    if (error || !product) { showError('Produkt nicht gefunden.'); return; }
+    if (!product.loesung_aktiv || !product.loesung_inhalt) { showError('Für dieses Produkt gibt es keine Lösungsseite.'); return; }
+
+    document.title = `eHS Portal – ${product.produkt}`;
+    document.getElementById('topbar-sub').textContent = `/ ${product.produkt}`;
+
+    renderPage(product);
+  }
+
+  function renderPage(p) {
+    const inhalt = p.loesung_inhalt || {};
+    const themenTags = Object.entries(THEMEN)
+      .filter(([k]) => p[k])
+      .map(([, t]) => `<span class="hero-tag" style="background:${t.color}22;color:${t.color}">${t.label}</span>`)
+      .join('');
+
+    const vorteile = (inhalt.vorteile || []).filter(Boolean);
+    const hatBeschreibung = !!inhalt.beschreibung;
+    const hatVorteile = vorteile.length > 0;
+    const hatCta = !!inhalt.cta_url && !!inhalt.cta_text;
+
+    document.getElementById('page-content').innerHTML = `
+      <!-- Hero -->
+      <div class="hero">
+        <div class="hero-img">
+          ${p.image_url
+            ? `<img src="${p.image_url}" alt="${p.produkt}" onerror="this.parentElement.innerHTML='<div class=hero-img-placeholder><svg fill=none viewBox=&quot;0 0 24 24&quot; stroke=currentColor stroke-width=1.5><path stroke-linecap=round stroke-linejoin=round d=&quot;M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z&quot;/></svg></div>'">`
+            : `<div class="hero-img-placeholder"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>`}
+        </div>
+        <div class="hero-name-block">
+          <h1 class="hero-title">${p.produkt}</h1>
+          ${p.hersteller ? `<div class="hero-hersteller">von ${p.hersteller}</div>` : ''}
+          ${themenTags ? `<div class="hero-tags" style="margin-top:12px;">${themenTags}</div>` : ''}
+        </div>
+        <div class="hero-actions">
+          <a href="shop.html" class="btn-order">Jetzt bestellen</a>
+        </div>
+      </div>
+
+      <!-- Teaser -->
+      ${inhalt.teaser ? `
+      <div class="teaser-section">
+        <div class="teaser-label">Auf einen Blick</div>
+        <div class="teaser-text">${escHtml(inhalt.teaser)}</div>
+      </div>` : ''}
+
+      <!-- Beschreibung -->
+      ${hatBeschreibung ? `
+      <div style="padding: 8px 4px 24px;">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px;">Über das Produkt</div>
+        <p class="desc-text">${escHtml(inhalt.beschreibung)}</p>
+      </div>` : ''}
+
+      <!-- Vorteile -->
+      ${hatVorteile ? `
+      <div class="content-section">
+        <div class="section-title">Ihre Vorteile</div>
+        <ul class="features-list">
+          ${vorteile.flatMap(v => v.split('#').map(s => s.trim()).filter(Boolean)).map(v => `
+          <li class="feature-item">
+            <div class="feature-check">
+              <svg fill="none" viewBox="0 0 12 12" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2 6l3 3 5-5"/></svg>
+            </div>
+            <span>${escHtml(v)}</span>
+          </li>`).join('')}
+        </ul>
+      </div>` : ''}
+
+      <!-- CTA -->
+      ${hatCta ? `
+      <div class="cta-section">
+        <div class="cta-text">
+          <h2>Bereit für den nächsten Schritt?</h2>
+          <p>Jetzt mehr Informationen anfordern oder direkt loslegen.</p>
+        </div>
+        <a href="${escAttr(inhalt.cta_url)}" target="_blank" rel="noopener" class="btn-cta">${escHtml(inhalt.cta_text)}</a>
+      </div>` : ''}
+
+      <div class="order-hint">
+        Möchten Sie dieses Produkt bestellen? <a href="shop.html">Zum Shop →</a>
+      </div>
+    `;
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function escAttr(str) {
+    return String(str).replace(/"/g,'&quot;');
+  }
+
+  function showError(msg) {
+    document.getElementById('page-content').innerHTML = `<div class="error-box">${msg}</div>`;
+  }
+
+  async function logout() { await sb.auth.signOut(); window.location.href = 'index.html'; }
+  init();
+</script>
+</body>
+</html>

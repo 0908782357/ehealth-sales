@@ -1,0 +1,28 @@
+name: Deploy to Strato
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SFTP
+        run: |
+          sudo apt-get install -y lftp
+          lftp -c "
+            set sftp:auto-confirm yes
+            set net:max-retries 3
+            open sftp://su777200:${{ secrets.SFTP_PASSWORD }}@5019828312.ssh.w2.strato.hosting
+            mirror -R --delete \
+              --exclude ^\.git/ \
+              --exclude ^\.github/ \
+              --exclude ^\.gitignore \
+              --exclude ^\.DS_Store \
+              . ${{ secrets.SFTP_TARGET_DIR }}
+          "
