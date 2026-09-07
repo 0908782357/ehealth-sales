@@ -316,6 +316,54 @@ INSERT INTO public.products (nr, hersteller, reseller, produkt, typ, kategorie, 
 ON CONFLICT DO NOTHING;
 
 -- ============================================================
+-- PHASE 1: Produktfinder White-Label SaaS – Migration
+-- ============================================================
+
+-- Bestehende partners-Tabelle um SaaS-Felder erweitern
+ALTER TABLE public.partners ADD COLUMN IF NOT EXISTS slug         text UNIQUE;
+ALTER TABLE public.partners ADD COLUMN IF NOT EXISTS kontakt_email text;
+ALTER TABLE public.partners ADD COLUMN IF NOT EXISTS primary_color text DEFAULT '#3C4A7C';
+ALTER TABLE public.partners ADD COLUMN IF NOT EXISTS abo_status   text DEFAULT 'test'
+  CHECK (abo_status IN ('aktiv', 'gesperrt', 'test'));
+
+-- Konfigurationstabelle je Partner (Themen, Texte, Hinweise)
+CREATE TABLE IF NOT EXISTS public.partner_finder_config (
+  id                  uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  partner_id          uuid REFERENCES public.partners(id) ON DELETE CASCADE UNIQUE,
+  themen              jsonb DEFAULT '["ti","security","telemedizin","it_infrastruktur","modern_work","prozess_digital"]'::jsonb,
+  anfrage_email_text  text,
+  hinweistexte        jsonb,
+  created_at          timestamptz DEFAULT now(),
+  updated_at          timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.partner_finder_config ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Öffentlich: Finder-Config lesen"     ON public.partner_finder_config;
+DROP POLICY IF EXISTS "Admin: Finder-Config verwalten"      ON public.partner_finder_config;
+
+CREATE POLICY "Öffentlich: Finder-Config lesen"
+  ON public.partner_finder_config FOR SELECT USING (true);
+
+CREATE POLICY "Admin: Finder-Config verwalten"
+  ON public.partner_finder_config FOR ALL USING (public.is_admin());
+
+-- Spalte artikelnummer auf products nachrüsten (falls noch nicht vorhanden)
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS artikelnummer text;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS abrechnungsart text DEFAULT 'monatlich'
+  CHECK (abrechnungsart IN ('monatlich', 'einmalig'));
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS it_infrastruktur boolean DEFAULT false;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS modern_work      boolean DEFAULT false;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS prozess_digital  boolean DEFAULT false;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS preise           jsonb;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS image_url        text;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS loesung_aktiv    boolean DEFAULT false;
+
+-- Index für Partner-Abfragen
+CREATE INDEX IF NOT EXISTS idx_products_partner_id ON public.products(partner_id);
+CREATE INDEX IF NOT EXISTS idx_partners_slug ON public.partners(slug);
+
+-- ============================================================
 -- NACH DER AUSFÜHRUNG:
 -- 1. Supabase Dashboard → Authentication → Users → "Invite user"
 --    oder per E-Mail einladen
