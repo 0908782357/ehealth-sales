@@ -2227,7 +2227,7 @@
           <div id="wiz2-success" class="wiz-success" style="display:none;">
             <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             <h2>Anfrage gesendet!</h2>
-            <p>Vielen Dank für Ihr Interesse. Wir melden uns schnellstmöglich bei Ihnen.</p>
+            <p id="wiz2-success-text">Vielen Dank für Ihr Interesse. Wir melden uns schnellstmöglich bei Ihnen.</p>
             <button class="btn btn-primary" style="margin-top:24px;" onclick="wizReset()">Neue Anfrage starten</button>
           </div>
         </div>
@@ -2995,13 +2995,14 @@
   let wizFilterPraeferenz = [];
   let wizShowGesetze = false;
   let wizStep0Pref = null;
+  let currentPartner = null;
   let wizStep0TopicId = null;
   let wizSelectedTopics = new Set();
   let assessmentAnswers = [];
   let assessmentCurrentQ = 0;
   let assessmentScores = null;
 
-  const ASSESSMENT_TOPICS = [
+  let ASSESSMENT_TOPICS = [
     { id: 'security',     label: 'Cybersecurity',            color: '#E53E3E', pref: 'security'         },
     { id: 'ti',           label: 'Telematik Infrastruktur',  color: '#3C4A7C', pref: 'ti'               },
     { id: 'it',           label: 'IT Infrastruktur',         color: '#4299E1', pref: 'it_infrastruktur'  },
@@ -3977,7 +3978,8 @@
       (nachricht ? `Nachricht:\n${nachricht}\n` : '')
     );
 
-    window.location.href = `mailto:anfrage@ehealth-sales.de?subject=${subject}&body=${body}`;
+    const contactEmail = currentPartner?.kontakt_email || 'anfrage@ehealth-sales.de';
+    window.location.href = `mailto:${contactEmail}?subject=${subject}&body=${body}`;
 
     document.getElementById('wiz-step3-content').style.display = 'none';
     document.getElementById('wiz-success').style.display = 'block';
@@ -4026,6 +4028,7 @@
       nachricht: document.getElementById('w2-nachricht').value.trim() || null,
       berufsgruppe: wizBGName,
       produkte:  products,
+      partner_id: currentPartner?.id || null,
       created_at: new Date().toISOString(),
     };
 
@@ -4033,6 +4036,8 @@
       await _sb.from('anfragen').insert(payload);
     } catch(e) { console.warn('Anfrage-Insert fehlgeschlagen:', e); }
 
+    const successText = currentPartner?.config?.anfrage_email_text || 'Vielen Dank für Ihr Interesse. Wir melden uns schnellstmöglich bei Ihnen.';
+    document.getElementById('wiz2-success-text').textContent = successText;
     document.getElementById('wiz2-form-content').style.display = 'none';
     document.getElementById('wiz2-success').style.display = '';
     window.scrollTo({ top: document.getElementById('wiz-offer-form').offsetTop - 80, behavior: 'smooth' });
@@ -4127,9 +4132,59 @@
   const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
   const _sb = supabase.createClient(_SB_URL, _SB_ANON);
 
+  // ===== PARTNER-CONFIG =====
+  async function loadPartnerConfig() {
+    const slug = new URLSearchParams(window.location.search).get('partner');
+    if (!slug) return;
+
+    const { data: partner } = await _sb.from('partners')
+      .select('id, name, slug, kontakt_email, primary_color, logo_url, abo_status')
+      .eq('slug', slug).single();
+
+    if (!partner || partner.abo_status === 'gesperrt') {
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#64748b;flex-direction:column;gap:12px;"><strong style="font-size:1.2rem;">Dieser Finder ist momentan nicht verfügbar.</strong><span>Bitte wenden Sie sich an Ihren Ansprechpartner.</span></div>';
+      return;
+    }
+
+    const { data: config } = await _sb.from('partner_finder_config')
+      .select('*').eq('partner_id', partner.id).single();
+
+    currentPartner = { ...partner, config: config || {} };
+
+    // Primärfarbe übernehmen
+    if (partner.primary_color) {
+      document.documentElement.style.setProperty('--navy', partner.primary_color);
+      document.documentElement.style.setProperty('--navy-dark', partner.primary_color + 'cc');
+    }
+
+    // Themen filtern
+    if (config?.themen?.length) {
+      const ALL_TOPICS = [
+        { id:'security',    label:'Cybersecurity',           color:'#E53E3E', pref:'security'        },
+        { id:'ti',          label:'Telematik Infrastruktur', color:'#3C4A7C', pref:'ti'              },
+        { id:'it',          label:'IT Infrastruktur',        color:'#4299E1', pref:'it_infrastruktur' },
+        { id:'modernwork',  label:'Modern Work',             color:'#6DC52D', pref:'modern_work'      },
+        { id:'prozess',     label:'Prozess Digitalisierung', color:'#ED8936', pref:'prozess_digital'  },
+        { id:'telemedizin', label:'Telemedizin',             color:'#38B2AC', pref:'telemedizin'      }
+      ];
+      ASSESSMENT_TOPICS = ALL_TOPICS.filter(t => config.themen.includes(t.pref));
+    }
+
+    // Gesetzliche Hinweise überschreiben falls konfiguriert
+    if (config?.hinweistexte) {
+      Object.keys(config.hinweistexte).forEach(key => {
+        if (TOPIC_HINWEISE[key] && config.hinweistexte[key]) {
+          TOPIC_HINWEISE[key].einzeiler = config.hinweistexte[key];
+        }
+      });
+    }
+  }
+
   async function loadFromSupabase() {
     try {
-      const { data, error } = await _sb.from('products').select('*').eq('published', true).order('nr', { ascending: true });
+      let q = _sb.from('products').select('*').eq('published', true).order('nr', { ascending: true });
+      if (currentPartner?.id) q = q.eq('partner_id', currentPartner.id);
+      const { data, error } = await q;
       if (error || !data?.length) return;
 
       LOESUNGEN_DATA = data
@@ -4193,7 +4248,8 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
+    await loadPartnerConfig();
     loadFromSupabase();
     // ?open=shop URL-Parameter (Redirect von Compass-Gate)
     const openParam = new URLSearchParams(window.location.search).get('open');

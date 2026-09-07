@@ -231,6 +231,13 @@
       </div>
     </div>
 
+    <!-- Hinweistexte -->
+    <div class="card">
+      <div class="card-title">Hinweistexte</div>
+      <div class="card-sub">Kurzer Einzeiler pro Thema, der im Finder unter der Themen-Auswahl erscheint. Leer lassen = Standardtext.</div>
+      <div id="hinweise-grid" style="display:flex;flex-direction:column;gap:14px;margin-top:12px;"></div>
+    </div>
+
     <div style="display:flex;justify-content:flex-end;margin-top:8px;">
       <button class="btn btn-primary" onclick="saveConfig()">Änderungen speichern</button>
     </div>
@@ -320,6 +327,11 @@
       updateTopicStyle(t.key);
     });
     document.getElementById('f-anfrage-text').value = data?.anfrage_email_text || '';
+    const hinweistexte = data?.hinweistexte || {};
+    TOPICS.forEach(t => {
+      const inp = document.getElementById('hinweis-' + t.key);
+      if (inp) inp.value = hinweistexte[t.key] || '';
+    });
   }
 
   function buildTopicGrid() {
@@ -329,6 +341,14 @@
         <span class="topic-dot" style="background:${t.color}"></span>
         <span class="topic-label">${t.label}</span>
       </label>`).join('');
+    document.getElementById('hinweise-grid').innerHTML = TOPICS.map(t => `
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="topic-dot" style="background:${t.color};flex-shrink:0;"></span>
+        <div style="flex:1;">
+          <label style="font-size:0.82rem;font-weight:600;color:var(--gray-600);display:block;margin-bottom:4px;">${t.label}</label>
+          <input type="text" id="hinweis-${t.key}" placeholder="Standardtext verwenden" style="width:100%;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:0.9rem;">
+        </div>
+      </div>`).join('');
   }
 
   function updateTopicStyle(key) {
@@ -374,11 +394,19 @@
     }).eq('id', currentPartnerId);
     if (partnerErr) { showToast('Fehler: ' + partnerErr.message, 'error'); return; }
 
+    // Hinweistexte sammeln (nur nicht-leere Werte)
+    const hinweistexte = {};
+    TOPICS.forEach(t => {
+      const val = document.getElementById('hinweis-' + t.key)?.value.trim();
+      if (val) hinweistexte[t.key] = val;
+    });
+
     // Finder-Config upsert
     const { error: configErr } = await sb.from('partner_finder_config').upsert({
       partner_id: currentPartnerId,
       themen: activeThemen,
       anfrage_email_text: text,
+      hinweistexte: Object.keys(hinweistexte).length ? hinweistexte : null,
       updated_at: new Date().toISOString()
     }, { onConflict: 'partner_id' });
     if (configErr) { showToast('Fehler: ' + configErr.message, 'error'); return; }
