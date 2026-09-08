@@ -2602,7 +2602,7 @@
     20:'Hilfsmittelhersteller', 21:'Pflegeeinrichtungen', 22:'Pflegedienste',
     23:'Rehakliniken', 24:'Hebammen', 25:'Rettungsdienste', 26:'Krankentransport', 27:'Arbeitsmedizin', 28:'DiGA'
   };
-  let BG_HAS_RECHNER = {};
+  let BG_HAS_RECHNER = { 23: true }; // Rehakliniken: Default aktiv, wird durch Supabase überschrieben
 
   // ===== DETAIL PAGE ENGINE =====
   const IP = {
@@ -4459,14 +4459,17 @@
         if (!bgRes2.error && bgRes2.data?.length) bgData = bgRes2.data;
       }
       if (bgData?.length) {
-        const hadRechnerCol = bgData.some(bg => 'has_rechner' in bg);
-        BG_HAS_RECHNER = hadRechnerCol ? {} : { 23: true }; // Fallback bis SQL-Migration läuft
+        const hasRechnerCol = bgData.some(bg => 'has_rechner' in bg);
         bgData.forEach(bg => {
           BERUFSGRUPPEN_NAMES[bg.nr] = bg.name;
-          if (bg.has_rechner) BG_HAS_RECHNER[bg.nr] = true;
+          if (hasRechnerCol) {
+            // Spalte existiert: Admin-Einstellung übernehmen
+            if (bg.has_rechner) BG_HAS_RECHNER[bg.nr] = true;
+            else delete BG_HAS_RECHNER[bg.nr];
+          }
         });
         renderBerufsgruppen(bgData);
-        updateRehaRechnerVisibility(); // nachladen wenn BG schon gewählt
+        updateRehaRechnerVisibility();
       }
 
       // Aktive Seite neu rendern falls betroffen
