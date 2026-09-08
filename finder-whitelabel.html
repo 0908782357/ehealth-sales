@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Finder White-Label</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@400;500;600;700&display=swap">
@@ -591,10 +592,10 @@ footer a:hover { color: rgba(255,255,255,0.8); }
 
     <div class="pricing-card">
       <div>
-        <div class="price-tag">ab X €</div>
-        <div class="price-period">pro Monat, monatlich kündbar</div>
-        <div class="price-note">* Preis wird im Shop angezeigt</div>
-        <a class="price-cta" href="index.html?open=shop">Im Shop ansehen →</a>
+        <div class="price-tag" id="price-display">–</div>
+        <div class="price-period" id="price-period">wird geladen…</div>
+        <div class="price-note" id="price-note" style="display:none">* Preis zzgl. MwSt.</div>
+        <a class="price-cta" id="price-cta" href="index.html?open=shop">Im Shop ansehen →</a>
       </div>
       <ul class="price-features">
         <li>
@@ -645,5 +646,35 @@ footer a:hover { color: rgba(255,255,255,0.8); }
   </div>
 </footer>
 
+<script>
+(async () => {
+  const sb = supabase.createClient(
+    'https://focysklymhmcfwgxdtuk.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg'
+  );
+
+  const { data } = await sb
+    .from('products')
+    .select('produkt, preise, abrechnungsart, nr')
+    .is('partner_id', null)
+    .eq('published', true)
+    .ilike('produkt', '%finder%')
+    .limit(1)
+    .maybeSingle();
+
+  if (!data) return;
+
+  const values = Object.values(data.preise || {}).map(Number).filter(v => v > 0);
+  if (!values.length) return;
+
+  const minPreis = Math.min(...values);
+  const formatted = minPreis.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const period = data.abrechnungsart === 'monatlich' ? 'pro Monat (netto)' : 'einmalig (netto)';
+
+  document.getElementById('price-display').textContent = `ab ${formatted} €`;
+  document.getElementById('price-period').textContent = period;
+  document.getElementById('price-note').style.display = '';
+})();
+</script>
 </body>
 </html>
