@@ -722,6 +722,12 @@
     #gesetz-popup { background:white; border-radius:16px; max-width:580px; width:100%; max-height:80vh; overflow-y:auto; padding:32px; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
     #gesetz-popup-close { position:absolute; top:16px; right:16px; background:none; border:none; cursor:pointer; color:var(--gray-400); padding:4px; }
     #gesetz-popup h3 { color:var(--navy); margin:0 0 20px; font-size:1.1rem; padding-right:32px; }
+    /* Reha-Rechner Popup (step2) */
+    #reha-rechner-popup-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; display:flex; align-items:center; justify-content:center; padding:20px; }
+    #reha-rechner-popup { background:white; border-radius:18px; max-width:600px; width:100%; max-height:88vh; overflow-y:auto; padding:32px; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
+    #reha-rechner-popup-close { position:absolute; top:14px; right:14px; background:none; border:none; cursor:pointer; color:#9ca3af; padding:4px; }
+    #reha-rechner-popup h3 { color:#065f46; margin:0 0 4px; font-size:1.05rem; }
+    #reha-rechner-popup .rr-sub { color:#6b7280; font-size:0.78rem; margin:0 0 20px; }
     #wiz-step1b .wizard-back-btn { text-align: left; }
     #wiz-step1b .section-header { text-align: center; }
     .filter-block { margin-bottom: 40px; }
@@ -2203,6 +2209,63 @@
         </div>
       </div>
 
+      <!-- Reha-Rechner Popup (nur auf Ergebnisseite) -->
+      <div id="reha-rechner-popup-overlay" style="display:none;" onclick="closeRehaPopup(event)">
+        <div id="reha-rechner-popup">
+          <button id="reha-rechner-popup-close" onclick="closeRehaPopup()" aria-label="Schließen">
+            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+          <h3>TI-Finanzierungsrechner für Rehakliniken</h3>
+          <p class="rr-sub">Orientierungswert nach § 381 SGB V – gültig ab 01.01.2024</p>
+          <div class="rr-grid">
+            <div class="rr-field">
+              <label>Vertragsbetten / -plätze</label>
+              <input type="number" id="rr-betten-p" placeholder="z.B. 120" min="0" oninput="calcRehaZuschlag('p')">
+            </div>
+            <div class="rr-field">
+              <label>Fachabteilungen / Indikationsgruppen</label>
+              <input type="number" id="rr-abt-p" placeholder="z.B. 4" min="0" oninput="calcRehaZuschlag('p')">
+            </div>
+            <div class="rr-field">
+              <label>Amb. Abrechnungstage (Vorjahr)</label>
+              <input type="number" id="rr-amb-p" placeholder="z.B. 800" min="0" oninput="calcRehaZuschlag('p')">
+            </div>
+            <div class="rr-field">
+              <label>Stat. Abrechnungstage (Vorjahr)</label>
+              <input type="number" id="rr-stat-p" placeholder="z.B. 38000" min="0" oninput="calcRehaZuschlag('p')">
+            </div>
+          </div>
+          <button class="rr-toggle" onclick="toggleRrAdvanced(this, 'rr-advanced-p')">
+            <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            Erweiterte Optionen (gemeinsam genutzte IT, RZK)
+          </button>
+          <div class="rr-advanced" id="rr-advanced-p">
+            <div class="rr-grid">
+              <div class="rr-field">
+                <label>Einrichtungen mit gem. IT (0 = nein)</label>
+                <input type="number" id="rr-shared-p" placeholder="0" min="0" oninput="calcRehaZuschlag('p')">
+              </div>
+              <div class="rr-field">
+                <label>RZK nutzen?</label>
+                <select id="rr-rzk-p" onchange="calcRehaZuschlag('p')">
+                  <option value="n">Nein</option>
+                  <option value="j">Ja</option>
+                </select>
+              </div>
+              <div class="rr-field" id="rr-shared-betten-wrap-p" style="display:none;">
+                <label>Betten/Plätze gesamt (alle Einrichtungen)</label>
+                <input type="number" id="rr-shared-betten-p" placeholder="z.B. 360" min="0" oninput="calcRehaZuschlag('p')">
+              </div>
+              <div class="rr-field" id="rr-shared-abt-wrap-p" style="display:none;">
+                <label>Fachabteilungen gesamt (alle Einrichtungen)</label>
+                <input type="number" id="rr-shared-abt-p" placeholder="z.B. 12" min="0" oninput="calcRehaZuschlag('p')">
+              </div>
+            </div>
+          </div>
+          <div class="rr-result" id="rr-result-p"></div>
+        </div>
+      </div>
+
       <!-- STEP 2: Ergebnisse (Angebotslayout) -->
       <div id="wiz-step2" class="wizard-step">
         <button class="wizard-back-btn" onclick="wizBack()">
@@ -3618,36 +3681,60 @@
     document.getElementById('wiz-step1b').classList.add('active');
     renderTopicSelect();
     updateWiz1bGesetze();
-    // Reha-Rechner ein-/ausblenden
-    const rehaEl = document.getElementById('reha-rechner');
-    if (rehaEl) rehaEl.style.display = (col === 23) ? '' : 'none';
+    updateRehaRechnerVisibility();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
 
-  function toggleRrAdvanced(btn) {
-    const adv = document.getElementById('rr-advanced');
+  function updateRehaRechnerVisibility() {
+    const isReha = wizBGCol === 23;
+    const hasTI  = wizSelectedTopics.has('ti');
+    const show   = isReha && hasTI;
+    const onStep2 = document.getElementById('wiz-step2')?.classList.contains('active');
+    // Inline-Karte in step1b
+    const inlineEl = document.getElementById('reha-rechner');
+    if (inlineEl) inlineEl.style.display = (!onStep2 && show) ? '' : 'none';
+    // Popup auf Ergebnisseite
+    const popupEl = document.getElementById('reha-rechner-popup-overlay');
+    if (popupEl) {
+      if (onStep2 && show) {
+        popupEl.style.display = 'flex';
+      } else if (!show) {
+        popupEl.style.display = 'none';
+      }
+    }
+  }
+
+  function closeRehaPopup(e) {
+    if (e && e.target !== document.getElementById('reha-rechner-popup-overlay') && e.target !== document.getElementById('reha-rechner-popup-close')) return;
+    const el = document.getElementById('reha-rechner-popup-overlay');
+    if (el) el.style.display = 'none';
+  }
+
+  function toggleRrAdvanced(btn, advId) {
+    const adv = document.getElementById(advId || 'rr-advanced');
     adv.classList.toggle('open');
     btn.querySelector('svg').style.transform = adv.classList.contains('open') ? 'rotate(180deg)' : '';
   }
 
-  function calcRehaZuschlag() {
-    const betten  = parseFloat(document.getElementById('rr-betten')?.value) || 0;
-    const abt     = parseFloat(document.getElementById('rr-abt')?.value) || 0;
-    const amb     = parseFloat(document.getElementById('rr-amb')?.value) || 0;
-    const stat    = parseFloat(document.getElementById('rr-stat')?.value) || 0;
-    const shared  = parseFloat(document.getElementById('rr-shared')?.value) || 0;
-    const rzk     = document.getElementById('rr-rzk')?.value === 'j';
-    const shBett  = parseFloat(document.getElementById('rr-shared-betten')?.value) || 0;
-    const shAbt   = parseFloat(document.getElementById('rr-shared-abt')?.value) || 0;
+  function calcRehaZuschlag(suffix) {
+    const s = suffix ? '-' + suffix : '';
+    const betten  = parseFloat(document.getElementById('rr-betten'  + s)?.value) || 0;
+    const abt     = parseFloat(document.getElementById('rr-abt'     + s)?.value) || 0;
+    const amb     = parseFloat(document.getElementById('rr-amb'     + s)?.value) || 0;
+    const stat    = parseFloat(document.getElementById('rr-stat'    + s)?.value) || 0;
+    const shared  = parseFloat(document.getElementById('rr-shared'  + s)?.value) || 0;
+    const rzk     = document.getElementById('rr-rzk'    + s)?.value === 'j';
+    const shBett  = parseFloat(document.getElementById('rr-shared-betten' + s)?.value) || 0;
+    const shAbt   = parseFloat(document.getElementById('rr-shared-abt'    + s)?.value) || 0;
 
     // Shared-IT sub-fields visibility
     const showShared = shared >= 2;
     ['rr-shared-betten-wrap','rr-shared-abt-wrap'].forEach(id => {
-      const el = document.getElementById(id); if (el) el.style.display = showShared ? '' : 'none';
+      const el = document.getElementById(id + s); if (el) el.style.display = showShared ? '' : 'none';
     });
 
-    const resultEl = document.getElementById('rr-result');
+    const resultEl = document.getElementById('rr-result' + s);
     const e13 = amb + stat;
     if (!betten || !e13) { resultEl.style.display = 'none'; return; }
 
@@ -3826,6 +3913,7 @@
     renderTopicFilterStrip(stripId);
     renderWizSummary();
     reapplyFilters();
+    updateRehaRechnerVisibility();
   }
 
   function reapplyFilters() {
@@ -3876,6 +3964,7 @@
     renderTopicSelect();
     renderWizSummary();
     updateWiz1bGesetze();
+    updateRehaRechnerVisibility();
   }
 
   const KATEGORIE_LABEL = { ti:'TI-Infrastruktur', kommunikation:'Kommunikation', ki:'KI & Dokumentation', management:'Praxismanagement', hardware:'Hardware', security:'Security & IT', 'it-unterstuetzung':'IT Unterstützung' };
