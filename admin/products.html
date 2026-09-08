@@ -629,7 +629,7 @@
       document.getElementById('row-published').style.display = 'none';
     }
 
-    await setupNavRole(userRole);
+    setupNavRole(userRole).catch(console.warn);
     buildBgGrids();
     await loadProducts();
   }

@@ -322,7 +322,7 @@
       document.getElementById('admin-partner-selector').style.display = 'flex';
       await loadAdminPartnerList();
     }
-    await setupNavRole(userRole); else {
+    else {
       const { data: partner } = await sb.from('partners').select('id, slug, kontakt_email, primary_color, logo_url').eq('user_id', session.user.id).single();
       if (!partner) { showToast('Kein Kunden-Konto verknüpft.', 'error'); return; }
       currentPartnerId   = partner.id;
@@ -334,6 +334,7 @@
       updateFinderUrl();
       await loadConfig(partner.id);
     }
+    setupNavRole(userRole).catch(console.warn);
   }
 
   async function loadAdminPartnerList() {

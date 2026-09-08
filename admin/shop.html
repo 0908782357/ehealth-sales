@@ -447,7 +447,7 @@
       document.getElementById('nav-group-admin').style.display = '';
     }
         if (userRole === 'customer') { document.getElementById('nav-item-products').style.display = 'none'; }
-    await setupNavRole(userRole);
+    setupNavRole(userRole).catch(console.warn);
 
     if (userRole !== 'admin') {
       const { data: partner } = await sb.from('partners').select('id').eq('user_id', session.user.id).single();

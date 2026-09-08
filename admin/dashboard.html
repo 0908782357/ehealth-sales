@@ -244,7 +244,7 @@
     if (role === 'customer') {
       document.getElementById('nav-item-products').style.display = 'none';
     }
-    await setupNavRole(role);
+    setupNavRole(role).catch(console.warn);
 
     // Partner-Name laden
     const { data: partner } = await sb.from('partners').select('name').eq('user_id', user.id).single();

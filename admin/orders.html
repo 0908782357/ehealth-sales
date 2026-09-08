@@ -236,7 +236,7 @@
     document.getElementById('nav-group-admin').style.display = '';
     await loadOrders();
   }
-    await setupNavRole(role);
+    setupNavRole(role).catch(console.warn);
 
   async function loadOrders() {
     const { data, error } = await sb

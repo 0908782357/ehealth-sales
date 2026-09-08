@@ -345,7 +345,7 @@
 
     await loadPartners();
   }
-    await setupNavRole(role);
+    setupNavRole(role).catch(console.warn);
 
   async function logout() {
     await sb.auth.signOut();

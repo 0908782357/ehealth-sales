@@ -321,7 +321,7 @@
     if (role === 'customer') {
       document.getElementById('nav-item-products').style.display = 'none';
     }
-    await setupNavRole(role);
+    setupNavRole(role).catch(console.warn);
     if (role !== 'admin') {
       document.getElementById('f-firma').readOnly = true;
       document.getElementById('f-firma').style.background = 'var(--gray-50)';
