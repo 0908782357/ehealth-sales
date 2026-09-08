@@ -452,7 +452,7 @@
 
   async function loadItems() {
     let q = sb.from('shop_items')
-      .select('*, products(produkt, hersteller, unternehmen, partner_id, image_url, loesung_aktiv, ti, security, telemedizin, it_infrastruktur, modern_work, prozess_digital)')
+      .select('*, products(produkt, hersteller, unternehmen, partner_id, image_url, loesung_aktiv, detail_page, ti, security, telemedizin, it_infrastruktur, modern_work, prozess_digital)')
       .order('created_at', { ascending: false });
 
     const { data, error } = await q;
@@ -492,6 +492,7 @@
         : null;
       const imgSrc = item.bild_url || item.products?.image_url || null;
       const hasLoesung = !!item.products?.loesung_aktiv && !!item.product_id;
+      const detailPage = item.products?.detail_page || null;
 
       // Themen-Tags
       const topicTags = Object.keys(TOPIC_LABELS)
@@ -533,6 +534,8 @@
             <button class="btn btn-sm btn-edit" onclick="openModal('${item.id}')">Bearbeiten</button>
             <button class="btn btn-sm ${item.aktiv ? 'btn-toggle' : 'btn-toggle inactive'}"
               onclick="toggleAktiv('${item.id}', ${item.aktiv})">${item.aktiv ? 'Aktiv' : 'Inaktiv'}</button>
+            ${hasLoesung ? `<a class="btn btn-sm" href="loesung.html?id=${item.product_id}" target="_blank" style="text-decoration:none;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;">Lösungsseite</a>` : ''}
+            ${detailPage ? `<a class="btn btn-sm" href="../${detailPage}" target="_blank" style="text-decoration:none;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;">Landingpage</a>` : ''}
             <button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}','${item.titel.replace(/'/g,"\\'")}')">Löschen</button>
           ` : `
             ${hasLoesung
