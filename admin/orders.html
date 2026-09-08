@@ -143,9 +143,9 @@
       </div>
       <div class="nav-group-body">
         <a class="nav-link nav-sub" id="nav-item-products" href="products.html">Verwaltung</a>
-        <div class="nav-subgroup">
+        <div class="nav-subgroup" id="nav-subgroup-finder">
           <div class="nav-subgroup-label">Produktfinder</div>
-          <a class="nav-link nav-sub nav-sub2" href="partners.html">Kunden</a>
+          <a class="nav-link nav-sub nav-sub2" id="nav-item-kunden" href="partners.html">Kunden</a>
           <a class="nav-link nav-sub nav-sub2" href="finder-config.html">Finder-Konfiguration</a>
         </div>
       </div>
@@ -233,10 +233,10 @@
       document.querySelector('.main').innerHTML = '<p style="padding:40px;color:#94a3b8">Nur Admins können Bestellungen verwalten.</p>';
       return;
     }
-    document.getElementById('nav-orders').style.display = '';
-    document.getElementById('nav-users').style.display = '';
+    document.getElementById('nav-group-admin').style.display = '';
     await loadOrders();
   }
+    await setupNavRole(role);
 
   async function loadOrders() {
     const { data, error } = await sb
@@ -441,6 +441,21 @@
   init();
 
   function toggleNavGroup(h) { h.closest('.nav-group').classList.toggle('open'); }
-</script>
+
+  async function setupNavRole(roleArg) {
+    if (roleArg !== 'admin') {
+      const k = document.getElementById('nav-item-kunden');
+      if (k) k.style.display = 'none';
+      const { data: _s } = await sb.auth.getSession();
+      const _uid = _s?.session?.user?.id;
+      if (_uid) {
+        const { data: _p } = await sb.from('partners').select('abo_status').eq('user_id', _uid).maybeSingle();
+        const hasFinder = _p && (_p.abo_status === 'aktiv' || _p.abo_status === 'test');
+        const fg = document.getElementById('nav-subgroup-finder');
+        if (fg) fg.style.display = hasFinder ? '' : 'none';
+      }
+    }
+  }
+  </script>
 </body>
 </html>
