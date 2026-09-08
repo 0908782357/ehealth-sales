@@ -3638,9 +3638,12 @@
     if (defMob) setFilterMob('beides', defMob);
     document.getElementById('wiz-step1').classList.remove('active');
     document.getElementById('wiz-step1b').classList.add('active');
-    renderTopicSelect();
-    updateWiz1bGesetze();
-    updateRehaRechnerVisibility();
+    try { renderTopicSelect(); } catch(e) { console.warn('renderTopicSelect:', e); }
+    try { updateWiz1bGesetze(); } catch(e) { console.warn('updateWiz1bGesetze:', e); }
+    // Rechner immer direkt anzeigen – unabhängig von anderen Funktionen
+    const _rr = document.getElementById('reha-rechner');
+    if (_rr) _rr.style.display = (col === 23 || !!BG_HAS_RECHNER[col]) ? 'block' : 'none';
+    try { updateRehaRechnerVisibility(); } catch(e) { console.warn('updateRehaRechnerVisibility:', e); }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
