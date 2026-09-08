@@ -227,14 +227,15 @@
           <tr>
             <th>Nr.</th>
             <th>Berufsgruppe</th>
+            <th>Gruppe</th>
             <th>TI – Finanzierungsart</th>
+            <th>TI – Rechtsgrundlage</th>
             <th>TI – Förderbetrag</th>
-            <th>TI – Fördergeber</th>
             <th style="width:120px">Aktionen</th>
           </tr>
         </thead>
         <tbody id="bg-tbody">
-          <tr><td colspan="6" class="empty">Lade Berufsgruppen…</td></tr>
+          <tr><td colspan="7" class="empty">Lade Berufsgruppen…</td></tr>
         </tbody>
       </table>
     </div>
@@ -254,25 +255,54 @@
         <label>Nr. (intern) *</label>
         <input type="number" id="f-nr" placeholder="z.B. 4" min="1">
       </div>
+      <div class="form-group form-full">
+        <label>Gruppe</label>
+        <select id="f-gruppe">
+          <option value="">– keine Gruppe –</option>
+          <option>Arztpraxen &amp; Einrichtungen</option>
+          <option>Heilmittelerbringer</option>
+          <option>Hilfsmittelerbringer</option>
+          <option>Pflege</option>
+          <option>Sonstige Leistungserbringer</option>
+        </select>
+      </div>
 
       <hr class="form-divider">
       <div class="form-section-label">Telematik Infrastruktur – Finanzierungsvereinbarung</div>
 
       <div class="form-group">
         <label>Finanzierungsart</label>
-        <input type="text" id="f-art" placeholder="z.B. Pauschale, Einzelförderung">
+        <select id="f-art">
+          <option value="">– keine –</option>
+          <option>Monatliche Pauschale</option>
+          <option>Monatliche Pauschale + Kartenzuschlag</option>
+          <option>Fallbezogener Zuschlag</option>
+          <option>Monatliche Pauschale (Beträge aktuell unklar)</option>
+        </select>
       </div>
       <div class="form-group">
-        <label>Fördergeber</label>
+        <label>Rechtsgrundlage</label>
+        <input type="text" id="f-rechtsgrundlage" placeholder="z.B. § 378 SGB V">
+      </div>
+      <div class="form-group">
+        <label>Fördergeber / Vertragspartner</label>
         <input type="text" id="f-geber" placeholder="z.B. KBV, GKV-SV">
       </div>
       <div class="form-group">
-        <label>Förderbetrag</label>
-        <input type="text" id="f-betrag" placeholder="z.B. 900 €/Jahr">
+        <label>Gültig seit</label>
+        <input type="text" id="f-gueltig" placeholder="z.B. 1.7.2023">
       </div>
       <div class="form-group form-full">
-        <label>Bedingungen / Hinweise</label>
-        <textarea id="f-bedingungen" placeholder="Freitext: Voraussetzungen, Fristen, besondere Regelungen…"></textarea>
+        <label>Förderbetrag</label>
+        <input type="text" id="f-betrag" placeholder="z.B. 263,62–390,80 €/Monat">
+      </div>
+      <div class="form-group form-full">
+        <label>Bedingungen / Voraussetzungen</label>
+        <textarea id="f-bedingungen" placeholder="Pflichtanwendungen, Fristen, besondere Regelungen…"></textarea>
+      </div>
+      <div class="form-group form-full">
+        <label>Auszahlungsweg</label>
+        <textarea id="f-auszahlung" style="min-height:70px;" placeholder="z.B. Automatisch über KV im Rahmen der Quartalsabrechnung…"></textarea>
       </div>
     </div>
     <div class="msg" id="modal-msg"></div>
@@ -325,17 +355,17 @@ async function init() {
 
 async function loadBerufsgruppen() {
   const tbody = document.getElementById('bg-tbody');
-  tbody.innerHTML = '<tr><td colspan="6" class="empty">Lade…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="empty">Lade…</td></tr>';
 
   const { data, error } = await sb.from('berufsgruppen').select('*').order('nr', { ascending: true });
 
   if (error) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">Fehler beim Laden: ' + error.message + '</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Fehler beim Laden: ' + error.message + '</td></tr>';
     return;
   }
 
   if (!data || data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">Noch keine Berufsgruppen angelegt.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Noch keine Berufsgruppen angelegt.</td></tr>';
     return;
   }
 
@@ -343,9 +373,10 @@ async function loadBerufsgruppen() {
     <tr>
       <td><strong>${bg.nr}</strong></td>
       <td><strong>${escHtml(bg.name)}</strong></td>
+      <td>${bg.gruppe ? escHtml(bg.gruppe) : '<span class="ti-empty">–</span>'}</td>
       <td>${bg.ti_finanzierungsart ? '<span class="ti-badge">' + escHtml(bg.ti_finanzierungsart) + '</span>' : '<span class="ti-empty">–</span>'}</td>
+      <td>${bg.ti_rechtsgrundlage ? '<code style="font-size:0.78rem;color:var(--navy);">' + escHtml(bg.ti_rechtsgrundlage) + '</code>' : '<span class="ti-empty">–</span>'}</td>
       <td>${bg.ti_foerderbetrag ? escHtml(bg.ti_foerderbetrag) : '<span class="ti-empty">–</span>'}</td>
-      <td>${bg.ti_foerdergeber ? escHtml(bg.ti_foerdergeber) : '<span class="ti-empty">–</span>'}</td>
       <td>
         <div class="actions">
           <button class="btn btn-edit btn-sm" onclick="openModal('${bg.id}')">Bearbeiten</button>
@@ -374,10 +405,14 @@ async function loadIntoModal(id) {
   if (!data) return;
   document.getElementById('f-name').value = data.name || '';
   document.getElementById('f-nr').value = data.nr || '';
+  document.getElementById('f-gruppe').value = data.gruppe || '';
   document.getElementById('f-art').value = data.ti_finanzierungsart || '';
+  document.getElementById('f-rechtsgrundlage').value = data.ti_rechtsgrundlage || '';
   document.getElementById('f-geber').value = data.ti_foerdergeber || '';
+  document.getElementById('f-gueltig').value = data.ti_gueltig_seit || '';
   document.getElementById('f-betrag').value = data.ti_foerderbetrag || '';
   document.getElementById('f-bedingungen').value = data.ti_bedingungen || '';
+  document.getElementById('f-auszahlung').value = data.ti_auszahlung || '';
 }
 
 function closeModal() {
@@ -387,7 +422,7 @@ function closeModal() {
 }
 
 function clearModal() {
-  ['f-name','f-nr','f-art','f-geber','f-betrag','f-bedingungen'].forEach(id => {
+  ['f-name','f-nr','f-gruppe','f-art','f-rechtsgrundlage','f-geber','f-gueltig','f-betrag','f-bedingungen','f-auszahlung'].forEach(id => {
     document.getElementById(id).value = '';
   });
   const msg = document.getElementById('modal-msg');
@@ -398,10 +433,14 @@ function clearModal() {
 async function saveBerufsgruppe() {
   const name = document.getElementById('f-name').value.trim();
   const nr = parseInt(document.getElementById('f-nr').value, 10);
+  const gruppe = document.getElementById('f-gruppe').value.trim();
   const art = document.getElementById('f-art').value.trim();
+  const rechtsgrundlage = document.getElementById('f-rechtsgrundlage').value.trim();
   const geber = document.getElementById('f-geber').value.trim();
+  const gueltig = document.getElementById('f-gueltig').value.trim();
   const betrag = document.getElementById('f-betrag').value.trim();
   const bedingungen = document.getElementById('f-bedingungen').value.trim();
+  const auszahlung = document.getElementById('f-auszahlung').value.trim();
 
   const msg = document.getElementById('modal-msg');
   msg.className = 'msg';
@@ -412,10 +451,14 @@ async function saveBerufsgruppe() {
   const payload = {
     name,
     nr,
-    ti_finanzierungsart: art || null,
-    ti_foerdergeber: geber || null,
-    ti_foerderbetrag: betrag || null,
-    ti_bedingungen: bedingungen || null,
+    gruppe: gruppe || null,
+    ti_finanzierungsart:  art || null,
+    ti_rechtsgrundlage:   rechtsgrundlage || null,
+    ti_foerdergeber:      geber || null,
+    ti_gueltig_seit:      gueltig || null,
+    ti_foerderbetrag:     betrag || null,
+    ti_bedingungen:       bedingungen || null,
+    ti_auszahlung:        auszahlung || null,
     aktualisiert_am: new Date().toISOString()
   };
 
