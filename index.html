@@ -3694,7 +3694,7 @@
     const onStep2 = document.getElementById('wiz-step2')?.classList.contains('active');
     // Inline-Karte in step1b
     const inlineEl = document.getElementById('reha-rechner');
-    if (inlineEl) inlineEl.style.display = (!onStep2 && show) ? '' : 'none';
+    if (inlineEl) inlineEl.style.display = (!onStep2 && show) ? 'block' : 'none';
     // Popup auf Ergebnisseite
     const popupEl = document.getElementById('reha-rechner-popup-overlay');
     if (popupEl) {
