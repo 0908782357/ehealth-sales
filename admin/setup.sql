@@ -373,3 +373,10 @@ CREATE INDEX IF NOT EXISTS idx_partners_slug ON public.partners(slug);
 -- 3. Partner mit user_id verknüpfen:
 --    UPDATE partners SET user_id = '<uuid>' WHERE name = 'PITNAS GmbH';
 -- ============================================================
+
+-- ============================================================
+-- PHASE 4: anfragen-Tracking pro Kunde (Phase 3 Ergänzung)
+-- ============================================================
+ALTER TABLE public.anfragen ADD COLUMN IF NOT EXISTS partner_id uuid REFERENCES public.partners(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_anfragen_partner_id ON public.anfragen(partner_id);
+-- ============================================================

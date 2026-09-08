@@ -50,6 +50,10 @@
   .btn-edit:hover { background: #eef0f7; }
   .btn-code { background: #eff6ff; color: #2563eb; }
   .btn-code:hover { background: #dbeafe; }
+  .btn-activate { background: #f0fdf4; color: #16a34a; }
+  .btn-activate:hover { background: #dcfce7; }
+  .btn-block { background: #fff7ed; color: #c2410c; }
+  .btn-block:hover { background: #ffedd5; }
 
   .table-card { background: white; border-radius: 14px; border: 1px solid var(--gray-200); overflow: hidden; }
   .table-toolbar { padding: 16px 20px; border-bottom: 1px solid var(--gray-100); display: flex; gap: 10px; align-items: center; }
@@ -301,6 +305,7 @@
 
     document.getElementById('nav-users').style.display = '';
     document.getElementById('nav-orders').style.display = '';
+
     await loadPartners();
   }
 
@@ -347,6 +352,9 @@
         <td><span style="font-size:0.82rem;">${counts[i]} Produkte</span></td>
         <td>
           <div class="actions">
+            ${p.abo_status !== 'aktiv'
+              ? `<button class="btn btn-sm btn-activate" onclick='setStatus("${p.id}","aktiv")'>Aktivieren</button>`
+              : `<button class="btn btn-sm btn-block"    onclick='setStatus("${p.id}","gesperrt")'>Sperren</button>`}
             <button class="btn btn-sm btn-code" onclick='openEmbedModal(${JSON.stringify(p)})'>Embed</button>
             <button class="btn btn-sm btn-edit" onclick='openModal("${p.id}")'>Bearbeiten</button>
             <button class="btn btn-sm btn-danger" onclick='deletePartner("${p.id}","${p.name.replace(/"/g,"&quot;")}") '>Löschen</button>
@@ -435,6 +443,14 @@
     const { error } = await sb.from('partners').delete().eq('id', id);
     if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
     showToast('Kunde gelöscht.', 'success');
+    await loadPartners();
+  }
+
+  async function setStatus(id, newStatus) {
+    const { error } = await sb.from('partners').update({ abo_status: newStatus }).eq('id', id);
+    if (error) { showToast('Fehler: ' + error.message, 'error'); return; }
+    const label = newStatus === 'aktiv' ? 'Aktiviert' : 'Gesperrt';
+    showToast(`Kunden-Status auf „${label}" gesetzt.`, 'success');
     await loadPartners();
   }
 
