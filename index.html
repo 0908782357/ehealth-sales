@@ -2062,50 +2062,7 @@
           <p>Klicken Sie auf Ihre Berufsgruppe, um passende Produkte zu sehen.</p>
         </div>
 
-        <div class="bg-section-label">Arztpraxen &amp; Einrichtungen</div>
-        <div class="bg-grid">
-          <button class="bg-btn" onclick="selectBG(4, 'Ärzte')">Ärzte</button>
-          <button class="bg-btn" onclick="selectBG(5, 'Zahnärzte')">Zahnärzte</button>
-          <button class="bg-btn" onclick="selectBG(6, 'Psychotherapeuten')">Psychotherapeuten</button>
-          <button class="bg-btn" onclick="selectBG(7, 'Apotheke')">Apotheke</button>
-          <button class="bg-btn" onclick="selectBG(8, 'Krankenhaus')">Krankenhaus</button>
-          <button class="bg-btn" onclick="selectBG(23, 'Rehakliniken')">Rehakliniken</button>
-        </div>
-
-        <div class="bg-section-label">Heilmittelerbringer</div>
-        <div class="bg-grid">
-          <button class="bg-btn" onclick="selectBG(9, 'Physiotherapeuten')">Physiotherapeuten</button>
-          <button class="bg-btn" onclick="selectBG(10, 'Ergotherapeuten')">Ergotherapeuten</button>
-          <button class="bg-btn" onclick="selectBG(11, 'Logopäden')">Logopäden</button>
-          <button class="bg-btn" onclick="selectBG(12, 'Podologen')">Podologen</button>
-          <button class="bg-btn" onclick="selectBG(13, 'Ernährungstherapeutische Praxis')">Ernährungstherapeutische Praxis</button>
-        </div>
-
-        <div class="bg-section-label">Hilfsmittelerbringer</div>
-        <div class="bg-grid">
-          <button class="bg-btn" onclick="selectBG(14, 'Sanitätshäuser')">Sanitätshäuser</button>
-          <button class="bg-btn" onclick="selectBG(15, 'Orthopädieschuhmacher')">Orthopädieschuhmacher</button>
-          <button class="bg-btn" onclick="selectBG(16, 'Orthopädietechniker')">Orthopädietechniker</button>
-          <button class="bg-btn" onclick="selectBG(17, 'Zahntechniker')">Zahntechniker</button>
-          <button class="bg-btn" onclick="selectBG(18, 'Augenoptiker')">Augenoptiker</button>
-          <button class="bg-btn" onclick="selectBG(19, 'Hörakustiker')">Hörakustiker</button>
-          <button class="bg-btn" onclick="selectBG(20, 'Hersteller von medizinischen Hilfsmitteln')">Hersteller von med. Hilfsmitteln</button>
-        </div>
-
-        <div class="bg-section-label">Pflege</div>
-        <div class="bg-grid">
-          <button class="bg-btn" onclick="selectBG(21, 'Pflegeeinrichtungen')">Pflegeeinrichtungen</button>
-          <button class="bg-btn" onclick="selectBG(22, 'Pflegedienste')">Pflegedienste</button>
-        </div>
-
-        <div class="bg-section-label">Sonstige Leistungserbringer</div>
-        <div class="bg-grid">
-          <button class="bg-btn" onclick="selectBG(24, 'Hebammen')">Hebammen</button>
-          <button class="bg-btn" onclick="selectBG(25, 'Rettungsdienste')">Rettungsdienste</button>
-          <button class="bg-btn" onclick="selectBG(26, 'Krankentransportunternehmen')">Krankentransportunternehmen</button>
-          <button class="bg-btn" onclick="selectBG(27, 'Arbeitsmedizin')">Arbeitsmedizin</button>
-          <button class="bg-btn" onclick="selectBG(28, 'DiGA')">DiGA</button>
-        </div>
+        <div id="bg-step1-grid"><p style="color:var(--gray-400);text-align:center;padding:32px 0;">Berufsgruppen werden geladen…</p></div>
       </div>
 
       <!-- STEP 1b: Filter verfeinern -->
@@ -2541,7 +2498,7 @@
     ...l
   }));
 
-  const BERUFSGRUPPEN_NAMES = {
+  let BERUFSGRUPPEN_NAMES = {
     4:'Ärzte', 5:'Zahnärzte', 6:'Psychotherapeuten', 7:'Apotheken', 8:'Krankenhäuser',
     9:'Physiotherapeuten', 10:'Ergotherapeuten', 11:'Logopäden', 12:'Podologen',
     13:'Ernährungstherapeuten', 14:'Sanitätshäuser', 15:'Orthopädieschuhmacher',
@@ -3590,6 +3547,26 @@
   }
 
 
+  function renderBerufsgruppen(bgData) {
+    const container = document.getElementById('bg-step1-grid');
+    if (!container) return;
+    const hasGruppen = bgData.some(bg => bg.gruppe);
+    const esc = s => s.replace(/'/g, "\\'");
+    if (hasGruppen) {
+      const order = ['Arztpraxen & Einrichtungen','Heilmittelerbringer','Hilfsmittelerbringer','Pflege','Sonstige Leistungserbringer'];
+      const grouped = {};
+      bgData.forEach(bg => { const g = bg.gruppe || 'Weitere'; if (!grouped[g]) grouped[g] = []; grouped[g].push(bg); });
+      const keys = [...order.filter(k => grouped[k]), ...Object.keys(grouped).filter(k => !order.includes(k))];
+      container.innerHTML = keys.map(g =>
+        `<div class="bg-section-label">${g}</div><div class="bg-grid">${grouped[g].map(bg =>
+          `<button class="bg-btn" onclick="selectBG(${bg.nr}, '${esc(bg.name)}')">${bg.name}</button>`).join('')}</div>`
+      ).join('');
+    } else {
+      container.innerHTML = `<div class="bg-grid">${bgData.map(bg =>
+        `<button class="bg-btn" onclick="selectBG(${bg.nr}, '${esc(bg.name)}')">${bg.name}</button>`).join('')}</div>`;
+    }
+  }
+
   function renderWizSummary() {
     const el = document.getElementById('wiz-summary');
     const items = document.getElementById('wiz-sum-items');
@@ -4258,6 +4235,13 @@
       // Bundles laden
       const { data: bundleData } = await _sb.from('bundles').select('*').eq('aktiv', true);
       BUNDLES = bundleData || [];
+
+      // Berufsgruppen laden
+      const { data: bgData } = await _sb.from('berufsgruppen').select('nr, name, gruppe').order('nr', { ascending: true });
+      if (bgData?.length) {
+        bgData.forEach(bg => { BERUFSGRUPPEN_NAMES[bg.nr] = bg.name; });
+        renderBerufsgruppen(bgData);
+      }
 
       // Aktive Seite neu rendern falls betroffen
       const active = document.querySelector('.page.active');
