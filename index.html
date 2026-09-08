@@ -3647,8 +3647,12 @@
 
   let lastRehaTotal = null;
 
+  function hasRechner() {
+    return wizBGCol === 23 || !!BG_HAS_RECHNER[wizBGCol];
+  }
+
   function updateRehaRechnerVisibility() {
-    const show = !!BG_HAS_RECHNER[wizBGCol];
+    const show = hasRechner();
     const inlineEl = document.getElementById('reha-rechner');
     if (inlineEl) inlineEl.style.display = show ? 'block' : 'none';
     if (!show) {
@@ -3661,7 +3665,7 @@
   function updateRehaResultSummary() {
     const sumEl = document.getElementById('reha-result-summary');
     if (!sumEl) return;
-    if (lastRehaTotal !== null) {
+    if (lastRehaTotal !== null && hasRechner()) {
       const fmt = v => v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       document.getElementById('reha-result-summary-total').textContent = fmt(lastRehaTotal) + ' €/Behandlungstag';
       document.getElementById('reha-result-summary-detail').textContent = 'TI-Zuschlag gesamt nach § 381 SGB V';
