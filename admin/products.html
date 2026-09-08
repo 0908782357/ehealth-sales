@@ -76,6 +76,11 @@
   .tab-btn { padding: 7px 20px; font-size: 0.85rem; font-weight: 700; font-family: inherit; border: none; background: white; color: var(--gray-500); cursor: pointer; transition: background 0.15s, color 0.15s; }
   .tab-btn.active { background: var(--navy); color: white; }
   .bundle-prod-tag { display: inline-block; background: var(--gray-100); color: var(--navy); font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; margin: 1px; }
+  .bg-preis-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; border-radius: 8px; gap: 12px; transition: background 0.1s; }
+  .bg-preis-row:hover { background: var(--gray-50); }
+  .bg-preis-label { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; cursor: pointer; flex: 1; color: var(--gray-900); }
+  .bg-preis-label input[type="checkbox"] { cursor: pointer; width: 15px; height: 15px; flex-shrink: 0; accent-color: var(--navy); }
+  .bg-preis-input { display: flex; align-items: center; gap: 6px; }
   .bundle-check-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; margin-top: 8px; max-height: 220px; overflow-y: auto; padding: 4px; border: 1.5px solid var(--gray-200); border-radius: 9px; background: #fafafa; }
   .table-toolbar { padding: 16px 20px; border-bottom: 1px solid var(--gray-100); display: flex; gap: 10px; align-items: center; }
   .search-input { flex: 1; padding: 8px 12px; border: 1.5px solid var(--gray-200); border-radius: 8px; font-size: 0.85rem; outline: none; max-width: 300px; }
@@ -332,9 +337,7 @@
           </div>
           <button class="btn btn-edit btn-sm" onclick="applyBundleEinheitspreis()" style="white-space:nowrap;">Für alle übernehmen</button>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;" id="b-preis-fields">
-          <p style="color:var(--gray-400);font-size:0.875rem;grid-column:1/-1;">Wird nach Berufsgruppen-Auswahl befüllt.</p>
-        </div>
+        <div id="b-preis-fields" style="border:1.5px solid var(--gray-200);border-radius:10px;padding:6px 4px;background:#fafafa;max-height:300px;overflow-y:auto;"></div>
       </div>
     </div>
     <div class="modal-actions">
@@ -1188,14 +1191,19 @@
     currentBundlePreise = {};
     document.getElementById('bundle-modal-title').textContent = id ? 'Bundle bearbeiten' : 'Neues Bundle';
 
-    // Build product checkboxes
+    // Build product checkboxes — only published + verfügbar (not "bald")
     const grid = document.getElementById('bundle-prod-grid');
-    grid.innerHTML = allProducts.map(p =>
-      `<label class="bg-check">
-        <input type="checkbox" data-nr="${p.nr}" id="bprod-${p.nr}">
-        ${p.produkt}
-      </label>`
-    ).join('');
+    const verfuegbareProdukte = allProducts.filter(p => p.published && p.verfuegbar && p.verfuegbar.length > 0);
+    if (!verfuegbareProdukte.length) {
+      grid.innerHTML = '<p style="font-size:0.82rem;color:var(--gray-400);padding:8px;">Keine verfügbaren Produkte gefunden.</p>';
+    } else {
+      grid.innerHTML = verfuegbareProdukte.map(p =>
+        `<label class="bg-check">
+          <input type="checkbox" data-nr="${p.nr}" id="bprod-${p.nr}">
+          ${p.produkt}
+        </label>`
+      ).join('');
+    }
 
     if (id) {
       const b = allBundles.find(x => x.id === id);
@@ -1224,32 +1232,46 @@
 
   function buildBundlePreisFields() {
     const container = document.getElementById('b-preis-fields');
-    const fields = Object.entries(BERUFSGRUPPEN).map(([nr, name]) => `
-      <div class="form-group">
-        <label>${name}</label>
-        <div style="display:flex;align-items:center;gap:8px;">
+    container.innerHTML = Object.entries(BERUFSGRUPPEN).map(([nr, name]) => {
+      const hasPrice = currentBundlePreise[nr] != null;
+      return `<div class="bg-preis-row">
+        <label class="bg-preis-label">
+          <input type="checkbox" id="bgcheck-${nr}" data-nr="${nr}" onchange="toggleBgPreis(this)"${hasPrice ? ' checked' : ''}>
+          ${name}
+        </label>
+        <div class="bg-preis-input" id="bgpreis-wrap-${nr}" style="${hasPrice ? 'display:flex' : 'display:none'}">
           <input type="number" id="b-preis-${nr}" min="0" step="0.01" placeholder="0,00"
-            value="${currentBundlePreise[nr] != null ? currentBundlePreise[nr] : ''}"
-            style="max-width:130px;">
-          <span style="font-size:0.82rem;color:var(--gray-400);">€ / Monat</span>
+            value="${hasPrice ? currentBundlePreise[nr] : ''}"
+            style="max-width:110px;padding:5px 8px;border:1.5px solid var(--gray-200);border-radius:7px;font-size:0.875rem;font-family:inherit;">
+          <span style="font-size:0.78rem;color:var(--gray-400);white-space:nowrap;">€ / Monat</span>
         </div>
-      </div>`).join('');
-    container.innerHTML = fields;
+      </div>`;
+    }).join('');
+  }
+
+  function toggleBgPreis(cb) {
+    const wrap = document.getElementById('bgpreis-wrap-' + cb.dataset.nr);
+    if (wrap) wrap.style.display = cb.checked ? 'flex' : 'none';
+    if (!cb.checked) {
+      const input = document.getElementById('b-preis-' + cb.dataset.nr);
+      if (input) input.value = '';
+    }
   }
 
   function applyBundleEinheitspreis() {
     const val = document.getElementById('b-preis-einheit').value;
-    document.querySelectorAll('[id^="b-preis-"]').forEach(input => {
-      if (input.id !== 'b-preis-einheit') input.value = val;
+    document.querySelectorAll('#b-preis-fields [id^="bgcheck-"]:checked').forEach(cb => {
+      const input = document.getElementById('b-preis-' + cb.dataset.nr);
+      if (input) input.value = val;
     });
   }
 
   function getBundlePreise() {
     const result = {};
-    document.querySelectorAll('[id^="b-preis-"]').forEach(input => {
-      if (input.id === 'b-preis-einheit') return;
-      const nr = input.id.replace('b-preis-', '');
-      const val = parseFloat(input.value);
+    document.querySelectorAll('#b-preis-fields [id^="bgcheck-"]:checked').forEach(cb => {
+      const nr = cb.dataset.nr;
+      const input = document.getElementById('b-preis-' + nr);
+      const val = parseFloat(input?.value);
       if (!isNaN(val) && val >= 0) result[nr] = val;
     });
     return result;
