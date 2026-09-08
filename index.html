@@ -4206,7 +4206,8 @@
   async function loadFromSupabase() {
     try {
       let q = _sb.from('products').select('*').eq('published', true).order('nr', { ascending: true });
-      if (currentPartner?.id) q = q.eq('partner_id', currentPartner.id);
+      if (currentPartner?.id) q = q.or(`partner_id.eq.${currentPartner.id},global.eq.true`);
+      else q = q.or('partner_id.is.null,global.eq.true');
       const { data, error } = await q;
       if (error || !data?.length) return;
 

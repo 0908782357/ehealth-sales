@@ -419,6 +419,9 @@
             <label class="toggle-row"><input type="checkbox" id="f-stationaer" checked> Stationär</label>
             <label class="toggle-row"><input type="checkbox" id="f-mobil" checked> Mobil</label>
             <label class="toggle-row" id="row-published"><input type="checkbox" id="f-published" checked> Veröffentlicht</label>
+            <label class="toggle-row" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:6px 10px;color:#1e40af;font-weight:600;" title="Erscheint in allen Findern — auch im eHS-Haupt-Finder und bei allen Kunden">
+              <input type="checkbox" id="f-global"> 🌐 Globale Freigabe
+            </label>
           </div>
           <div style="margin-top:6px;font-size:0.72rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Themen-Zuordnung</div>
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;padding:4px 0;">
@@ -697,7 +700,10 @@
           ${[['ti','#3C4A7C','TI'],['security','#E53E3E','Cyber'],['telemedizin','#38B2AC','Telemedizin'],['it_infrastruktur','#4299E1','IT Infra'],['modern_work','#6DC52D','Modern Work'],['prozess_digital','#ED8936','Prozess']].filter(([k]) => p[k]).map(([,c,l]) => `<span style="display:inline-block;background:${c}22;color:${c};font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:20px;margin:1px;">${l}</span>`).join('') || '–'}
         </td>
         <td><span class="badge badge-navy">${p.typ === 'hardware' ? 'Hardware' : p.typ === 'software' ? 'Software' : p.typ === 'dienstleistung' ? 'Dienstleistung' : p.typ || '–'}</span></td>
-        <td>${p.published ? '<span class="badge badge-green">Veröffentlicht</span>' : '<span class="badge badge-gray">Ausstehend</span>'}</td>
+        <td>
+          ${p.published ? '<span class="badge badge-green">Veröffentlicht</span>' : '<span class="badge badge-gray">Ausstehend</span>'}
+          ${p.global ? '<span class="badge badge-navy" style="margin-left:4px;" title="Globale Freigabe">🌐</span>' : ''}
+        </td>
         <td>
           <div class="actions">
             ${userRole === 'admin' && !p.published ? `<button class="btn btn-sm btn-primary" onclick="publishProduct('${p.id}')">Freigeben</button>` : ''}
@@ -947,6 +953,7 @@
       document.getElementById('f-detail-page').value  = p.detail_page || '';
       document.getElementById('f-stationaer').checked   = !!p.stationaer;
       document.getElementById('f-mobil').checked        = !!p.mobil;
+      document.getElementById('f-global').checked       = !!p.global;
       document.getElementById('f-ti').checked           = !!p.ti;
       document.getElementById('f-security').checked     = !!p.security;
       document.getElementById('f-telemedizin').checked  = !!p.telemedizin;
@@ -1035,6 +1042,7 @@
       detail_page:      document.getElementById('f-detail-page').value.trim() || null,
       stationaer:       document.getElementById('f-stationaer').checked,
       mobil:            document.getElementById('f-mobil').checked,
+      global:           document.getElementById('f-global').checked,
       ti:               document.getElementById('f-ti').checked,
       security:         document.getElementById('f-security').checked,
       telemedizin:      document.getElementById('f-telemedizin').checked,

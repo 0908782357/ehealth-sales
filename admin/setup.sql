@@ -430,3 +430,10 @@ INSERT INTO public.berufsgruppen (nr, name) VALUES
   (28, 'DiGA')
 ON CONFLICT (nr) DO NOTHING;
 -- ============================================================
+
+-- ============================================================
+-- PHASE 6: Globale Produkt-Freigabe
+-- ============================================================
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS global boolean DEFAULT false;
+CREATE INDEX IF NOT EXISTS idx_products_global ON public.products(global) WHERE global = true;
+-- ============================================================
