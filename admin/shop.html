@@ -293,7 +293,7 @@
     <div class="form-grid">
       <div class="form-group form-full">
         <label>Verknüpftes Produkt</label>
-        <select id="f-product-id">
+        <select id="f-product-id" onchange="autoFillProductPrice()">
           <option value="">– Kein Produkt verknüpft –</option>
         </select>
       </div>
@@ -424,7 +424,7 @@
   }
 
   async function loadProducts() {
-    let q = sb.from('products').select('id, produkt, hersteller').eq('published', true).order('produkt');
+    let q = sb.from('products').select('id, produkt, hersteller, preis_flat, abrechnungsart').eq('published', true).order('produkt');
     if (userRole !== 'admin' && myPartnerId) q = q.eq('partner_id', myPartnerId);
     const { data } = await q;
     allProducts = data || [];
@@ -436,6 +436,18 @@
       o.textContent = p.produkt + (p.hersteller ? ' (' + p.hersteller + ')' : '');
       sel.appendChild(o);
     });
+  }
+
+  function autoFillProductPrice() {
+    const id = document.getElementById('f-product-id').value;
+    if (!id) return;
+    const p = allProducts.find(x => x.id === id);
+    if (!p?.preis_flat) return;
+    document.getElementById('f-preis').value = p.preis_flat;
+    const einheit = p.abrechnungsart === 'monatlich' ? 'pro Monat'
+                  : p.abrechnungsart === 'einmalig'  ? 'einmalig'
+                  : 'pro Monat';
+    document.getElementById('f-preis-einheit').value = einheit;
   }
 
   async function loadItems() {
