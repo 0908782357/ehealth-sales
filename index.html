@@ -3670,6 +3670,7 @@
     wizBGName = name;
     wizFilterMob = 'beides';
     wizSelectedTopics = new Set(wizStep0TopicId ? [wizStep0TopicId] : []);
+    if (col === 23 && !wizSelectedTopics.has('ti')) wizSelectedTopics.add('ti');
     wizFilterPraeferenz = wizStep0Pref ? [wizStep0Pref] : [];
     wizShowGesetze = false;
     const defGesetz = document.getElementById('gesetz-nein');
