@@ -725,6 +725,24 @@
     #wiz-step1b .wizard-back-btn { text-align: left; }
     #wiz-step1b .section-header { text-align: center; }
     .filter-block { margin-bottom: 40px; }
+    /* Reha-Finanzierungsrechner */
+    .reha-rechner-card { background:#f0fdf4; border:1.5px solid #bbf7d0; border-radius:14px; padding:24px 28px; margin:0 auto 36px; text-align:left; max-width:640px; }
+    .reha-rechner-card h4 { color:#065f46; margin:0 0 4px; font-size:0.97rem; display:flex; align-items:center; gap:8px; }
+    .reha-rechner-card .rr-sub { color:#6b7280; font-size:0.78rem; margin:0 0 20px; }
+    .rr-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .rr-field { display:flex; flex-direction:column; gap:5px; }
+    .rr-field label { font-size:0.72rem; font-weight:700; color:#065f46; text-transform:uppercase; letter-spacing:0.05em; }
+    .rr-field input, .rr-field select { border:1.5px solid #bbf7d0; border-radius:8px; padding:8px 11px; font-size:0.9rem; background:white; outline:none; transition:border 0.15s; width:100%; }
+    .rr-field input:focus, .rr-field select:focus { border-color:#059669; }
+    .rr-toggle { margin-top:12px; font-size:0.78rem; color:#059669; cursor:pointer; display:inline-flex; align-items:center; gap:5px; background:none; border:none; padding:0; font-weight:600; }
+    .rr-advanced { display:none; margin-top:14px; padding-top:14px; border-top:1px solid #bbf7d0; }
+    .rr-advanced.open { display:block; }
+    .rr-result { display:none; margin-top:20px; background:white; border:1.5px solid #bbf7d0; border-radius:10px; padding:16px 20px; }
+    .rr-result-row { display:flex; justify-content:space-between; align-items:baseline; gap:12px; font-size:0.83rem; padding:6px 0; border-bottom:1px solid #f0fdf4; }
+    .rr-result-row:last-of-type { border-bottom:none; }
+    .rr-result-row strong { color:#065f46; white-space:nowrap; }
+    .rr-result-total { margin-top:10px; padding-top:10px; border-top:2px solid #bbf7d0; font-size:0.9rem; font-weight:700; color:#065f46; display:flex; justify-content:space-between; align-items:baseline; }
+    @media(max-width:540px) { .rr-grid { grid-template-columns:1fr; } }
     .filter-question-title { color: var(--navy); margin-bottom: 16px; font-size: 1.125rem; font-weight: 700; }
     .filter-options { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
     .filter-btn {
@@ -2108,6 +2126,63 @@
               </span>
               <span class="topic-select-check"></span>
             </button>
+          </div>
+        </div>
+
+        <!-- Reha-Finanzierungsrechner (nur für Rehakliniken nr=23) -->
+        <div id="reha-rechner" style="display:none; margin-top:36px;">
+          <div class="reha-rechner-card">
+            <h4>
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#059669" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              TI-Finanzierungsrechner für Rehakliniken
+            </h4>
+            <p class="rr-sub">Orientierungswert nach § 381 SGB V – gültig ab 01.01.2024</p>
+            <div class="rr-grid">
+              <div class="rr-field">
+                <label>Vertragsbetten / -plätze</label>
+                <input type="number" id="rr-betten" placeholder="z.B. 120" min="0" oninput="calcRehaZuschlag()">
+              </div>
+              <div class="rr-field">
+                <label>Fachabteilungen / Indikationsgruppen</label>
+                <input type="number" id="rr-abt" placeholder="z.B. 4" min="0" oninput="calcRehaZuschlag()">
+              </div>
+              <div class="rr-field">
+                <label>Amb. Abrechnungstage (Vorjahr)</label>
+                <input type="number" id="rr-amb" placeholder="z.B. 800" min="0" oninput="calcRehaZuschlag()">
+              </div>
+              <div class="rr-field">
+                <label>Stat. Abrechnungstage (Vorjahr)</label>
+                <input type="number" id="rr-stat" placeholder="z.B. 38000" min="0" oninput="calcRehaZuschlag()">
+              </div>
+            </div>
+            <button class="rr-toggle" onclick="toggleRrAdvanced(this)">
+              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              Erweiterte Optionen (gemeinsam genutzte IT, RZK)
+            </button>
+            <div class="rr-advanced" id="rr-advanced">
+              <div class="rr-grid">
+                <div class="rr-field">
+                  <label>Einrichtungen mit gem. IT (0 = nein)</label>
+                  <input type="number" id="rr-shared" placeholder="0" min="0" oninput="calcRehaZuschlag()">
+                </div>
+                <div class="rr-field">
+                  <label>RZK nutzen?</label>
+                  <select id="rr-rzk" onchange="calcRehaZuschlag()">
+                    <option value="n">Nein</option>
+                    <option value="j">Ja</option>
+                  </select>
+                </div>
+                <div class="rr-field" id="rr-shared-betten-wrap" style="display:none;">
+                  <label>Betten/Plätze gesamt (alle Einrichtungen)</label>
+                  <input type="number" id="rr-shared-betten" placeholder="z.B. 360" min="0" oninput="calcRehaZuschlag()">
+                </div>
+                <div class="rr-field" id="rr-shared-abt-wrap" style="display:none;">
+                  <label>Fachabteilungen gesamt (alle Einrichtungen)</label>
+                  <input type="number" id="rr-shared-abt" placeholder="z.B. 12" min="0" oninput="calcRehaZuschlag()">
+                </div>
+              </div>
+            </div>
+            <div class="rr-result" id="rr-result"></div>
           </div>
         </div>
 
@@ -3543,9 +3618,95 @@
     document.getElementById('wiz-step1b').classList.add('active');
     renderTopicSelect();
     updateWiz1bGesetze();
+    // Reha-Rechner ein-/ausblenden
+    const rehaEl = document.getElementById('reha-rechner');
+    if (rehaEl) rehaEl.style.display = (col === 23) ? '' : 'none';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+
+  function toggleRrAdvanced(btn) {
+    const adv = document.getElementById('rr-advanced');
+    adv.classList.toggle('open');
+    btn.querySelector('svg').style.transform = adv.classList.contains('open') ? 'rotate(180deg)' : '';
+  }
+
+  function calcRehaZuschlag() {
+    const betten  = parseFloat(document.getElementById('rr-betten')?.value) || 0;
+    const abt     = parseFloat(document.getElementById('rr-abt')?.value) || 0;
+    const amb     = parseFloat(document.getElementById('rr-amb')?.value) || 0;
+    const stat    = parseFloat(document.getElementById('rr-stat')?.value) || 0;
+    const shared  = parseFloat(document.getElementById('rr-shared')?.value) || 0;
+    const rzk     = document.getElementById('rr-rzk')?.value === 'j';
+    const shBett  = parseFloat(document.getElementById('rr-shared-betten')?.value) || 0;
+    const shAbt   = parseFloat(document.getElementById('rr-shared-abt')?.value) || 0;
+
+    // Shared-IT sub-fields visibility
+    const showShared = shared >= 2;
+    ['rr-shared-betten-wrap','rr-shared-abt-wrap'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.style.display = showShared ? '' : 'none';
+    });
+
+    const resultEl = document.getElementById('rr-result');
+    const e13 = amb + stat;
+    if (!betten || !e13) { resultEl.style.display = 'none'; return; }
+
+    // Intermediate (own facility values)
+    const e7  = Math.ceil(Math.max(abt, betten / 25));
+    const e8  = e7 <= 1 ? 1 : 0;
+    const e12 = Math.ceil(betten / 100 * 6);
+    // For shared IT: use cumulative KT count
+    const e10 = showShared ? Math.ceil(Math.max(shAbt, shBett / 25)) : e7 + e8;
+    const e16 = showShared ? Math.ceil(e10 / 25) + 1 : Math.ceil((e7 + e8) / 25) + 1;
+    const e17 = showShared ? Math.ceil(e10 / 50) + 1 : Math.ceil((e7 + e8) / 50) + 1;
+    const e11 = rzk ? e17 - 1 : e16 - 1;
+    const bProp = showShared && shBett > 0 ? betten / shBett : 1; // proportion
+
+    // 2-Jahres-Pauschale (§§ 5,6)
+    const h7  = showShared
+      ? (rzk ? 11000 * (e17 - 1) : 11000 * (e16 - 1)) * bProp
+      : (rzk ? 11000 * (e17 - 1) : 11000 * (e16 - 1));
+    const h15 = h7 + 33000 + 2500;
+    const zuschlagI = Math.round(h15 / 2 / e13 * 100) / 100;
+
+    // 5-Jahres-Pauschale (§§ 2,3,4,7)
+    const k7  = showShared
+      ? (rzk ? e17 * 3000 : e16 * 1794) * bProp
+      : (rzk ? e17 * 3000 : e16 * 1794);
+    const k9  = showShared ? (120 * e16) * bProp : 120 * e16;
+    const k10 = (e7 + e8) * 595;
+    const k11 = showShared
+      ? (rzk ? 3000*(e17-1)*0.20 : 1795*(e16-1)*0.20) * bProp * 5
+      : (rzk ? 3000*(e17-1)*0.20 : 1795*(e16-1)*0.20) * 5;
+    const k12 = showShared
+      ? ((rzk ? e17 : e16) - 1) * 792 * bProp * 5
+      : ((rzk ? e17 : e16) - 1) * 792 * 5;
+    const k13 = ((Math.ceil(e7 / 25) - 1) * 1800 + 100) * 5;
+    const k14 = showShared ? (e11 * 93) * bProp * 5 : e11 * 93 * 5;
+    const k16 = 6 * betten * 5;
+    const k17 = e12 * 46.5 * 5;
+    const k19 = k7 + k9 + k10 + k11 + k12 + k13 + k14 + 20000 + k16 + k17;
+    const zuschlagII = Math.round(k19 / 5 / e13 * 100) / 100;
+
+    const total = zuschlagI + zuschlagII;
+    const fmt = v => v.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});
+
+    resultEl.style.display = '';
+    resultEl.innerHTML = `
+      <div class="rr-result-row">
+        <span>TI-Zuschlag I <span style="font-size:0.72rem;color:#9ca3af;">(2-Jahres-Pauschale §§ 5,6)</span></span>
+        <strong>${fmt(zuschlagI)} €/Tag</strong>
+      </div>
+      <div class="rr-result-row">
+        <span>TI-Zuschlag II <span style="font-size:0.72rem;color:#9ca3af;">(5-Jahres-Pauschale §§ 2,3,4,7)</span></span>
+        <strong>${fmt(zuschlagII)} €/Tag</strong>
+      </div>
+      <div class="rr-result-total">
+        <span>TI-Zuschlag gesamt</span>
+        <strong>${fmt(total)} €/Behandlungstag</strong>
+      </div>
+      <p style="font-size:0.72rem;color:#9ca3af;margin:8px 0 0;">Orientierungswert nach § 381 SGB V, Stand 01.01.2024. Ohne Gewähr – individuelle Verhandlung mit Kostenträgern maßgeblich.</p>`;
+  }
 
   function renderBerufsgruppen(bgData) {
     const container = document.getElementById('bg-step1-grid');
