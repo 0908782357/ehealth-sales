@@ -483,6 +483,20 @@
 
     <!-- ====== SCHRITT 3: Preise ====== -->
     <div id="step-3-content" style="display:none">
+
+      <!-- Listenpreis (für Landingpages) -->
+      <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:0.72rem;font-weight:700;color:#1e40af;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;">Listenpreis (Landingpage)</div>
+          <div style="font-size:0.78rem;color:#3b82f6;">Wird auf der Finder-Landingpage als „ab X €" angezeigt.</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+          <input type="number" id="preis-flat" min="0" step="0.01" placeholder="0,00"
+            style="max-width:120px;padding:7px 10px;border:1.5px solid #bfdbfe;border-radius:8px;font-size:0.875rem;font-family:inherit;color:var(--gray-900);background:white;">
+          <span style="font-size:0.82rem;color:#60a5fa;">€ (netto)</span>
+        </div>
+      </div>
+
       <p style="font-size:0.82rem;color:var(--gray-500);margin:0 0 16px 0;">
         Preis pro Berufsgruppe — es erscheinen nur die unter „Verfügbar für" ausgewählten Gruppen.
         Felder ohne Eingabe werden im Produktfinder nicht angezeigt.
@@ -899,6 +913,7 @@
       // Page 3: preise
       currentPreise = p.preise || {};
       setAbrechnungsart(p.abrechnungsart || 'monatlich');
+      document.getElementById('preis-flat').value = p.preis_flat != null ? p.preis_flat : '';
 
       // Page 2: lösungsseite
       if (p.loesung_aktiv) {
@@ -1007,10 +1022,11 @@
       console.warn('Lösungsseite nicht gespeichert – SQL-Migration erforderlich:', loesungErr.message);
     }
 
-    // Extended: preise per Berufsgruppe + abrechnungsart
+    // Extended: preise per Berufsgruppe + abrechnungsart + preis_flat
     const preise = getPreise();
+    const preisFlat = parseFloat(document.getElementById('preis-flat').value) || null;
     const { error: preisErr } = await sb.from('products')
-      .update({ preise, abrechnungsart: currentAbrechnungsart })
+      .update({ preise, abrechnungsart: currentAbrechnungsart, preis_flat: preisFlat })
       .eq('id', savedId);
     if (preisErr) {
       console.warn('Preise nicht gespeichert – SQL-Migration erforderlich:', preisErr.message);

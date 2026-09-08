@@ -655,21 +655,18 @@ footer a:hover { color: rgba(255,255,255,0.8); }
 
   const { data } = await sb
     .from('products')
-    .select('produkt, preise, abrechnungsart, nr')
+    .select('preis_flat, abrechnungsart')
     .is('partner_id', null)
     .eq('published', true)
     .ilike('produkt', '%finder%')
+    .not('preis_flat', 'is', null)
     .limit(1)
     .maybeSingle();
 
-  if (!data) return;
+  if (!data?.preis_flat) return;
 
-  const values = Object.values(data.preise || {}).map(Number).filter(v => v > 0);
-  if (!values.length) return;
-
-  const minPreis = Math.min(...values);
-  const formatted = minPreis.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-  const period = data.abrechnungsart === 'monatlich' ? 'pro Monat (netto)' : 'einmalig (netto)';
+  const formatted = Number(data.preis_flat).toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  const period = data.abrechnungsart === 'monatlich' ? 'pro Monat (netto), monatlich kündbar' : 'einmalig (netto)';
 
   document.getElementById('price-display').textContent = `ab ${formatted} €`;
   document.getElementById('price-period').textContent = period;
