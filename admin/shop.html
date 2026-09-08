@@ -538,9 +538,11 @@
             ${detailPage ? `<a class="btn btn-sm" href="../${detailPage}" target="_blank" style="text-decoration:none;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;">Landingpage</a>` : ''}
             <button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}','${item.titel.replace(/'/g,"\\'")}')">Löschen</button>
           ` : `
-            ${hasLoesung
-              ? `<a class="btn btn-sm btn-edit" href="loesung.html?id=${item.product_id}" style="text-decoration:none;">Mehr erfahren</a>`
-              : `<a class="btn btn-sm btn-edit" href="../index.html?open=kontakt" style="text-decoration:none;">Anfragen</a>`}
+            ${detailPage
+              ? `<a class="btn btn-sm btn-edit" href="../${detailPage}" target="_blank" style="text-decoration:none;">Mehr erfahren</a>`
+              : hasLoesung
+                ? `<a class="btn btn-sm btn-edit" href="loesung.html?id=${item.product_id}" style="text-decoration:none;">Mehr erfahren</a>`
+                : `<a class="btn btn-sm btn-edit" href="../index.html?open=kontakt" style="text-decoration:none;">Anfragen</a>`}
             <button class="btn btn-sm btn-primary" data-item-id="${item.id}" onclick="addToCart('${item.id}')">In den Warenkorb</button>
           `}
         </div>
