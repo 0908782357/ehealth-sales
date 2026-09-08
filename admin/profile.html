@@ -316,11 +316,10 @@
 
     // Admin: Nutzer-Link einblenden
     if (role === 'admin') {
-      document.getElementById('nav-users').style.display = '';
-      document.getElementById('nav-orders').style.display = '';
+      document.getElementById('nav-group-admin').style.display = '';
     }
     if (role === 'customer') {
-      document.getElementById('nav-products').style.display = 'none';
+      document.getElementById('nav-item-products').style.display = 'none';
     }
     if (role !== 'admin') {
       document.getElementById('f-firma').readOnly = true;
@@ -497,6 +496,8 @@
     document.getElementById('logo-save-btn').style.display = 'none';
     setTimeout(() => { msg.className = 'msg'; }, 3000);
   }
+
+  function toggleNavGroup(h) { h.closest('.nav-group').classList.toggle('open'); }
 </script>
 </body>
 </html>
