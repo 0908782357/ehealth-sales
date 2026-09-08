@@ -4459,12 +4459,14 @@
         if (!bgRes2.error && bgRes2.data?.length) bgData = bgRes2.data;
       }
       if (bgData?.length) {
-        BG_HAS_RECHNER = {};
+        const hadRechnerCol = bgData.some(bg => 'has_rechner' in bg);
+        BG_HAS_RECHNER = hadRechnerCol ? {} : { 23: true }; // Fallback bis SQL-Migration läuft
         bgData.forEach(bg => {
           BERUFSGRUPPEN_NAMES[bg.nr] = bg.name;
           if (bg.has_rechner) BG_HAS_RECHNER[bg.nr] = true;
         });
         renderBerufsgruppen(bgData);
+        updateRehaRechnerVisibility(); // nachladen wenn BG schon gewählt
       }
 
       // Aktive Seite neu rendern falls betroffen
