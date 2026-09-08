@@ -189,6 +189,7 @@
       <div class="nav-group-body">
         <a class="nav-link nav-sub" href="users.html">Nutzer</a>
         <a class="nav-link nav-sub" href="orders.html">Bestellungen</a>
+        <a class="nav-link nav-sub" href="berufsgruppen.html">Berufsgruppen</a>
       </div>
     </div>
 
@@ -578,7 +579,7 @@
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { flowType: 'implicit' } });
 
-  const BERUFSGRUPPEN = {
+  let BERUFSGRUPPEN = {
     4:'Ärzte', 5:'Zahnärzte', 6:'Psychotherapeuten', 7:'Apotheken', 8:'Krankenhäuser',
     9:'Physiotherapeuten', 10:'Ergotherapeuten', 11:'Logopäden', 12:'Podologen',
     13:'Ernährungstherapeuten', 14:'Sanitätshäuser', 15:'Orthopädieschuhmacher',
@@ -587,6 +588,18 @@
     23:'Rehakliniken', 24:'Hebammen', 25:'Rettungsdienste', 26:'Krankentransport',
     27:'Arbeitsmedizin', 28:'DiGA'
   };
+
+  async function loadBerufsgruppen() {
+    try {
+      const { data } = await sb.from('berufsgruppen').select('nr, name').order('nr', { ascending: true });
+      if (data && data.length > 0) {
+        BERUFSGRUPPEN = {};
+        data.forEach(bg => { BERUFSGRUPPEN[bg.nr] = bg.name; });
+      }
+    } catch (e) {
+      console.warn('Berufsgruppen aus DB nicht geladen, verwende Fallback:', e);
+    }
+  }
 
   let allProducts = [];
   let filterSearch = '';
@@ -630,6 +643,7 @@
     }
 
     setupNavRole(userRole).catch(console.warn);
+    await loadBerufsgruppen();
     buildBgGrids();
     await loadProducts();
   }

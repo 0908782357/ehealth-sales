@@ -380,3 +380,53 @@ CREATE INDEX IF NOT EXISTS idx_partners_slug ON public.partners(slug);
 ALTER TABLE public.anfragen ADD COLUMN IF NOT EXISTS partner_id uuid REFERENCES public.partners(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_anfragen_partner_id ON public.anfragen(partner_id);
 -- ============================================================
+
+-- ============================================================
+-- PHASE 6: Berufsgruppen-Verwaltung
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.berufsgruppen (
+  id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  nr                   integer UNIQUE NOT NULL,
+  name                 text NOT NULL,
+  ti_finanzierungsart  text,
+  ti_foerdergeber      text,
+  ti_foerderbetrag     text,
+  ti_bedingungen       text,
+  erstellt_am          timestamptz DEFAULT now(),
+  aktualisiert_am      timestamptz DEFAULT now()
+);
+ALTER TABLE public.berufsgruppen ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admin full access berufsgruppen" ON public.berufsgruppen
+  USING (EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Authenticated read berufsgruppen" ON public.berufsgruppen
+  FOR SELECT USING (auth.role() = 'authenticated');
+
+INSERT INTO public.berufsgruppen (nr, name) VALUES
+  (4,  'Ärzte'),
+  (5,  'Zahnärzte'),
+  (6,  'Psychotherapeuten'),
+  (7,  'Apotheken'),
+  (8,  'Krankenhäuser'),
+  (9,  'Physiotherapeuten'),
+  (10, 'Ergotherapeuten'),
+  (11, 'Logopäden'),
+  (12, 'Podologen'),
+  (13, 'Ernährungstherapeuten'),
+  (14, 'Sanitätshäuser'),
+  (15, 'Orthopädieschuhmacher'),
+  (16, 'Orthopädietechniker'),
+  (17, 'Zahntechniker'),
+  (18, 'Augenoptiker'),
+  (19, 'Hörakustiker'),
+  (20, 'Hilfsmittelhersteller'),
+  (21, 'Pflegeeinrichtungen'),
+  (22, 'Pflegedienste'),
+  (23, 'Rehakliniken'),
+  (24, 'Hebammen'),
+  (25, 'Rettungsdienste'),
+  (26, 'Krankentransport'),
+  (27, 'Arbeitsmedizin'),
+  (28, 'DiGA')
+ON CONFLICT (nr) DO NOTHING;
+-- ============================================================
