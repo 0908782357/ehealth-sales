@@ -231,11 +231,12 @@
             <th>TI – Finanzierungsart</th>
             <th>TI – Rechtsgrundlage</th>
             <th>TI – Förderbetrag</th>
+            <th style="width:60px;text-align:center;">Rechner</th>
             <th style="width:120px">Aktionen</th>
           </tr>
         </thead>
         <tbody id="bg-tbody">
-          <tr><td colspan="7" class="empty">Lade Berufsgruppen…</td></tr>
+          <tr><td colspan="8" class="empty">Lade Berufsgruppen…</td></tr>
         </tbody>
       </table>
     </div>
@@ -304,6 +305,10 @@
         <label>Auszahlungsweg</label>
         <textarea id="f-auszahlung" style="min-height:70px;" placeholder="z.B. Automatisch über KV im Rahmen der Quartalsabrechnung…"></textarea>
       </div>
+      <div class="form-group form-full" style="display:flex;align-items:center;gap:10px;padding-top:4px;">
+        <input type="checkbox" id="f-has-rechner" style="width:18px;height:18px;accent-color:var(--navy);cursor:pointer;flex-shrink:0;">
+        <label for="f-has-rechner" style="cursor:pointer;font-size:0.87rem;">Finanzierungsrechner im Produktfinder anzeigen</label>
+      </div>
     </div>
     <div class="msg" id="modal-msg"></div>
     <div class="modal-actions">
@@ -355,17 +360,17 @@ async function init() {
 
 async function loadBerufsgruppen() {
   const tbody = document.getElementById('bg-tbody');
-  tbody.innerHTML = '<tr><td colspan="7" class="empty">Lade…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8" class="empty">Lade…</td></tr>';
 
   const { data, error } = await sb.from('berufsgruppen').select('*').order('nr', { ascending: true });
 
   if (error) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty">Fehler beim Laden: ' + error.message + '</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Fehler beim Laden: ' + error.message + '</td></tr>';
     return;
   }
 
   if (!data || data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="7" class="empty">Noch keine Berufsgruppen angelegt.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Noch keine Berufsgruppen angelegt.</td></tr>';
     return;
   }
 
@@ -377,6 +382,7 @@ async function loadBerufsgruppen() {
       <td>${bg.ti_finanzierungsart ? '<span class="ti-badge">' + escHtml(bg.ti_finanzierungsart) + '</span>' : '<span class="ti-empty">–</span>'}</td>
       <td>${bg.ti_rechtsgrundlage ? '<code style="font-size:0.78rem;color:var(--navy);">' + escHtml(bg.ti_rechtsgrundlage) + '</code>' : '<span class="ti-empty">–</span>'}</td>
       <td>${bg.ti_foerderbetrag ? escHtml(bg.ti_foerderbetrag) : '<span class="ti-empty">–</span>'}</td>
+      <td style="text-align:center;">${bg.has_rechner ? '<span title="Rechner aktiv" style="color:#059669;font-size:1.1rem;">✓</span>' : '<span class="ti-empty">–</span>'}</td>
       <td>
         <div class="actions">
           <button class="btn btn-edit btn-sm" onclick="openModal('${bg.id}')">Bearbeiten</button>
@@ -413,6 +419,7 @@ async function loadIntoModal(id) {
   document.getElementById('f-betrag').value = data.ti_foerderbetrag || '';
   document.getElementById('f-bedingungen').value = data.ti_bedingungen || '';
   document.getElementById('f-auszahlung').value = data.ti_auszahlung || '';
+  document.getElementById('f-has-rechner').checked = !!data.has_rechner;
 }
 
 function closeModal() {
@@ -425,6 +432,7 @@ function clearModal() {
   ['f-name','f-nr','f-gruppe','f-art','f-rechtsgrundlage','f-geber','f-gueltig','f-betrag','f-bedingungen','f-auszahlung'].forEach(id => {
     document.getElementById(id).value = '';
   });
+  document.getElementById('f-has-rechner').checked = false;
   const msg = document.getElementById('modal-msg');
   msg.className = 'msg';
   msg.textContent = '';
@@ -459,6 +467,7 @@ async function saveBerufsgruppe() {
     ti_foerderbetrag:     betrag || null,
     ti_bedingungen:       bedingungen || null,
     ti_auszahlung:        auszahlung || null,
+    has_rechner:          document.getElementById('f-has-rechner').checked,
     aktualisiert_am: new Date().toISOString()
   };
 

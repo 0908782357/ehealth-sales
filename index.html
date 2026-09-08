@@ -2644,6 +2644,7 @@
     20:'Hilfsmittelhersteller', 21:'Pflegeeinrichtungen', 22:'Pflegedienste',
     23:'Rehakliniken', 24:'Hebammen', 25:'Rettungsdienste', 26:'Krankentransport', 27:'Arbeitsmedizin', 28:'DiGA'
   };
+  let BG_HAS_RECHNER = {};
 
   // ===== DETAIL PAGE ENGINE =====
   const IP = {
@@ -3670,7 +3671,6 @@
     wizBGName = name;
     wizFilterMob = 'beides';
     wizSelectedTopics = new Set(wizStep0TopicId ? [wizStep0TopicId] : []);
-    if (col === 23 && !wizSelectedTopics.has('ti')) wizSelectedTopics.add('ti');
     wizFilterPraeferenz = wizStep0Pref ? [wizStep0Pref] : [];
     wizShowGesetze = false;
     const defGesetz = document.getElementById('gesetz-nein');
@@ -3688,21 +3688,14 @@
 
 
   function updateRehaRechnerVisibility() {
-    const isReha = wizBGCol === 23;
-    const hasTI  = wizSelectedTopics.has('ti');
-    const show   = isReha && hasTI;
+    const show = !!BG_HAS_RECHNER[wizBGCol];
     const onStep2 = document.getElementById('wiz-step2')?.classList.contains('active');
-    // Inline-Karte in step1b
     const inlineEl = document.getElementById('reha-rechner');
     if (inlineEl) inlineEl.style.display = (!onStep2 && show) ? 'block' : 'none';
-    // Popup auf Ergebnisseite
     const popupEl = document.getElementById('reha-rechner-popup-overlay');
     if (popupEl) {
-      if (onStep2 && show) {
-        popupEl.style.display = 'flex';
-      } else if (!show) {
-        popupEl.style.display = 'none';
-      }
+      if (onStep2 && show) { popupEl.style.display = 'flex'; }
+      else if (!show) { popupEl.style.display = 'none'; }
     }
   }
 
@@ -4148,6 +4141,7 @@
     }
     document.getElementById('wiz-step1b').classList.remove('active');
     document.getElementById('wiz-step2').classList.add('active');
+    updateRehaRechnerVisibility();
     renderWizSummary();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -4487,17 +4481,21 @@
       const { data: bundleData } = await _sb.from('bundles').select('*').eq('aktiv', true);
       BUNDLES = bundleData || [];
 
-      // Berufsgruppen laden (gruppe-Spalte optional)
+      // Berufsgruppen laden
       let bgData = null;
-      const bgRes = await _sb.from('berufsgruppen').select('nr, name, gruppe').order('nr', { ascending: true });
+      const bgRes = await _sb.from('berufsgruppen').select('nr, name, gruppe, has_rechner').order('nr', { ascending: true });
       if (!bgRes.error && bgRes.data?.length) {
         bgData = bgRes.data;
       } else {
-        const bgRes2 = await _sb.from('berufsgruppen').select('nr, name').order('nr', { ascending: true });
+        const bgRes2 = await _sb.from('berufsgruppen').select('nr, name, gruppe').order('nr', { ascending: true });
         if (!bgRes2.error && bgRes2.data?.length) bgData = bgRes2.data;
       }
       if (bgData?.length) {
-        bgData.forEach(bg => { BERUFSGRUPPEN_NAMES[bg.nr] = bg.name; });
+        BG_HAS_RECHNER = {};
+        bgData.forEach(bg => {
+          BERUFSGRUPPEN_NAMES[bg.nr] = bg.name;
+          if (bg.has_rechner) BG_HAS_RECHNER[bg.nr] = true;
+        });
         renderBerufsgruppen(bgData);
       }
 
