@@ -151,19 +151,23 @@
       display: flex; align-items: center; gap: 5px; font-family: inherit;
     }
     .nav-dropdown > button:hover,
-    .nav-dropdown:hover > button { color: var(--navy); background: var(--navy-bg); }
+    .nav-dropdown.open > button { color: var(--navy); background: var(--navy-bg); }
     .nav-dropdown > button svg { width: 13px; height: 13px; transition: transform 0.18s; }
-    .nav-dropdown:hover > button svg { transform: rotate(180deg); }
+    .nav-dropdown.open > button svg { transform: rotate(180deg); }
     .nav-dropdown-menu {
-      position: absolute; top: calc(100% + 6px); left: 0;
+      position: absolute; top: calc(100% + 4px); left: 0;
       background: white; border-radius: 12px; padding: 6px;
       box-shadow: 0 8px 32px rgba(60,74,124,0.14); border: 1px solid var(--gray-200);
       min-width: 160px; z-index: 200;
       opacity: 0; pointer-events: none; transform: translateY(-6px);
       transition: opacity 0.15s, transform 0.15s;
     }
-    .nav-dropdown:hover .nav-dropdown-menu {
+    .nav-dropdown.open .nav-dropdown-menu {
       opacity: 1; pointer-events: auto; transform: translateY(0);
+    }
+    /* Invisible bridge fills the gap so the mouse can reach the menu */
+    .nav-dropdown::after {
+      content: ''; position: absolute; top: 100%; left: 0; right: 0; height: 10px;
     }
     .nav-dropdown-menu a {
       display: block; padding: 8px 14px; border-radius: 8px;
@@ -4254,6 +4258,18 @@
     // ?open=shop URL-Parameter (Redirect von Compass-Gate)
     const openParam = new URLSearchParams(window.location.search).get('open');
     if (openParam) showPage(openParam);
+  });
+
+  // Lazy nav-dropdown: open immediately, close after 200ms delay
+  document.querySelectorAll('.nav-dropdown').forEach(function(dd) {
+    var timer;
+    dd.addEventListener('mouseenter', function() {
+      clearTimeout(timer);
+      dd.classList.add('open');
+    });
+    dd.addEventListener('mouseleave', function() {
+      timer = setTimeout(function() { dd.classList.remove('open'); }, 200);
+    });
   });
 
   window.addEventListener('scroll', () => {
