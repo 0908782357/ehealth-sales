@@ -1,13 +1,45 @@
-name: Deploy to Strato
+name: Deploy
 
 on:
   push:
     branches:
       - main
+      - staging
 
 jobs:
-  deploy:
+  deploy-staging:
+    name: Deploy → Staging
+    if: github.ref == 'refs/heads/staging'
     runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ vars.STAGING_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy via SFTP
+        run: |
+          sudo apt-get install -y lftp
+          lftp -c "
+            set sftp:auto-confirm yes
+            set net:max-retries 3
+            open sftp://su777200:${{ secrets.SFTP_PASSWORD }}@5019828312.ssh.w2.strato.hosting
+            mirror -R --delete \
+              --exclude ^\.git/ \
+              --exclude ^\.github/ \
+              --exclude ^\.gitignore \
+              --exclude ^\.DS_Store \
+              . ${{ secrets.SFTP_STAGING_DIR }}
+          "
+
+  deploy-production:
+    name: Deploy → Production
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_URL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
