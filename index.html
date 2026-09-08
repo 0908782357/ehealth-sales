@@ -4236,8 +4236,15 @@
       const { data: bundleData } = await _sb.from('bundles').select('*').eq('aktiv', true);
       BUNDLES = bundleData || [];
 
-      // Berufsgruppen laden
-      const { data: bgData } = await _sb.from('berufsgruppen').select('nr, name, gruppe').order('nr', { ascending: true });
+      // Berufsgruppen laden (gruppe-Spalte optional)
+      let bgData = null;
+      const bgRes = await _sb.from('berufsgruppen').select('nr, name, gruppe').order('nr', { ascending: true });
+      if (!bgRes.error && bgRes.data?.length) {
+        bgData = bgRes.data;
+      } else {
+        const bgRes2 = await _sb.from('berufsgruppen').select('nr, name').order('nr', { ascending: true });
+        if (!bgRes2.error && bgRes2.data?.length) bgData = bgRes2.data;
+      }
       if (bgData?.length) {
         bgData.forEach(bg => { BERUFSGRUPPEN_NAMES[bg.nr] = bg.name; });
         renderBerufsgruppen(bgData);
