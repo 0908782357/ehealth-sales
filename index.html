@@ -3474,11 +3474,10 @@
     wizBundleSelected = {};
     wizProductQty = {};
     const bundleHeader = document.getElementById('wiz-bundle-header');
-    const relevantBundles = BUNDLES.filter(b => {
-      if (!b.preise || b.preise[colStr] == null) return false;
-      if (!b.themen || !b.themen.length) return true;
-      return b.themen.some(t => wizSelectedTopics.has(t));
-    });
+    const relevantBundles = BUNDLES.filter(b =>
+      b.preise && b.preise[colStr] != null &&
+      (b.themen || []).some(t => wizSelectedTopics.has(t))
+    );
     if (relevantBundles.length) {
       bundleHeader.style.display = '';
       bundleHeader.innerHTML = relevantBundles.map(b => {
