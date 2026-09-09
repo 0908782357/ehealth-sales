@@ -290,7 +290,7 @@
         </div>
         <table>
           <thead>
-            <tr><th>Name</th><th>Enthaltene Produkte</th><th>Preise</th><th>Status</th><th>Aktionen</th></tr>
+            <tr><th>Name</th><th>Themenbereiche</th><th>Enthaltene Produkte</th><th>Preise</th><th>Status</th><th>Aktionen</th></tr>
           </thead>
           <tbody id="bundle-tbody">
             <tr><td colspan="5" class="empty">Laden…</td></tr>
@@ -317,6 +317,17 @@
         <label style="display:flex;align-items:center;gap:8px;">
           <input type="checkbox" id="b-aktiv" checked> Aktiv (im Produktfinder sichtbar)
         </label>
+      </div>
+      <div class="form-group form-full">
+        <label>Themenbereiche</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+          <label class="bg-check"><input type="checkbox" name="b-thema" value="security"> Cybersecurity</label>
+          <label class="bg-check"><input type="checkbox" name="b-thema" value="ti"> Telematik Infrastruktur</label>
+          <label class="bg-check"><input type="checkbox" name="b-thema" value="it"> IT Infrastruktur</label>
+          <label class="bg-check"><input type="checkbox" name="b-thema" value="modernwork"> Modern Work</label>
+          <label class="bg-check"><input type="checkbox" name="b-thema" value="prozess"> Prozess Digitalisierung</label>
+          <label class="bg-check"><input type="checkbox" name="b-thema" value="telemedizin"> Telemedizin</label>
+        </div>
       </div>
       <div class="form-group form-full">
         <label>Beschreibung</label>
@@ -1165,13 +1176,26 @@
     renderBundleTable(allBundles.filter(b => b.name.toLowerCase().includes(lower)));
   }
 
+  const BUNDLE_THEMEN_CFG = [
+    { id: 'security',    label: 'Cybersecurity',           color: '#E53E3E' },
+    { id: 'ti',          label: 'Telematik Infrastruktur', color: '#3C4A7C' },
+    { id: 'it',          label: 'IT Infrastruktur',        color: '#4299E1' },
+    { id: 'modernwork',  label: 'Modern Work',             color: '#6DC52D' },
+    { id: 'prozess',     label: 'Prozess Digital.',        color: '#ED8936' },
+    { id: 'telemedizin', label: 'Telemedizin',             color: '#38B2AC' }
+  ];
+
   function renderBundleTable(rows) {
     const tbody = document.getElementById('bundle-tbody');
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="5" class="empty">Keine Bundles gefunden.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">Keine Bundles gefunden.</td></tr>';
       return;
     }
     tbody.innerHTML = rows.map(b => {
+      const themenTags = BUNDLE_THEMEN_CFG
+        .filter(t => (b.themen || []).includes(t.id))
+        .map(t => `<span style="display:inline-block;background:${t.color}22;color:${t.color};font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:20px;margin:1px;">${t.label}</span>`)
+        .join('');
       const prodNames = (b.produkt_nrs || []).map(nr => {
         const p = allProducts.find(x => x.nr === nr);
         return p ? `<span class="bundle-prod-tag">${p.produkt}</span>` : '';
@@ -1183,6 +1207,7 @@
         : '–';
       return `<tr>
         <td><strong>${b.name}</strong>${b.beschreibung ? `<div style="font-size:0.78rem;color:var(--gray-400);margin-top:2px;">${b.beschreibung}</div>` : ''}</td>
+        <td>${themenTags || '<span style="color:var(--gray-300);">–</span>'}</td>
         <td>${prodNames || '–'}</td>
         <td style="font-size:0.78rem;color:var(--gray-500);">${preisInfo}</td>
         <td>${b.aktiv ? '<span class="badge badge-green">Aktiv</span>' : '<span class="badge badge-gray">Inaktiv</span>'}</td>
@@ -1223,11 +1248,15 @@
         const cb = document.getElementById('bprod-' + nr);
         if (cb) cb.checked = true;
       });
+      document.querySelectorAll('[name="b-thema"]').forEach(cb => {
+        cb.checked = (b.themen || []).includes(cb.value);
+      });
       currentBundlePreise = b.preise || {};
     } else {
       document.getElementById('b-name').value        = '';
       document.getElementById('b-beschreibung').value = '';
       document.getElementById('b-aktiv').checked     = true;
+      document.querySelectorAll('[name="b-thema"]').forEach(cb => cb.checked = false);
     }
 
     buildBundlePreisFields();
@@ -1295,6 +1324,7 @@
       name,
       beschreibung: document.getElementById('b-beschreibung').value.trim() || null,
       aktiv:        document.getElementById('b-aktiv').checked,
+      themen:       [...document.querySelectorAll('[name="b-thema"]:checked')].map(cb => cb.value),
       produkt_nrs,
       preise:       getBundlePreise(),
       updated_at:   new Date().toISOString(),
