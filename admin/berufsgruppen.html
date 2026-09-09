@@ -480,19 +480,25 @@ function openModal(id) {
 }
 
 async function loadIntoModal(id) {
-  const [{ data }, topicRes] = await Promise.all([
+  const [bgRes, topicRes] = await Promise.all([
     sb.from('berufsgruppen').select('*').eq('id', id).maybeSingle(),
-    sb.from('bg_topic_requirements').select('*').eq('berufsgruppe_id', id).catch(() => ({ data: null }))
+    sb.from('bg_topic_requirements').select('*').eq('berufsgruppe_id', id)
   ]);
-  if (!data) return;
 
-  document.getElementById('f-name').value  = data.name   || '';
-  document.getElementById('f-nr').value    = data.nr     || '';
+  const data = bgRes.data;
+  if (bgRes.error || !data) { console.error('BG Ladefehler:', bgRes.error); return; }
+
+  document.getElementById('f-name').value   = data.name   || '';
+  document.getElementById('f-nr').value     = data.nr     || '';
   document.getElementById('f-gruppe').value = data.gruppe || '';
 
   // Build topicData from new table rows
   topicData = {};
-  (topicRes.data || []).forEach(r => { topicData[r.thema] = r; });
+  if (topicRes.error) {
+    console.error('bg_topic_requirements Ladefehler (ggf. RLS-Policy fehlt):', topicRes.error);
+  } else {
+    (topicRes.data || []).forEach(r => { topicData[r.thema] = r; });
+  }
 
   // Fallback: pre-populate TI from old columns if new table has no TI entry
   if (!topicData['ti'] && (data.ti_finanzierungsart || data.ti_rechtsgrundlage || data.has_rechner)) {
