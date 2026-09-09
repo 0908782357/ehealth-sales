@@ -3740,7 +3740,7 @@
     if (!wizSelectedTopics.has('ti')) { el.style.display = 'none'; return; }
     const ti = BG_TI_DATA[wizBGCol];
     if (!ti) { el.style.display = 'none'; return; }
-    const row = (label, val) => val ? `
+    const detailRow = (label, val) => val ? `
       <div style="display:flex;gap:12px;padding:7px 0;border-bottom:1px solid #dbeafe;">
         <span style="min-width:130px;font-size:0.7rem;font-weight:600;color:#1e40af;flex-shrink:0;">${label}</span>
         <span style="font-size:0.78rem;color:#1e3a8a;line-height:1.4;">${val}</span>
@@ -3751,12 +3751,25 @@
           <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
           <span style="font-size:0.68rem;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:0.07em;">TI-Finanzierung${ti.rechtsgrundlage ? ' – ' + ti.rechtsgrundlage : ''}</span>
         </div>
-        ${row('Art der Förderung', ti.finanzierungsart)}
-        ${row('Fördergeber', ti.foerdergeber)}
-        ${row('Förderbetrag', ti.foerderbetrag)}
-        ${row('Gültig seit', ti.gueltig_seit)}
-        ${row('Bedingungen', ti.bedingungen)}
-        ${row('Auszahlung', ti.auszahlung)}
+        ${ti.foerderbetrag ? `<div style="margin-bottom:10px;">
+          <div style="font-size:0.63rem;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;">Förderbetrag</div>
+          <div style="font-size:1rem;font-weight:800;color:#1e3a8a;">${ti.foerderbetrag}</div>
+        </div>` : ''}
+        <details class="rrs-block">
+          <summary style="cursor:pointer;padding:8px 0;border-top:1px solid #bfdbfe;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+              <span style="font-size:0.75rem;font-weight:600;color:#1e40af;">Details zur Finanzierung</span>
+              <span style="font-size:0.72rem;color:#2563eb;font-weight:600;white-space:nowrap;flex-shrink:0;">Details <span class="rrs-arrow">▾</span></span>
+            </div>
+          </summary>
+          <div style="padding:4px 0 2px;">
+            ${detailRow('Art der Förderung', ti.finanzierungsart)}
+            ${detailRow('Fördergeber', ti.foerdergeber)}
+            ${detailRow('Gültig seit', ti.gueltig_seit)}
+            ${detailRow('Bedingungen', ti.bedingungen)}
+            ${detailRow('Auszahlung', ti.auszahlung)}
+          </div>
+        </details>
       </div>`;
     el.style.display = 'block';
   }
