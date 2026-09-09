@@ -2232,6 +2232,7 @@
         <!-- Bundle-Header -->
         <div id="wiz-bundle-header" style="display:none;"></div>
         <div id="wiz2-gesetze" style="display:none;"></div>
+        <div id="wiz2-ti-finanzierung" style="display:none; margin-bottom:20px;"></div>
 
         <!-- TI-Zuschlag Ergebnis (aus Rechner in Schritt 1b) -->
         <div id="reha-result-summary" style="display:none; margin-bottom:24px;">
@@ -2609,6 +2610,7 @@
     23:'Rehakliniken', 24:'Hebammen', 25:'Rettungsdienste', 26:'Krankentransport', 27:'Arbeitsmedizin', 28:'DiGA'
   };
   let BG_HAS_RECHNER = { 23: true }; // Rehakliniken: Default aktiv, wird durch Supabase überschrieben
+  let BG_TI_DATA = {}; // { bgNr: bg_topic_requirements-Zeile für thema='ti' }
 
   // ===== DETAIL PAGE ENGINE =====
   const IP = {
@@ -3648,7 +3650,7 @@
     try { updateWiz1bGesetze(); } catch(e) { console.warn('updateWiz1bGesetze:', e); }
     // Rechner immer direkt anzeigen – unabhängig von anderen Funktionen
     const _rr = document.getElementById('reha-rechner');
-    if (_rr) _rr.style.display = (col === 23 || !!BG_HAS_RECHNER[col]) ? 'block' : 'none';
+    if (_rr) _rr.style.display = (col === 23 || !!BG_HAS_RECHNER[col]) && wizSelectedTopics.has('ti') ? 'block' : 'none';
     try { updateRehaRechnerVisibility(); } catch(e) { console.warn('updateRehaRechnerVisibility:', e); }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -3657,7 +3659,7 @@
   let lastRehaData = null;
 
   function hasRechner() {
-    return wizBGCol === 23 || !!BG_HAS_RECHNER[wizBGCol];
+    return (wizBGCol === 23 || !!BG_HAS_RECHNER[wizBGCol]) && wizSelectedTopics.has('ti');
   }
 
   function updateRehaRechnerVisibility() {
@@ -3680,33 +3682,50 @@
       const fmtE = v => `<strong>${fmt(v)} €</strong>`;
       const fmtM = v => `<strong>${fmt(v)} €/Monat</strong>`;
       const row  = (label, val) => `<div class="rr-result-row"><span>${label}</span>${val}</div>`;
-      const hdr  = txt => `<div style="font-size:0.65rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid #bbf7d0;padding-bottom:5px;margin:14px 0 8px;">${txt}</div>`;
+      const summaryRow = (label, value) => `
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;">
+          <div>
+            <span style="font-size:0.63rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:1px;">${label}</span>
+            <span style="font-size:1rem;font-weight:800;color:#065f46;">${value}</span>
+          </div>
+          <span style="font-size:0.72rem;color:#059669;font-weight:600;white-space:nowrap;flex-shrink:0;">Details <span class="rrs-arrow">▾</span></span>
+        </div>`;
 
       sumEl.innerHTML = `
-        <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:14px;padding:20px 24px;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+        <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:14px;padding:16px 22px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
             <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#059669" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-            <span style="font-size:0.7rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:0.07em;">TI-Finanzierungsrechner – Orientierungswert nach § 381 SGB V</span>
+            <span style="font-size:0.68rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:0.07em;">TI-Finanzierungsrechner – § 381 SGB V</span>
           </div>
-          ${hdr('2-Jahres-Pauschale (§§ 5, 6 SGB V)')}
-          ${row('Anpassung IT pro Konnektor', fmtE(d.h7))}
-          ${row('IT-Kosten pro Einrichtung', fmtE(33000))}
-          ${row('Organisatorische Umstellung', fmtE(2500))}
-          <div class="rr-result-total" style="margin-bottom:0;">
-            <span>Zuschlag I</span><strong>${fmt(d.zuschlagI)} €/Behandlungstag</strong>
-          </div>
-          ${hdr('5-Jahres-Pauschale (§§ 2, 3, 4, 7 SGB V) — auf Monatsbasis')}
-          ${row('Konnektorpauschale',  fmtM(d.k7  / 60))}
-          ${row('Kartenterminals',     fmtM(d.k10 / 60))}
-          ${row('KON-Wartung',         fmtM(d.k11 / 60))}
-          ${row('VPN-ZD',              fmtM(d.k12 / 60))}
-          ${row('Betrieb',             fmtM(d.k13 / 60))}
-          ${row('lfd. Wartung I',      fmtM(20000 / 60))}
-          ${row('lfd. Wartung II',     fmtM(d.k16 / 60))}
-          <div class="rr-result-total">
-            <span>Zuschlag II (Summe)</span><strong>${fmt(d.zuschlagII_m)} €/Monat</strong>
-          </div>
-          <p style="font-size:0.68rem;color:#9ca3af;margin:10px 0 0;">Orientierungswert ohne Gewähr. Individuelle Verhandlung mit Kostenträgern bleibt maßgeblich.</p>
+
+          <details class="rrs-block">
+            <summary style="cursor:pointer;padding:10px 0;border-top:1px solid #bbf7d0;">
+              ${summaryRow('2-Jahres-Pauschale (§§ 5, 6)', 'Zuschlag I: ' + fmt(d.zuschlagI) + ' €/Behandlungstag')}
+            </summary>
+            <div style="padding:6px 0 4px;">
+              ${row('Anpassung IT pro Konnektor', fmtE(d.h7))}
+              ${row('IT-Kosten pro Einrichtung', fmtE(33000))}
+              ${row('Organisatorische Umstellung', fmtE(2500))}
+              ${row('Summe 2-Jahres-Kosten', fmtE(d.h15))}
+            </div>
+          </details>
+
+          <details class="rrs-block">
+            <summary style="cursor:pointer;padding:10px 0;border-top:1px solid #bbf7d0;">
+              ${summaryRow('5-Jahres-Pauschale (§§ 2, 3, 4, 7) — monatlich', 'Zuschlag II: ' + fmt(d.zuschlagII_m) + ' €/Monat')}
+            </summary>
+            <div style="padding:6px 0 4px;">
+              ${row('Konnektorpauschale',  fmtM(d.k7  / 60))}
+              ${row('Kartenterminals',     fmtM(d.k10 / 60))}
+              ${row('KON-Wartung',         fmtM(d.k11 / 60))}
+              ${row('VPN-ZD',             fmtM(d.k12 / 60))}
+              ${row('Betrieb',             fmtM(d.k13 / 60))}
+              ${row('lfd. Wartung I',      fmtM(20000 / 60))}
+              ${row('lfd. Wartung II',     fmtM(d.k16 / 60))}
+            </div>
+          </details>
+
+          <p style="font-size:0.67rem;color:#9ca3af;margin:8px 0 0;">Orientierungswert ohne Gewähr. Individuelle Verhandlung mit Kostenträgern maßgeblich.</p>
         </div>`;
       sumEl.style.display = 'block';
     } else {
@@ -3714,6 +3733,33 @@
     }
   }
 
+
+  function updateTiFinanzierungCard() {
+    const el = document.getElementById('wiz2-ti-finanzierung');
+    if (!el) return;
+    if (!wizSelectedTopics.has('ti')) { el.style.display = 'none'; return; }
+    const ti = BG_TI_DATA[wizBGCol];
+    if (!ti) { el.style.display = 'none'; return; }
+    const row = (label, val) => val ? `
+      <div style="display:flex;gap:12px;padding:7px 0;border-bottom:1px solid #dbeafe;">
+        <span style="min-width:130px;font-size:0.7rem;font-weight:600;color:#1e40af;flex-shrink:0;">${label}</span>
+        <span style="font-size:0.78rem;color:#1e3a8a;line-height:1.4;">${val}</span>
+      </div>` : '';
+    el.innerHTML = `
+      <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:14px;padding:16px 22px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span style="font-size:0.68rem;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:0.07em;">TI-Finanzierung${ti.rechtsgrundlage ? ' – ' + ti.rechtsgrundlage : ''}</span>
+        </div>
+        ${row('Art der Förderung', ti.finanzierungsart)}
+        ${row('Fördergeber', ti.foerdergeber)}
+        ${row('Förderbetrag', ti.foerderbetrag)}
+        ${row('Gültig seit', ti.gueltig_seit)}
+        ${row('Bedingungen', ti.bedingungen)}
+        ${row('Auszahlung', ti.auszahlung)}
+      </div>`;
+    el.style.display = 'block';
+  }
 
   function toggleRrAdvanced(btn, advId) {
     const adv = document.getElementById(advId || 'rr-advanced');
@@ -3942,6 +3988,7 @@
         gesetzeEl2.innerHTML = buildGesetzeHinweis(wizBGCol, wizBGName);
         gesetzeEl2.style.display = 'block';
       } else { gesetzeEl2.style.display = 'none'; }
+      updateTiFinanzierungCard();
     }
   }
 
@@ -4159,6 +4206,7 @@
     document.getElementById('wiz-step1b').classList.remove('active');
     document.getElementById('wiz-step2').classList.add('active');
     updateRehaResultSummary();
+    updateTiFinanzierungCard();
     renderWizSummary();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -4500,17 +4548,19 @@
 
       // Berufsgruppen laden
       let bgData = null;
-      const bgRes = await _sb.from('berufsgruppen').select('nr, name, gruppe, has_rechner').order('nr', { ascending: true });
+      const bgRes = await _sb.from('berufsgruppen').select('id, nr, name, gruppe, has_rechner').order('nr', { ascending: true });
       if (!bgRes.error && bgRes.data?.length) {
         bgData = bgRes.data;
       } else {
-        const bgRes2 = await _sb.from('berufsgruppen').select('nr, name, gruppe').order('nr', { ascending: true });
+        const bgRes2 = await _sb.from('berufsgruppen').select('id, nr, name, gruppe').order('nr', { ascending: true });
         if (!bgRes2.error && bgRes2.data?.length) bgData = bgRes2.data;
       }
       if (bgData?.length) {
         const hasRechnerCol = bgData.some(bg => 'has_rechner' in bg);
+        const bgIdToNr = {};
         bgData.forEach(bg => {
           BERUFSGRUPPEN_NAMES[bg.nr] = bg.name;
+          if (bg.id) bgIdToNr[bg.id] = bg.nr;
           if (hasRechnerCol) {
             // Spalte existiert: Admin-Einstellung übernehmen
             if (bg.has_rechner) BG_HAS_RECHNER[bg.nr] = true;
@@ -4519,6 +4569,15 @@
         });
         renderBerufsgruppen(bgData);
         updateRehaRechnerVisibility();
+
+        // TI-Finanzierungsdaten aus bg_topic_requirements laden
+        const tiRes = await _sb.from('bg_topic_requirements').select('*').eq('thema', 'ti');
+        if (!tiRes.error && tiRes.data?.length) {
+          tiRes.data.forEach(row => {
+            const nr = bgIdToNr[row.berufsgruppe_id];
+            if (nr) BG_TI_DATA[nr] = row;
+          });
+        }
       }
 
       // Aktive Seite neu rendern falls betroffen
