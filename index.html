@@ -748,6 +748,12 @@
     .rr-result-row:last-of-type { border-bottom:none; }
     .rr-result-row strong { color:#065f46; white-space:nowrap; }
     .rr-result-total { margin-top:10px; padding-top:10px; border-top:2px solid #bbf7d0; font-size:0.9rem; font-weight:700; color:#065f46; display:flex; justify-content:space-between; align-items:baseline; }
+    /* Ergebnisseite – aufklappbare TI-Rechner-Blöcke */
+    details.rrs-block > summary::-webkit-details-marker,
+    details.rrs-block > summary::marker { display:none; content:''; }
+    details.rrs-block > summary { list-style:none; }
+    .rrs-arrow { display:inline-block; transition:transform 0.2s; }
+    details.rrs-block[open] .rrs-arrow { transform:rotate(180deg); }
     @media(max-width:540px) { .rr-grid { grid-template-columns:1fr; } }
     .filter-question-title { color: var(--navy); margin-bottom: 16px; font-size: 1.125rem; font-weight: 700; }
     .filter-options { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
