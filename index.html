@@ -2095,54 +2095,18 @@
         <div id="bg-step1-grid"><p style="color:var(--gray-400);text-align:center;padding:32px 0;">Berufsgruppen werden geladen…</p></div>
       </div>
 
-      <!-- STEP 1b: Filter verfeinern -->
+      <!-- STEP 1b: TI-Finanzierungsrechner -->
       <div id="wiz-step1b" class="wizard-step">
         <button class="wizard-back-btn" onclick="wizBack1b()">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
           Andere Berufsgruppe wählen
         </button>
-        <div class="section-header centered" style="margin-bottom:48px;">
-          <span class="section-label">Schritt 2 von 2</span>
-          <h2 style="color:var(--navy);">Verfeinern Sie Ihre Suche</h2>
-          <p>Noch zwei kurze Fragen für ein optimales Ergebnis.</p>
-        </div>
-
-        <div class="filter-block">
-          <div class="filter-question-title">Ihr Themenschwerpunkt</div>
-          <p style="font-size:0.875rem;color:#6b7280;margin:0 0 16px 0;">Mehrfachauswahl möglich – Ihr gewähltes Thema ist bereits markiert.</p>
-          <div class="topic-select-grid" id="topic-select-grid"></div>
-        </div>
-
-        <div class="filter-block">
-          <div class="filter-question-title">Für welchen Einsatz?</div>
-          <p style="font-size:0.875rem;color:#6b7280;margin:0 0 16px 0;">Stationär, mobil oder beides?</p>
-          <div class="topic-select-grid einsatz-compact" style="grid-template-columns:repeat(3,1fr);max-width:520px;">
-            <button class="topic-select-box" id="mob-stationaer" onclick="setFilterMob('stationaer',this)">
-              <span style="display:flex;align-items:center;gap:8px;">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="width:18px;height:18px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                Stationär
-              </span>
-              <span class="topic-select-check"></span>
-            </button>
-            <button class="topic-select-box" id="mob-mobil" onclick="setFilterMob('mobil',this)">
-              <span style="display:flex;align-items:center;gap:8px;">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="width:18px;height:18px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                Mobil
-              </span>
-              <span class="topic-select-check"></span>
-            </button>
-            <button class="topic-select-box" id="mob-beides" onclick="setFilterMob('beides',this)">
-              <span style="display:flex;align-items:center;gap:8px;">
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="width:18px;height:18px;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                Beides
-              </span>
-              <span class="topic-select-check"></span>
-            </button>
-          </div>
+        <div class="section-header centered" style="margin-bottom:36px;">
+          <h2 style="color:var(--navy);">Wie sieht die Finanzierung der Telematik Infrastruktur aus?</h2>
         </div>
 
         <!-- TI-Finanzierungsrechner (typ-abhängig pro Berufsgruppe) -->
-        <div id="wiz-rechner-wrap" style="display:none; margin-top:36px;">
+        <div id="wiz-rechner-wrap" style="margin-top:0;">
 
           <!-- Panel: Staffel / Festpreis -->
           <div id="panel-wiz-staffel" style="display:none;">
@@ -3695,19 +3659,18 @@
     wizSelectedTopics = new Set(wizStep0TopicId ? [wizStep0TopicId] : []);
     wizFilterPraeferenz = wizStep0Pref ? [wizStep0Pref] : [];
     wizShowGesetze = false;
-    const defGesetz = document.getElementById('gesetz-nein');
-    if (defGesetz) setFilterGesetze(false, defGesetz);
-    document.querySelectorAll('[id^="mob-"]').forEach(b => b.classList.remove('active'));
-    const defMob = document.getElementById('mob-beides');
-    if (defMob) setFilterMob('beides', defMob);
     document.getElementById('wiz-step1').classList.remove('active');
+
+    const bgHatRechner = col === 23 || !!BG_HAS_RECHNER[col];
+    if (!bgHatRechner) {
+      // Kein Rechner → direkt zum Ergebnis
+      applyFilters();
+      return;
+    }
+    // Rechner vorhanden → 'ti' in Topics sicherstellen und Step 1b zeigen
+    wizSelectedTopics.add('ti');
     document.getElementById('wiz-step1b').classList.add('active');
-    try { renderTopicSelect(); } catch(e) { console.warn('renderTopicSelect:', e); }
-    try { updateWiz1bGesetze(); } catch(e) { console.warn('updateWiz1bGesetze:', e); }
-    // Rechner immer direkt anzeigen – unabhängig von anderen Funktionen
-    const _rr = document.getElementById('wiz-rechner-wrap');
-    if (_rr) _rr.style.display = (col === 23 || !!BG_HAS_RECHNER[col]) && wizSelectedTopics.has('ti') ? 'block' : 'none';
-    try { updateRehaRechnerVisibility(); } catch(e) { console.warn('updateRehaRechnerVisibility:', e); }
+    try { updateWizRechnerPanel(); } catch(e) { console.warn('updateWizRechnerPanel:', e); }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -3716,13 +3679,11 @@
   let lastKHData   = null;
 
   function hasRechner() {
-    return (wizBGCol === 23 || !!BG_HAS_RECHNER[wizBGCol]) && wizSelectedTopics.has('ti');
+    return wizBGCol === 23 || !!BG_HAS_RECHNER[wizBGCol];
   }
 
   function updateRehaRechnerVisibility() {
     const show = hasRechner();
-    const wrap = document.getElementById('wiz-rechner-wrap');
-    if (wrap) wrap.style.display = show ? 'block' : 'none';
     if (show) {
       updateWizRechnerPanel();
     } else {
