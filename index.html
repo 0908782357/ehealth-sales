@@ -3648,7 +3648,7 @@
   }
 
 
-  let lastRehaTotal = null;
+  let lastRehaData = null;
 
   function hasRechner() {
     return wizBGCol === 23 || !!BG_HAS_RECHNER[wizBGCol];
@@ -3659,7 +3659,7 @@
     const inlineEl = document.getElementById('reha-rechner');
     if (inlineEl) inlineEl.style.display = show ? 'block' : 'none';
     if (!show) {
-      lastRehaTotal = null;
+      lastRehaData = null;
       const sumEl = document.getElementById('reha-result-summary');
       if (sumEl) sumEl.style.display = 'none';
     }
@@ -3668,10 +3668,40 @@
   function updateRehaResultSummary() {
     const sumEl = document.getElementById('reha-result-summary');
     if (!sumEl) return;
-    if (lastRehaTotal !== null && hasRechner()) {
-      const fmt = v => v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-      document.getElementById('reha-result-summary-total').textContent = fmt(lastRehaTotal) + ' €/Behandlungstag';
-      document.getElementById('reha-result-summary-detail').textContent = 'TI-Zuschlag gesamt nach § 381 SGB V';
+    if (lastRehaData !== null && hasRechner()) {
+      const d = lastRehaData;
+      const fmt  = v => v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const fmtE = v => `<strong>${fmt(v)} €</strong>`;
+      const fmtM = v => `<strong>${fmt(v)} €/Monat</strong>`;
+      const row  = (label, val) => `<div class="rr-result-row"><span>${label}</span>${val}</div>`;
+      const hdr  = txt => `<div style="font-size:0.65rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid #bbf7d0;padding-bottom:5px;margin:14px 0 8px;">${txt}</div>`;
+
+      sumEl.innerHTML = `
+        <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:14px;padding:20px 24px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#059669" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            <span style="font-size:0.7rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:0.07em;">TI-Finanzierungsrechner – Orientierungswert nach § 381 SGB V</span>
+          </div>
+          ${hdr('2-Jahres-Pauschale (§§ 5, 6 SGB V)')}
+          ${row('Anpassung IT pro Konnektor', fmtE(d.h7))}
+          ${row('IT-Kosten pro Einrichtung', fmtE(33000))}
+          ${row('Organisatorische Umstellung', fmtE(2500))}
+          <div class="rr-result-total" style="margin-bottom:0;">
+            <span>Zuschlag I</span><strong>${fmt(d.zuschlagI)} €/Behandlungstag</strong>
+          </div>
+          ${hdr('5-Jahres-Pauschale (§§ 2, 3, 4, 7 SGB V) — auf Monatsbasis')}
+          ${row('Konnektorpauschale',  fmtM(d.k7  / 60))}
+          ${row('Kartenterminals',     fmtM(d.k10 / 60))}
+          ${row('KON-Wartung',         fmtM(d.k11 / 60))}
+          ${row('VPN-ZD',              fmtM(d.k12 / 60))}
+          ${row('Betrieb',             fmtM(d.k13 / 60))}
+          ${row('lfd. Wartung I',      fmtM(20000 / 60))}
+          ${row('lfd. Wartung II',     fmtM(d.k16 / 60))}
+          <div class="rr-result-total">
+            <span>Zuschlag II (Summe)</span><strong>${fmt(d.zuschlagII_m)} €/Monat</strong>
+          </div>
+          <p style="font-size:0.68rem;color:#9ca3af;margin:10px 0 0;">Orientierungswert ohne Gewähr. Individuelle Verhandlung mit Kostenträgern bleibt maßgeblich.</p>
+        </div>`;
       sumEl.style.display = 'block';
     } else {
       sumEl.style.display = 'none';
@@ -3704,7 +3734,7 @@
 
     const resultEl = document.getElementById('rr-result' + s);
     const e13 = amb + stat;
-    if (!betten || !e13) { resultEl.style.display = 'none'; if (!suffix) lastRehaTotal = null; return; }
+    if (!betten || !e13) { resultEl.style.display = 'none'; if (!suffix) lastRehaData = null; return; }
 
     // Intermediate (own facility values)
     const e7  = Math.ceil(Math.max(abt, betten / 25));
@@ -3744,7 +3774,13 @@
     const zuschlagII = Math.round(k19 / 5 / e13 * 100) / 100;
 
     const total = zuschlagI + zuschlagII;
-    if (!suffix) lastRehaTotal = total;
+    if (!suffix) {
+      lastRehaData = {
+        zuschlagI, h7, h15,
+        k7, k10, k11, k12, k13, k16,
+        zuschlagII_m: (k7 + k10 + k11 + k12 + k13 + 20000 + k16) / 60
+      };
+    }
     const fmt = v => v.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2});
 
     resultEl.style.display = '';
