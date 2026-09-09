@@ -3713,6 +3713,7 @@
 
 
   let lastRehaData = null;
+  let lastKHData   = null;
 
   function hasRechner() {
     return (wizBGCol === 23 || !!BG_HAS_RECHNER[wizBGCol]) && wizSelectedTopics.has('ti');
@@ -3726,6 +3727,7 @@
       updateWizRechnerPanel();
     } else {
       lastRehaData = null;
+      lastKHData   = null;
       const sumEl = document.getElementById('reha-result-summary');
       if (sumEl) sumEl.style.display = 'none';
     }
@@ -3748,6 +3750,7 @@
       const ti = BG_TI_DATA[wizBGCol];
       renderWizStaffelTable(ti?.rechner_config || []);
     } else if (typ === 'kh_377') {
+      lastKHData = null;
       const p = document.getElementById('panel-wiz-kh377');
       if (p) p.style.display = '';
       ['kh-betten','kh-faelle'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -3784,9 +3787,14 @@
   function updateRehaResultSummary() {
     const sumEl = document.getElementById('reha-result-summary');
     if (!sumEl) return;
-    if (lastRehaData !== null && hasRechner() && getWizRechnerTyp() === 'reha_381') {
+    if (!hasRechner()) { sumEl.style.display = 'none'; return; }
+
+    const typ = getWizRechnerTyp();
+    const fmt  = v => v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    // ── Reha § 381 ──
+    if (typ === 'reha_381' && lastRehaData !== null) {
       const d = lastRehaData;
-      const fmt  = v => v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const fmtE = v => `<strong>${fmt(v)} €</strong>`;
       const fmtM = v => `<strong>${fmt(v)} €/Monat</strong>`;
       const row  = (label, val) => `<div class="rr-result-row"><span>${label}</span>${val}</div>`;
@@ -3798,14 +3806,12 @@
           </div>
           <span style="font-size:0.72rem;color:#059669;font-weight:600;white-space:nowrap;flex-shrink:0;">Details <span class="rrs-arrow">▾</span></span>
         </div>`;
-
       sumEl.innerHTML = `
         <div style="background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:14px;padding:16px 22px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
             <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#059669" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             <span style="font-size:0.68rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:0.07em;">TI-Finanzierungsrechner – § 381 SGB V</span>
           </div>
-
           <details class="rrs-block">
             <summary style="cursor:pointer;padding:10px 0;border-top:1px solid #bbf7d0;">
               ${summaryRow('2-Jahres-Pauschale (§§ 5, 6)', 'Zuschlag I: ' + fmt(d.zuschlagI) + ' €/Behandlungstag')}
@@ -3817,7 +3823,6 @@
               ${row('Summe 2-Jahres-Kosten', fmtE(d.h15))}
             </div>
           </details>
-
           <details class="rrs-block">
             <summary style="cursor:pointer;padding:10px 0;border-top:1px solid #bbf7d0;">
               ${summaryRow('5-Jahres-Pauschale (§§ 2, 3, 4, 7) — monatlich', 'Zuschlag II: ' + fmt(d.zuschlagII_m) + ' €/Monat')}
@@ -3832,10 +3837,62 @@
               ${row('lfd. Wartung II',     fmtM(d.k16 / 60))}
             </div>
           </details>
-
           <p style="font-size:0.67rem;color:#9ca3af;margin:8px 0 0;">Orientierungswert ohne Gewähr. Individuelle Verhandlung mit Kostenträgern maßgeblich.</p>
         </div>`;
       sumEl.style.display = 'block';
+
+    // ── KH § 377 ──
+    } else if (typ === 'kh_377' && lastKHData !== null) {
+      const d = lastKHData;
+      const row = (label, val) => `<div class="rr-result-row"><span>${label}</span><strong>${val}</strong></div>`;
+      sumEl.innerHTML = `
+        <div style="background:#eef0f7;border:1.5px solid #c7d0ec;border-radius:14px;padding:16px 22px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#3C4A7C" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            <span style="font-size:0.68rem;font-weight:700;color:#3C4A7C;text-transform:uppercase;letter-spacing:0.07em;">TI-Finanzierungsrechner – § 377 SGB V (2026)</span>
+          </div>
+          <details class="rrs-block">
+            <summary style="cursor:pointer;padding:10px 0;border-top:1px solid #c7d0ec;">
+              <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;">
+                <div>
+                  <span style="font-size:0.63rem;font-weight:700;color:#3C4A7C;text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:1px;">Telematikzuschlag pro Fall</span>
+                  <span style="font-size:1rem;font-weight:800;color:#2d3a63;">${fmt(d.zuschlag)} €/Fall</span>
+                </div>
+                <span style="font-size:0.72rem;color:#3C4A7C;font-weight:600;white-space:nowrap;flex-shrink:0;">Details <span class="rrs-arrow">▾</span></span>
+              </div>
+            </summary>
+            <div style="padding:6px 0 4px;">
+              ${row('Betten', d.betten.toLocaleString('de-DE'))}
+              ${row('Vereinbarte Fälle', d.faelle.toLocaleString('de-DE'))}
+              ${row('Monate Vollpauschale', d.mVoll + ' Mon.')}
+              ${row('Finanzierungsbetrag gesamt', fmt(d.finanzierung) + ' €')}
+            </div>
+          </details>
+          <p style="font-size:0.67rem;color:#9ca3af;margin:8px 0 0;">Orientierungswert ohne Gewähr. Maßgeblich ist die individuelle Vereinbarung.</p>
+        </div>`;
+      sumEl.style.display = 'block';
+
+    // ── Staffel ──
+    } else if (typ === 'staffel') {
+      const ti = BG_TI_DATA[wizBGCol];
+      const config = ti?.rechner_config || [];
+      if (!config.length) { sumEl.style.display = 'none'; return; }
+      sumEl.innerHTML = `
+        <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:14px;padding:16px 22px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            <span style="font-size:0.68rem;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:0.07em;">TI-Finanzierung – Fördersätze</span>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+            ${config.map((r, i) => `
+            <tr style="border-bottom:1px solid #dbeafe;${i % 2 === 1 ? 'background:rgba(219,234,254,0.3);' : ''}">
+              <td style="padding:6px 8px;color:#1e3a8a;">${r.label || '–'}</td>
+              <td style="padding:6px 8px;text-align:right;font-weight:700;color:#1e40af;white-space:nowrap;">${r.betrag || '–'}</td>
+            </tr>`).join('')}
+          </table>
+        </div>`;
+      sumEl.style.display = 'block';
+
     } else {
       sumEl.style.display = 'none';
     }
@@ -3903,7 +3960,7 @@
     if (mf) mf.style.display = (jahr !== 'voll') ? '' : 'none';
     const resultEl = document.getElementById('kh-result-wiz');
     if (!resultEl) return;
-    if (!betten || !faelle) { resultEl.style.display = 'none'; return; }
+    if (!betten || !faelle) { lastKHData = null; resultEl.style.display = 'none'; return; }
     let mVoll = 12;
     if (jahr !== 'voll') {
       mVoll = Math.min(12, Math.max(1, parseInt(document.getElementById('kh-monate-voll')?.value) || 6));
@@ -3913,6 +3970,7 @@
     const gesamtRed  = KH_GP_RED  + betten * KH_BP_RED;
     const finanzierung = mVoll * (gesamtVoll / 12) + mRed * (gesamtRed / 12);
     const zuschlag = Math.round(finanzierung / faelle * 100) / 100;
+    lastKHData = { betten, faelle, mVoll, mRed, gesamtVoll, gesamtRed, finanzierung, zuschlag };
     const fmt = v => v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     resultEl.innerHTML = `
       <div class="rr-result-row"><span>Gesamtbetrag Vollpauschale (${mVoll} Mon.)</span><strong>${fmt(mVoll * gesamtVoll / 12)} €</strong></div>
