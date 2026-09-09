@@ -97,7 +97,26 @@
   /* Modal */
   .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: none; align-items: flex-start; justify-content: center; padding: 24px; overflow-y: auto; }
   .modal-bg.open { display: flex; }
-  .modal { background: white; border-radius: 18px; width: 100%; max-width: 680px; padding: 34px 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); margin: auto; }
+  .modal { background: white; border-radius: 18px; width: 100%; max-width: 800px; padding: 34px 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); margin: auto; }
+
+  /* Thema-Tabs */
+  .thema-tabs { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:4px; }
+  .thema-tab {
+    padding:5px 11px; border-radius:20px; border:1.5px solid var(--gray-200);
+    font-size:0.72rem; font-weight:700; cursor:pointer;
+    transition:all 0.15s; background:white; color:var(--gray-500); white-space:nowrap;
+  }
+  .thema-tab:hover { border-color:var(--gray-500); color:var(--gray-900); }
+  .thema-tab.active { color:white !important; border-color:transparent !important; }
+  .thema-tab[data-thema="security"].active  { background:#E53E3E; }
+  .thema-tab[data-thema="ti"].active        { background:#3C4A7C; }
+  .thema-tab[data-thema="it"].active        { background:#4299E1; }
+  .thema-tab[data-thema="modernwork"].active { background:#6DC52D; }
+  .thema-tab[data-thema="prozess"].active   { background:#ED8936; }
+  .thema-tab[data-thema="telemedizin"].active { background:#38B2AC; }
+  .thema-tab.has-data::after { content:'•'; margin-left:4px; }
+  /* Dot-Badges in der Tabelle */
+  .topic-dot { display:inline-block; width:9px; height:9px; border-radius:50%; vertical-align:middle; margin-right:2px; }
   .modal h2 { font-family: Montserrat, sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--navy); margin-bottom: 24px; }
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .form-full { grid-column: 1 / -1; }
@@ -229,15 +248,13 @@
             <th>Nr.</th>
             <th>Berufsgruppe</th>
             <th>Gruppe</th>
-            <th>TI – Finanzierungsart</th>
-            <th>TI – Rechtsgrundlage</th>
-            <th>TI – Förderbetrag</th>
+            <th>Anforderungen</th>
             <th style="width:60px;text-align:center;">Rechner</th>
             <th style="width:120px">Aktionen</th>
           </tr>
         </thead>
         <tbody id="bg-tbody">
-          <tr><td colspan="8" class="empty">Lade Berufsgruppen…</td></tr>
+          <tr><td colspan="6" class="empty">Lade Berufsgruppen…</td></tr>
         </tbody>
       </table>
     </div>
@@ -270,7 +287,18 @@
       </div>
 
       <hr class="form-divider">
-      <div class="form-section-label">Telematik Infrastruktur – Finanzierungsvereinbarung</div>
+      <div class="form-section-label">Gesetzliche Anforderungen je Themenbereich</div>
+
+      <div class="form-full">
+        <div class="thema-tabs" id="thema-tabs">
+          <button type="button" class="thema-tab active" data-thema="security"    onclick="switchThema('security')">Cybersecurity</button>
+          <button type="button" class="thema-tab"        data-thema="ti"          onclick="switchThema('ti')">Telematik Infrastruktur</button>
+          <button type="button" class="thema-tab"        data-thema="it"          onclick="switchThema('it')">IT-Infrastruktur</button>
+          <button type="button" class="thema-tab"        data-thema="modernwork"  onclick="switchThema('modernwork')">Modern Work</button>
+          <button type="button" class="thema-tab"        data-thema="prozess"     onclick="switchThema('prozess')">Prozess Digitalisierung</button>
+          <button type="button" class="thema-tab"        data-thema="telemedizin" onclick="switchThema('telemedizin')">Telemedizin</button>
+        </div>
+      </div>
 
       <div class="form-group">
         <label>Finanzierungsart</label>
@@ -279,6 +307,7 @@
           <option>Monatliche Pauschale</option>
           <option>Monatliche Pauschale + Kartenzuschlag</option>
           <option>Fallbezogener Zuschlag</option>
+          <option>Einmalige Förderung</option>
           <option>Monatliche Pauschale (Beträge aktuell unklar)</option>
         </select>
       </div>
@@ -306,7 +335,7 @@
         <label>Auszahlungsweg</label>
         <textarea id="f-auszahlung" style="min-height:70px;" placeholder="z.B. Automatisch über KV im Rahmen der Quartalsabrechnung…"></textarea>
       </div>
-      <div class="form-group form-full" style="display:flex;align-items:center;gap:10px;padding-top:4px;">
+      <div id="rechner-field" class="form-group form-full" style="display:none;flex-direction:row;align-items:center;gap:10px;padding-top:4px;">
         <input type="checkbox" id="f-has-rechner" style="width:18px;height:18px;accent-color:var(--navy);cursor:pointer;flex-shrink:0;">
         <label for="f-has-rechner" style="cursor:pointer;font-size:0.87rem;">Finanzierungsrechner im Produktfinder anzeigen</label>
       </div>
@@ -336,9 +365,20 @@ const SUPA_URL = 'https://focysklymhmcfwgxdtuk.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
+const THEMEN = [
+  { id: 'security',    label: 'Cybersecurity',           color: '#E53E3E' },
+  { id: 'ti',         label: 'Telematik Infrastruktur', color: '#3C4A7C' },
+  { id: 'it',         label: 'IT-Infrastruktur',        color: '#4299E1' },
+  { id: 'modernwork', label: 'Modern Work',              color: '#6DC52D' },
+  { id: 'prozess',    label: 'Prozess Digitalisierung', color: '#ED8936' },
+  { id: 'telemedizin',label: 'Telemedizin',              color: '#38B2AC' },
+];
+
 let userRole = null;
 let editId = null;
 let deleteId = null;
+let activeThema = 'security';
+let topicData = {};
 
 async function init() {
   const { data: { session } } = await sb.auth.getSession();
@@ -361,37 +401,61 @@ async function init() {
 
 async function loadBerufsgruppen() {
   const tbody = document.getElementById('bg-tbody');
-  tbody.innerHTML = '<tr><td colspan="8" class="empty">Lade…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" class="empty">Lade…</td></tr>';
 
-  const { data, error } = await sb.from('berufsgruppen').select('*').order('nr', { ascending: true });
+  const [bgRes, topicRes] = await Promise.all([
+    sb.from('berufsgruppen').select('*').order('nr', { ascending: true }),
+    sb.from('bg_topic_requirements').select('berufsgruppe_id,thema,finanzierungsart,rechtsgrundlage,has_rechner').catch(() => ({ data: null }))
+  ]);
 
-  if (error) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty">Fehler beim Laden: ' + error.message + '</td></tr>';
+  if (bgRes.error) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Fehler beim Laden: ' + bgRes.error.message + '</td></tr>';
     return;
   }
 
-  if (!data || data.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty">Noch keine Berufsgruppen angelegt.</td></tr>';
+  const data = bgRes.data || [];
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Noch keine Berufsgruppen angelegt.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = data.map(bg => `
-    <tr>
+  // Map topic rows by berufsgruppe_id
+  const topicMap = {};
+  (topicRes.data || []).forEach(r => {
+    if (!topicMap[r.berufsgruppe_id]) topicMap[r.berufsgruppe_id] = [];
+    topicMap[r.berufsgruppe_id].push(r);
+  });
+
+  tbody.innerHTML = data.map(bg => {
+    const topics = topicMap[bg.id] || [];
+    // Fallback: use old ti_* columns if new table has no data for this BG
+    const tiFromOld = !topics.length && bg.ti_finanzierungsart;
+    const activatedThemen = tiFromOld
+      ? [{ thema: 'ti' }]
+      : THEMEN.filter(t => topics.find(r => r.thema === t.id && (r.finanzierungsart || r.rechtsgrundlage)));
+    const hasRechner = bg.has_rechner || topics.some(t => t.has_rechner);
+
+    const dots = activatedThemen.length
+      ? activatedThemen.map(t => {
+          const def = THEMEN.find(d => d.id === t.id) || { color: '#ccc', label: t.id };
+          return `<span class="topic-dot" style="background:${def.color}" title="${def.label}"></span>`;
+        }).join('') + `&nbsp;<span style="font-size:0.75rem;color:var(--gray-500);">${activatedThemen.length} Thema${activatedThemen.length !== 1 ? 'en' : ''}</span>`
+      : '<span class="ti-empty">–</span>';
+
+    return `<tr>
       <td><strong>${bg.nr}</strong></td>
       <td><strong>${escHtml(bg.name)}</strong></td>
       <td>${bg.gruppe ? escHtml(bg.gruppe) : '<span class="ti-empty">–</span>'}</td>
-      <td>${bg.ti_finanzierungsart ? '<span class="ti-badge">' + escHtml(bg.ti_finanzierungsart) + '</span>' : '<span class="ti-empty">–</span>'}</td>
-      <td>${bg.ti_rechtsgrundlage ? '<code style="font-size:0.78rem;color:var(--navy);">' + escHtml(bg.ti_rechtsgrundlage) + '</code>' : '<span class="ti-empty">–</span>'}</td>
-      <td>${bg.ti_foerderbetrag ? escHtml(bg.ti_foerderbetrag) : '<span class="ti-empty">–</span>'}</td>
-      <td style="text-align:center;">${bg.has_rechner ? '<span title="Rechner aktiv" style="color:#059669;font-size:1.1rem;">✓</span>' : '<span class="ti-empty">–</span>'}</td>
+      <td>${dots}</td>
+      <td style="text-align:center;">${hasRechner ? '<span title="Rechner aktiv" style="color:#059669;font-size:1.1rem;">✓</span>' : '<span class="ti-empty">–</span>'}</td>
       <td>
         <div class="actions">
           <button class="btn btn-edit btn-sm" onclick="openModal('${bg.id}')">Bearbeiten</button>
           <button class="btn btn-danger btn-sm" onclick="openConfirm('${bg.id}', '${escAttr(bg.name)}')">Löschen</button>
         </div>
       </td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
 }
 
 function openModal(id) {
@@ -408,19 +472,38 @@ function openModal(id) {
 }
 
 async function loadIntoModal(id) {
-  const { data } = await sb.from('berufsgruppen').select('*').eq('id', id).maybeSingle();
+  const [{ data }, topicRes] = await Promise.all([
+    sb.from('berufsgruppen').select('*').eq('id', id).maybeSingle(),
+    sb.from('bg_topic_requirements').select('*').eq('berufsgruppe_id', id).catch(() => ({ data: null }))
+  ]);
   if (!data) return;
-  document.getElementById('f-name').value = data.name || '';
-  document.getElementById('f-nr').value = data.nr || '';
+
+  document.getElementById('f-name').value  = data.name   || '';
+  document.getElementById('f-nr').value    = data.nr     || '';
   document.getElementById('f-gruppe').value = data.gruppe || '';
-  document.getElementById('f-art').value = data.ti_finanzierungsart || '';
-  document.getElementById('f-rechtsgrundlage').value = data.ti_rechtsgrundlage || '';
-  document.getElementById('f-geber').value = data.ti_foerdergeber || '';
-  document.getElementById('f-gueltig').value = data.ti_gueltig_seit || '';
-  document.getElementById('f-betrag').value = data.ti_foerderbetrag || '';
-  document.getElementById('f-bedingungen').value = data.ti_bedingungen || '';
-  document.getElementById('f-auszahlung').value = data.ti_auszahlung || '';
-  document.getElementById('f-has-rechner').checked = !!data.has_rechner;
+
+  // Build topicData from new table rows
+  topicData = {};
+  (topicRes.data || []).forEach(r => { topicData[r.thema] = r; });
+
+  // Fallback: pre-populate TI from old columns if new table has no TI entry
+  if (!topicData['ti'] && (data.ti_finanzierungsart || data.ti_rechtsgrundlage || data.has_rechner)) {
+    topicData['ti'] = {
+      finanzierungsart: data.ti_finanzierungsart || '',
+      rechtsgrundlage:  data.ti_rechtsgrundlage  || '',
+      foerdergeber:     data.ti_foerdergeber     || '',
+      gueltig_seit:     data.ti_gueltig_seit     || '',
+      foerderbetrag:    data.ti_foerderbetrag    || '',
+      bedingungen:      data.ti_bedingungen      || '',
+      auszahlung:       data.ti_auszahlung       || '',
+      has_rechner:      !!data.has_rechner,
+    };
+  }
+
+  // Activate the first tab that has data, or default to 'security'
+  const firstFilled = THEMEN.find(t => topicData[t.id] && (topicData[t.id].finanzierungsart || topicData[t.id].rechtsgrundlage));
+  switchThema(firstFilled ? firstFilled.id : 'security');
+  refreshTabDots();
 }
 
 function closeModal() {
@@ -430,26 +513,78 @@ function closeModal() {
 }
 
 function clearModal() {
-  ['f-name','f-nr','f-gruppe','f-art','f-rechtsgrundlage','f-geber','f-gueltig','f-betrag','f-bedingungen','f-auszahlung'].forEach(id => {
+  document.getElementById('f-name').value  = '';
+  document.getElementById('f-nr').value    = '';
+  document.getElementById('f-gruppe').value = '';
+  topicData = {};
+  activeThema = 'security';
+  ['f-art','f-rechtsgrundlage','f-geber','f-gueltig','f-betrag','f-bedingungen','f-auszahlung'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('f-has-rechner').checked = false;
+  document.getElementById('rechner-field').style.display = 'none';
+  document.querySelectorAll('.thema-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.thema === 'security');
+    t.classList.remove('has-data');
+  });
   const msg = document.getElementById('modal-msg');
   msg.className = 'msg';
   msg.textContent = '';
 }
 
+// ── Tab-Logik ──────────────────────────────────────────────
+
+function flushThemaToMemory() {
+  topicData[activeThema] = {
+    finanzierungsart: document.getElementById('f-art').value.trim(),
+    rechtsgrundlage:  document.getElementById('f-rechtsgrundlage').value.trim(),
+    foerdergeber:     document.getElementById('f-geber').value.trim(),
+    gueltig_seit:     document.getElementById('f-gueltig').value.trim(),
+    foerderbetrag:    document.getElementById('f-betrag').value.trim(),
+    bedingungen:      document.getElementById('f-bedingungen').value.trim(),
+    auszahlung:       document.getElementById('f-auszahlung').value.trim(),
+    has_rechner:      activeThema === 'ti' ? document.getElementById('f-has-rechner').checked : !!(topicData[activeThema]?.has_rechner),
+  };
+}
+
+function loadThemaIntoForm(themaId) {
+  const d = topicData[themaId] || {};
+  document.getElementById('f-art').value             = d.finanzierungsart || '';
+  document.getElementById('f-rechtsgrundlage').value = d.rechtsgrundlage  || '';
+  document.getElementById('f-geber').value           = d.foerdergeber     || '';
+  document.getElementById('f-gueltig').value         = d.gueltig_seit     || '';
+  document.getElementById('f-betrag').value          = d.foerderbetrag    || '';
+  document.getElementById('f-bedingungen').value     = d.bedingungen      || '';
+  document.getElementById('f-auszahlung').value      = d.auszahlung       || '';
+  const rechnerField = document.getElementById('rechner-field');
+  if (themaId === 'ti') {
+    rechnerField.style.display = 'flex';
+    document.getElementById('f-has-rechner').checked = !!d.has_rechner;
+  } else {
+    rechnerField.style.display = 'none';
+  }
+}
+
+function switchThema(themaId) {
+  flushThemaToMemory();
+  activeThema = themaId;
+  document.querySelectorAll('.thema-tab').forEach(t => t.classList.toggle('active', t.dataset.thema === themaId));
+  loadThemaIntoForm(themaId);
+}
+
+function refreshTabDots() {
+  document.querySelectorAll('.thema-tab').forEach(btn => {
+    const t = topicData[btn.dataset.thema];
+    btn.classList.toggle('has-data', !!(t && (t.finanzierungsart || t.rechtsgrundlage || t.foerderbetrag)));
+  });
+}
+
 async function saveBerufsgruppe() {
-  const name = document.getElementById('f-name').value.trim();
-  const nr = parseInt(document.getElementById('f-nr').value, 10);
+  flushThemaToMemory();
+
+  const name  = document.getElementById('f-name').value.trim();
+  const nr    = parseInt(document.getElementById('f-nr').value, 10);
   const gruppe = document.getElementById('f-gruppe').value.trim();
-  const art = document.getElementById('f-art').value.trim();
-  const rechtsgrundlage = document.getElementById('f-rechtsgrundlage').value.trim();
-  const geber = document.getElementById('f-geber').value.trim();
-  const gueltig = document.getElementById('f-gueltig').value.trim();
-  const betrag = document.getElementById('f-betrag').value.trim();
-  const bedingungen = document.getElementById('f-bedingungen').value.trim();
-  const auszahlung = document.getElementById('f-auszahlung').value.trim();
 
   const msg = document.getElementById('modal-msg');
   msg.className = 'msg';
@@ -457,32 +592,66 @@ async function saveBerufsgruppe() {
   if (!name) { showMsg(msg, 'error', 'Name ist ein Pflichtfeld.'); return; }
   if (!nr || isNaN(nr) || nr < 1) { showMsg(msg, 'error', 'Nr. muss eine positive Zahl sein.'); return; }
 
+  // TI-Tab-Daten für rückwärtskompatible Spalten
+  const ti = topicData['ti'] || {};
   const payload = {
-    name,
-    nr,
+    name, nr,
     gruppe: gruppe || null,
-    ti_finanzierungsart:  art || null,
-    ti_rechtsgrundlage:   rechtsgrundlage || null,
-    ti_foerdergeber:      geber || null,
-    ti_gueltig_seit:      gueltig || null,
-    ti_foerderbetrag:     betrag || null,
-    ti_bedingungen:       bedingungen || null,
-    ti_auszahlung:        auszahlung || null,
-    has_rechner:          document.getElementById('f-has-rechner').checked,
+    ti_finanzierungsart: ti.finanzierungsart || null,
+    ti_rechtsgrundlage:  ti.rechtsgrundlage  || null,
+    ti_foerdergeber:     ti.foerdergeber     || null,
+    ti_gueltig_seit:     ti.gueltig_seit     || null,
+    ti_foerderbetrag:    ti.foerderbetrag    || null,
+    ti_bedingungen:      ti.bedingungen      || null,
+    ti_auszahlung:       ti.auszahlung       || null,
+    has_rechner:         !!ti.has_rechner,
     aktualisiert_am: new Date().toISOString()
   };
 
+  let bgId = editId;
   let error;
+
   if (editId) {
     ({ error } = await sb.from('berufsgruppen').update(payload).eq('id', editId));
   } else {
-    ({ error } = await sb.from('berufsgruppen').insert(payload));
+    const res = await sb.from('berufsgruppen').insert(payload).select('id').single();
+    error = res.error;
+    bgId  = res.data?.id;
   }
 
   if (error) {
     const detail = error.code === '23505' ? 'Diese Nr. ist bereits vergeben.' : error.message;
     showMsg(msg, 'error', 'Fehler: ' + detail);
     return;
+  }
+
+  // Thema-Anforderungen in bg_topic_requirements upserten
+  if (bgId) {
+    const upserts = THEMEN
+      .filter(t => {
+        const d = topicData[t.id];
+        return d && (d.finanzierungsart || d.rechtsgrundlage || d.foerderbetrag || d.bedingungen || d.auszahlung || d.has_rechner);
+      })
+      .map(t => ({
+        berufsgruppe_id: bgId,
+        thema:           t.id,
+        finanzierungsart: topicData[t.id].finanzierungsart || null,
+        rechtsgrundlage:  topicData[t.id].rechtsgrundlage  || null,
+        foerdergeber:     topicData[t.id].foerdergeber     || null,
+        gueltig_seit:     topicData[t.id].gueltig_seit     || null,
+        foerderbetrag:    topicData[t.id].foerderbetrag    || null,
+        bedingungen:      topicData[t.id].bedingungen      || null,
+        auszahlung:       topicData[t.id].auszahlung       || null,
+        has_rechner:      !!topicData[t.id].has_rechner,
+        aktualisiert_am:  new Date().toISOString(),
+      }));
+
+    if (upserts.length > 0) {
+      const { error: uErr } = await sb
+        .from('bg_topic_requirements')
+        .upsert(upserts, { onConflict: 'berufsgruppe_id,thema' });
+      if (uErr) console.warn('Thema-Upsert Fehler:', uErr.message);
+    }
   }
 
   closeModal();
