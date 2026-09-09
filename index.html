@@ -3661,14 +3661,13 @@
     wizShowGesetze = false;
     document.getElementById('wiz-step1').classList.remove('active');
 
-    const bgHatRechner = col === 23 || !!BG_HAS_RECHNER[col];
+    const bgHatRechner = (col === 23 || !!BG_HAS_RECHNER[col]) && wizStep0TopicId === 'ti';
     if (!bgHatRechner) {
-      // Kein Rechner → direkt zum Ergebnis
+      // Kein Rechner oder anderes Thema → direkt zum Ergebnis
       applyFilters();
       return;
     }
-    // Rechner vorhanden → 'ti' in Topics sicherstellen und Step 1b zeigen
-    wizSelectedTopics.add('ti');
+    // TI-Rechner vorhanden → Step 1b zeigen
     document.getElementById('wiz-step1b').classList.add('active');
     try { updateWizRechnerPanel(); } catch(e) { console.warn('updateWizRechnerPanel:', e); }
     window.scrollTo({ top: 0, behavior: 'smooth' });
