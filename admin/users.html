@@ -358,8 +358,8 @@
 
     document.getElementById('nav-group-admin').style.display = '';
     await loadUsers();
+    setupNavRole(roleRow?.role).catch(console.warn);
   }
-    setupNavRole(role).catch(console.warn);
 
   async function loadUsers() {
     const { data, error } = await sb
