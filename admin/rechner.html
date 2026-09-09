@@ -133,6 +133,25 @@
   .rr-result-total-label { font-size: 0.88rem; font-weight: 700; color: var(--navy); }
   .rr-result-total-value { font-size: 1.2rem; font-weight: 800; color: #065f46; }
 
+  /* Calculation result sections */
+  .rr-section { margin-bottom: 22px; }
+  .rr-section-title {
+    font-size: 0.7rem; font-weight: 700; color: var(--navy);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    border-bottom: 1.5px solid #c7d0ec; padding-bottom: 6px; margin-bottom: 10px;
+  }
+  .rr-calc-rows { display: flex; flex-direction: column; gap: 5px; }
+  .rr-calc-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 0.83rem; color: var(--gray-500); padding: 2px 0;
+  }
+  .rr-calc-row span:last-child { font-weight: 600; color: var(--gray-900); font-variant-numeric: tabular-nums; white-space: nowrap; padding-left: 12px; }
+  .rr-calc-row.subtotal { border-top: 1px solid var(--gray-200); padding-top: 7px; margin-top: 2px; }
+  .rr-calc-row.subtotal span { font-weight: 700 !important; color: var(--navy) !important; }
+  .rr-calc-row.zuschlag { border-top: 2px solid #c7d0ec; padding-top: 9px; margin-top: 3px; }
+  .rr-calc-row.zuschlag span:first-child { font-weight: 700; color: var(--navy); font-size: 0.9rem; }
+  .rr-calc-row.zuschlag span:last-child { font-size: 1.05rem; font-weight: 800; color: #065f46; }
+
   /* no-rechner state */
   .no-rechner {
     text-align: center; padding: 60px 20px; color: var(--gray-400);
@@ -283,41 +302,61 @@
 
         <button class="rr-toggle-btn" onclick="toggleAdvanced()" id="rr-toggle-btn">
           <svg id="rr-toggle-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;transition:transform 0.2s;"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-          Erweiterte Einstellungen (Stufe 2 aktiv, E13-Entgelt)
+          Erweiterte Einstellungen (RZK, gemeinsam genutzte IT)
         </button>
 
         <div class="rr-advanced" id="rr-advanced">
           <div class="rr-advanced-grid">
             <div class="rr-field">
-              <label>Stufe 2 aktiv?</label>
-              <select id="rr-stufe2" onchange="calcRechner()">
-                <option value="nein">Nein</option>
-                <option value="ja">Ja</option>
+              <label>Konnektor-Typ</label>
+              <select id="rr-rzk" onchange="calcRechner()">
+                <option value="nein">EBK (Einrichtungs-Konnektor)</option>
+                <option value="ja">RZK (Rechenzentrum-Konnektor)</option>
               </select>
             </div>
             <div class="rr-field">
-              <label>E13-Entgelt (€/Std.)</label>
-              <input type="number" id="rr-e13" placeholder="z.B. 22.50" step="0.01" min="0" oninput="calcRechner()">
+              <label>Einrichtungen mit gemeinsam genutzter IT</label>
+              <input type="number" id="rr-einrichtungen" placeholder="0 = keine" min="0" oninput="calcRechner()">
+            </div>
+          </div>
+          <div class="rr-advanced-grid" id="rr-kum-fields" style="margin-top:14px;display:none;">
+            <div class="rr-field">
+              <label>Kumulierte Betten/Plätze (alle Einrichtungen)</label>
+              <input type="number" id="rr-betten-kum" placeholder="Gesamt Betten" min="0" oninput="calcRechner()">
+            </div>
+            <div class="rr-field">
+              <label>Kumulierte Fachabteilungen (alle Einrichtungen)</label>
+              <input type="number" id="rr-abt-kum" placeholder="Gesamt Abteilungen" min="0" oninput="calcRechner()">
             </div>
           </div>
         </div>
 
         <div class="rr-result" id="rr-result">
-          <div class="rr-result-title">Berechnungsergebnis</div>
-          <div class="rr-result-rows">
-            <div class="rr-result-row">
-              <span>Zuschlag I – 2-Jahres-Pauschale</span>
-              <span id="rr-res-i">–</span>
-            </div>
-            <div class="rr-result-row">
-              <span>Zuschlag II – 5-Jahres-Pauschale</span>
-              <span id="rr-res-ii">–</span>
+          <!-- 2-Jahres-Pauschale -->
+          <div class="rr-section">
+            <div class="rr-section-title">2-Jahres-Pauschale (§§ 5, 6 SGB V)</div>
+            <div class="rr-calc-rows">
+              <div class="rr-calc-row"><span>Anpassung IT pro Konnektor</span><span id="r2-anpassung">–</span></div>
+              <div class="rr-calc-row"><span>IT-Kosten pro Einrichtung</span><span>33.000,00 €</span></div>
+              <div class="rr-calc-row"><span>Organisatorische Umstellung</span><span>2.500,00 €</span></div>
+              <div class="rr-calc-row subtotal"><span>Summe 2-Jahres-Kosten</span><span id="r2-summe">–</span></div>
+              <div class="rr-calc-row zuschlag"><span>Zuschlag I</span><span id="r2-zuschlag">–</span></div>
             </div>
           </div>
-          <hr class="rr-result-divider">
-          <div class="rr-result-total">
-            <span class="rr-result-total-label">TI-Zuschlag gesamt / Behandlungstag</span>
-            <span class="rr-result-total-value" id="rr-res-total">–</span>
+
+          <!-- 5-Jahres-Pauschale auf Monatsbasis -->
+          <div class="rr-section">
+            <div class="rr-section-title">5-Jahres-Pauschale (§§ 2, 3, 4, 7 SGB V) — auf Monatsbasis</div>
+            <div class="rr-calc-rows">
+              <div class="rr-calc-row"><span>Konnektorpauschale</span><span id="r5-kon">–</span></div>
+              <div class="rr-calc-row"><span>Kartenterminals</span><span id="r5-kt">–</span></div>
+              <div class="rr-calc-row"><span>KON-Wartung</span><span id="r5-konwart">–</span></div>
+              <div class="rr-calc-row"><span>VPN-ZD</span><span id="r5-vpn">–</span></div>
+              <div class="rr-calc-row"><span>Betrieb</span><span id="r5-betrieb">–</span></div>
+              <div class="rr-calc-row"><span>lfd. Wartung I</span><span id="r5-wart1">–</span></div>
+              <div class="rr-calc-row"><span>lfd. Wartung II</span><span id="r5-wart2">–</span></div>
+              <div class="rr-calc-row zuschlag"><span>Zuschlag II (Summe)</span><span id="r5-summe">–</span></div>
+            </div>
           </div>
         </div>
       </div>
@@ -393,11 +432,12 @@ function selectBG(nr, name) {
   document.getElementById('no-rechner').style.display = 'none';
 
   // Reset inputs
-  ['rr-betten','rr-abt','rr-amb','rr-stat','rr-e13'].forEach(id => {
+  ['rr-betten','rr-abt','rr-amb','rr-stat','rr-einrichtungen','rr-betten-kum','rr-abt-kum'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
-  document.getElementById('rr-stufe2').value = 'nein';
+  document.getElementById('rr-rzk').value = 'nein';
+  document.getElementById('rr-kum-fields').style.display = 'none';
   document.getElementById('rr-result').classList.remove('visible');
 }
 
@@ -409,43 +449,87 @@ function toggleAdvanced() {
 }
 
 function calcRechner() {
-  const betten = parseFloat(document.getElementById('rr-betten').value) || 0;
-  const abt    = parseFloat(document.getElementById('rr-abt').value)    || 0;
-  const amb    = parseFloat(document.getElementById('rr-amb').value)    || 0;
-  const stat   = parseFloat(document.getElementById('rr-stat').value)   || 0;
-  const stufe2 = document.getElementById('rr-stufe2').value === 'ja';
-  const e13    = parseFloat(document.getElementById('rr-e13').value)    || 0;
+  const betten  = parseFloat(document.getElementById('rr-betten').value) || 0;
+  const abt     = parseFloat(document.getElementById('rr-abt').value)    || 0;
+  const amb     = parseFloat(document.getElementById('rr-amb').value)    || 0;
+  const stat    = parseFloat(document.getElementById('rr-stat').value)   || 0;
+  const rzk     = document.getElementById('rr-rzk').value === 'ja';
+  const einr    = parseInt(document.getElementById('rr-einrichtungen').value) || 0;
+  const bettenK = parseFloat(document.getElementById('rr-betten-kum').value) || betten;
+  const abtK    = parseFloat(document.getElementById('rr-abt-kum').value)    || abt;
 
   const resultEl = document.getElementById('rr-result');
+  // Kumulierte Felder nur anzeigen wenn Einrichtungen > 0
+  document.getElementById('rr-kum-fields').style.display = einr > 0 ? 'grid' : 'none';
 
-  if (!betten || !stat) {
-    resultEl.classList.remove('visible');
-    return;
-  }
+  if (!betten || (amb + stat) === 0) { resultEl.classList.remove('visible'); return; }
 
-  const fmt = v => v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  const e13 = amb + stat;  // Abrechnungstage gesamt (B9+B10)
 
-  // § 381 SGB V – Zuschlag I (2-Jahres-Pauschale)
-  const pauschale2J = 1600;
-  const abtZuschlag2J = abt > 0 ? abt * 300 : 0;
-  const sum2J = (betten * pauschale2J + abtZuschlag2J) / 2;
-  const zuschlagI = stat > 0 ? sum2J / stat : 0;
+  // Intermediate: Kartenterminals (E7) = ROUNDUP(MAX(B8, B7/25), 0)
+  const e7 = Math.ceil(Math.max(abt, betten / 25));
+  // Ersatz-KT (E8) = IF(E7<=1, 1, 0)
+  const e8 = e7 <= 1 ? 1 : 0;
+  // KT kumuliert (E10) = ROUNDUP(MAX(B16, B15/25), 0)
+  const e10 = Math.ceil(Math.max(abtK, bettenK / 25));
 
-  // § 381 SGB V – Zuschlag II (5-Jahres-Pauschale)
-  let zuschlagII = 0;
-  if (stufe2 && e13 > 0) {
-    const pauschale5J = betten * 2800 + abt * 500;
-    const ambFaktor = amb > 0 ? (amb / (amb + stat)) : 0;
-    const lohnfaktor = e13 / 22.50;
-    const sum5J = (pauschale5J * (1 + ambFaktor * 0.3) * lohnfaktor) / 5;
-    zuschlagII = stat > 0 ? sum5J / stat : 0;
-  }
+  // EBK (E16) = IF(B14>0, ROUNDUP(E10/25,0)+1, ROUNDUP((E7+E8)/25,0)+1)
+  const e16 = einr > 0 ? Math.ceil(e10 / 25) + 1 : Math.ceil((e7 + e8) / 25) + 1;
+  // RZK (E17) = IF(B14>0, ROUNDUP(E10/50,0)+1, ROUNDUP((E7+E8)/50,0)+1)
+  const e17 = einr > 0 ? Math.ceil(e10 / 50) + 1 : Math.ceil((e7 + e8) / 50) + 1;
 
-  const total = zuschlagI + zuschlagII;
+  // Anteilsfaktor bei gemeinsam genutzter IT
+  const ratio = einr > 0 ? betten / Math.max(bettenK, betten) : 1;
 
-  document.getElementById('rr-res-i').textContent = fmt(zuschlagI) + '/Beh.tag';
-  document.getElementById('rr-res-ii').textContent = stufe2 ? fmt(zuschlagII) + '/Beh.tag' : 'nicht aktiv';
-  document.getElementById('rr-res-total').textContent = fmt(total) + '/Behandlungstag';
+  // === 2-Jahres-Pauschale (§§ 5, 6) ===
+  // H7: Anpassung IT pro KON = 11000 * (EBK-1 oder RZK-1) * ratio
+  const h7  = 11000 * (rzk ? e17 - 1 : e16 - 1) * ratio;
+  const h10 = 33000;  // IT-Kosten pro Einrichtung (fest)
+  const h11 = 2500;   // Organisatorische Umstellung (fest)
+  const h15 = h7 + h10 + h11;  // Summe
+  // H21: TI-Zuschlag I = ROUND((H15/2)/E13, 2)
+  const zuschlagI = Math.round((h15 / 2) / e13 * 100) / 100;
+
+  // === 5-Jahres-Pauschale (§§ 2, 3, 4, 7) — 5-Jahres-Gesamtkosten ===
+  // K7: Konnektorpauschale
+  const k7  = (rzk ? e17 * 3000 : e16 * 1794) * ratio;
+  // K10: Kartenterminals = (E7+E8)*595
+  const k10 = (e7 + e8) * 595;
+  // K11: KON-Wartung = (EBK/RZK-1)*20%*Preis * ratio * 5
+  const k11 = (rzk ? 3000 * (e17 - 1) * 0.2 : 1795 * (e16 - 1) * 0.2) * ratio * 5;
+  // K12: VPN-ZD = (EBK/RZK-1)*792 * ratio * 5
+  const k12 = ((rzk ? e17 : e16) - 1) * 792 * ratio * 5;
+  // K13: Betrieb = (ROUNDUP(E7/25,0)-1)*1800+100) * 5
+  const k13 = ((Math.ceil(e7 / 25) - 1) * 1800 + 100) * 5;
+  // K15: lfd. Wartung I = 4000*5 (fest)
+  const k15 = 20000;
+  // K16: lfd. Wartung II = 6*B7*5
+  const k16 = 6 * betten * 5;
+
+  // Monatlich = 5-Jahres-Gesamtkosten / 60 (5 Jahre × 12 Monate)
+  const mon = v => v / 60;
+  const zuschlagII = (k7 + k10 + k11 + k12 + k13 + k15 + k16) / 60;
+
+  // Formatierung
+  const fmtEur = v => v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+  const fmtMon = v => v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €/Monat';
+  const fmtTag = v => v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €/Behandlungstag';
+
+  // 2-Jahres-Bereich
+  document.getElementById('r2-anpassung').textContent = fmtEur(h7);
+  document.getElementById('r2-summe').textContent     = fmtEur(h15);
+  document.getElementById('r2-zuschlag').textContent  = fmtTag(zuschlagI);
+
+  // 5-Jahres-Bereich (auf Monatsbasis)
+  document.getElementById('r5-kon').textContent     = fmtMon(mon(k7));
+  document.getElementById('r5-kt').textContent      = fmtMon(mon(k10));
+  document.getElementById('r5-konwart').textContent = fmtMon(mon(k11));
+  document.getElementById('r5-vpn').textContent     = fmtMon(mon(k12));
+  document.getElementById('r5-betrieb').textContent = fmtMon(mon(k13));
+  document.getElementById('r5-wart1').textContent   = fmtMon(mon(k15));
+  document.getElementById('r5-wart2').textContent   = fmtMon(mon(k16));
+  document.getElementById('r5-summe').textContent   = fmtMon(zuschlagII);
+
   resultEl.classList.add('visible');
 }
 
