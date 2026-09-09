@@ -335,9 +335,29 @@
         <label>Auszahlungsweg</label>
         <textarea id="f-auszahlung" style="min-height:70px;" placeholder="z.B. Automatisch über KV im Rahmen der Quartalsabrechnung…"></textarea>
       </div>
-      <div id="rechner-field" class="form-group form-full" style="display:none;flex-direction:row;align-items:center;gap:10px;padding-top:4px;">
-        <input type="checkbox" id="f-has-rechner" style="width:18px;height:18px;accent-color:var(--navy);cursor:pointer;flex-shrink:0;">
-        <label for="f-has-rechner" style="cursor:pointer;font-size:0.87rem;">Finanzierungsrechner im Produktfinder anzeigen</label>
+      <div id="rechner-field" class="form-group form-full" style="display:none;padding-top:4px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+          <input type="checkbox" id="f-has-rechner" style="width:18px;height:18px;accent-color:var(--navy);cursor:pointer;flex-shrink:0;" onchange="toggleRechnerTypArea()">
+          <label for="f-has-rechner" style="cursor:pointer;font-size:0.87rem;">Finanzierungsrechner im Produktfinder anzeigen</label>
+        </div>
+        <div id="rechner-typ-area" style="display:none;border:1.5px solid var(--gray-200);border-radius:10px;padding:14px 16px;background:#fafafa;">
+          <div style="margin-bottom:12px;">
+            <label style="font-size:0.72rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px;">Rechner-Typ</label>
+            <select id="f-rechner-typ" onchange="toggleStaffelEditor()" style="width:100%;padding:8px 10px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:0.875rem;font-family:inherit;background:white;">
+              <option value="staffel">Staffel / Festpreis (editierbar)</option>
+              <option value="kh_377">Krankenhaus § 377 SGB V (Formelrechner)</option>
+              <option value="reha_381">Rehakliniken § 381 SGB V (Formelrechner)</option>
+            </select>
+          </div>
+          <div id="staffel-editor">
+            <label style="font-size:0.72rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.06em;display:block;margin-bottom:6px;">Staffelung / Fördersätze</label>
+            <div id="staffel-rows"></div>
+            <button type="button" onclick="addStaffelRow()" style="margin-top:6px;padding:5px 12px;border:1.5px dashed var(--gray-300);border-radius:7px;background:white;color:var(--gray-500);font-size:0.8rem;cursor:pointer;">+ Zeile hinzufügen</button>
+          </div>
+          <div id="formel-info" style="display:none;font-size:0.82rem;color:var(--gray-400);padding:6px 0;">
+            Formelrechner — Berechnungslogik ist fest hinterlegt, keine weitere Konfiguration nötig.
+          </div>
+        </div>
       </div>
     </div>
     <div class="msg" id="modal-msg"></div>
@@ -422,7 +442,7 @@ async function loadBerufsgruppen() {
     const topicMap = {};
     try {
       const topicRes = await sb.from('bg_topic_requirements')
-        .select('berufsgruppe_id,thema,finanzierungsart,rechtsgrundlage,has_rechner');
+        .select('berufsgruppe_id,thema,finanzierungsart,rechtsgrundlage,has_rechner,rechner_typ,rechner_config');
       if (!topicRes.error && topicRes.data) {
         topicRes.data.forEach(r => {
           if (!topicMap[r.berufsgruppe_id]) topicMap[r.berufsgruppe_id] = [];
@@ -537,6 +557,11 @@ function clearModal() {
   });
   document.getElementById('f-has-rechner').checked = false;
   document.getElementById('rechner-field').style.display = 'none';
+  document.getElementById('rechner-typ-area').style.display = 'none';
+  document.getElementById('f-rechner-typ').value = 'staffel';
+  document.getElementById('staffel-rows').innerHTML = '';
+  document.getElementById('staffel-editor').style.display = '';
+  document.getElementById('formel-info').style.display = 'none';
   document.querySelectorAll('.thema-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.thema === 'security');
     t.classList.remove('has-data');
@@ -548,8 +573,47 @@ function clearModal() {
 
 // ── Tab-Logik ──────────────────────────────────────────────
 
+function toggleRechnerTypArea() {
+  const checked = document.getElementById('f-has-rechner').checked;
+  document.getElementById('rechner-typ-area').style.display = checked ? '' : 'none';
+}
+
+function toggleStaffelEditor() {
+  const typ = document.getElementById('f-rechner-typ').value;
+  document.getElementById('staffel-editor').style.display = typ === 'staffel' ? '' : 'none';
+  document.getElementById('formel-info').style.display   = typ !== 'staffel' ? '' : 'none';
+}
+
+function addStaffelRow(label = '', betrag = '') {
+  const container = document.getElementById('staffel-rows');
+  const row = document.createElement('div');
+  row.className = 'staffel-row';
+  row.style.cssText = 'display:flex;gap:6px;margin-bottom:5px;align-items:center;';
+  row.innerHTML = `
+    <input type="text" placeholder="z.B. 1–3 Ärzte / Grundpauschale" value="${escHtml(label)}"
+      style="flex:1;padding:6px 10px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:0.82rem;font-family:inherit;background:white;">
+    <input type="text" placeholder="263,62 €/Monat" value="${escHtml(betrag)}"
+      style="width:160px;flex-shrink:0;padding:6px 10px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:0.82rem;font-family:inherit;background:white;">
+    <button type="button" onclick="this.closest('.staffel-row').remove()"
+      style="flex-shrink:0;width:26px;height:26px;border:none;background:var(--gray-100);color:var(--gray-500);border-radius:6px;cursor:pointer;font-size:1rem;line-height:1;padding:0;">×</button>`;
+  container.appendChild(row);
+}
+
+function getStaffelConfig() {
+  return [...document.querySelectorAll('.staffel-row')].map(row => {
+    const [lbl, amt] = row.querySelectorAll('input');
+    return { label: lbl.value.trim(), betrag: amt.value.trim() };
+  }).filter(r => r.label || r.betrag);
+}
+
+function renderStaffelRows(config) {
+  document.getElementById('staffel-rows').innerHTML = '';
+  (config || []).forEach(r => addStaffelRow(r.label, r.betrag));
+}
+
 function flushThemaToMemory() {
-  topicData[activeThema] = {
+  const hasRechner = activeThema === 'ti' ? document.getElementById('f-has-rechner').checked : !!(topicData[activeThema]?.has_rechner);
+  const d = {
     finanzierungsart: document.getElementById('f-art').value.trim(),
     rechtsgrundlage:  document.getElementById('f-rechtsgrundlage').value.trim(),
     foerdergeber:     document.getElementById('f-geber').value.trim(),
@@ -557,8 +621,13 @@ function flushThemaToMemory() {
     foerderbetrag:    document.getElementById('f-betrag').value.trim(),
     bedingungen:      document.getElementById('f-bedingungen').value.trim(),
     auszahlung:       document.getElementById('f-auszahlung').value.trim(),
-    has_rechner:      activeThema === 'ti' ? document.getElementById('f-has-rechner').checked : !!(topicData[activeThema]?.has_rechner),
+    has_rechner:      hasRechner,
   };
+  if (activeThema === 'ti' && hasRechner) {
+    d.rechner_typ    = document.getElementById('f-rechner-typ').value;
+    d.rechner_config = d.rechner_typ === 'staffel' ? getStaffelConfig() : null;
+  }
+  topicData[activeThema] = d;
 }
 
 function loadThemaIntoForm(themaId) {
@@ -572,8 +641,17 @@ function loadThemaIntoForm(themaId) {
   document.getElementById('f-auszahlung').value      = d.auszahlung       || '';
   const rechnerField = document.getElementById('rechner-field');
   if (themaId === 'ti') {
-    rechnerField.style.display = 'flex';
-    document.getElementById('f-has-rechner').checked = !!d.has_rechner;
+    rechnerField.style.display = '';
+    const hasRechner = !!d.has_rechner;
+    document.getElementById('f-has-rechner').checked = hasRechner;
+    document.getElementById('rechner-typ-area').style.display = hasRechner ? '' : 'none';
+    if (hasRechner) {
+      const typ = d.rechner_typ || 'staffel';
+      document.getElementById('f-rechner-typ').value = typ;
+      document.getElementById('staffel-editor').style.display = typ === 'staffel' ? '' : 'none';
+      document.getElementById('formel-info').style.display   = typ !== 'staffel' ? '' : 'none';
+      if (typ === 'staffel') renderStaffelRows(d.rechner_config || []);
+    }
   } else {
     rechnerField.style.display = 'none';
   }
@@ -657,6 +735,8 @@ async function saveBerufsgruppe() {
         bedingungen:      topicData[t.id].bedingungen      || null,
         auszahlung:       topicData[t.id].auszahlung       || null,
         has_rechner:      !!topicData[t.id].has_rechner,
+        rechner_typ:      topicData[t.id].rechner_typ    || null,
+        rechner_config:   topicData[t.id].rechner_config ?? null,
         aktualisiert_am:  new Date().toISOString(),
       }));
 

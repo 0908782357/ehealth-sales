@@ -2141,61 +2141,113 @@
           </div>
         </div>
 
-        <!-- Reha-Finanzierungsrechner (nur für Rehakliniken nr=23) -->
-        <div id="reha-rechner" style="display:none; margin-top:36px;">
-          <div class="reha-rechner-card">
-            <h4>
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#059669" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-              TI-Finanzierungsrechner für Rehakliniken
-            </h4>
-            <p class="rr-sub">Orientierungswert nach § 381 SGB V – gültig ab 01.01.2024</p>
-            <div class="rr-grid">
-              <div class="rr-field">
-                <label>Vertragsbetten / -plätze</label>
-                <input type="number" id="rr-betten" placeholder="z.B. 120" min="0" oninput="calcRehaZuschlag()">
-              </div>
-              <div class="rr-field">
-                <label>Fachabteilungen / Indikationsgruppen</label>
-                <input type="number" id="rr-abt" placeholder="z.B. 4" min="0" oninput="calcRehaZuschlag()">
-              </div>
-              <div class="rr-field">
-                <label>Amb. Abrechnungstage (Vorjahr)</label>
-                <input type="number" id="rr-amb" placeholder="z.B. 800" min="0" oninput="calcRehaZuschlag()">
-              </div>
-              <div class="rr-field">
-                <label>Stat. Abrechnungstage (Vorjahr)</label>
-                <input type="number" id="rr-stat" placeholder="z.B. 38000" min="0" oninput="calcRehaZuschlag()">
-              </div>
+        <!-- TI-Finanzierungsrechner (typ-abhängig pro Berufsgruppe) -->
+        <div id="wiz-rechner-wrap" style="display:none; margin-top:36px;">
+
+          <!-- Panel: Staffel / Festpreis -->
+          <div id="panel-wiz-staffel" style="display:none;">
+            <div class="reha-rechner-card" style="border-color:#bfdbfe;background:#eff6ff;">
+              <h4 style="color:#1e40af;">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#2563eb" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                TI-Finanzierung – Fördersätze
+              </h4>
+              <p class="rr-sub">Hinterlegte Staffelung für diese Berufsgruppe</p>
+              <div id="wiz-staffel-table"></div>
             </div>
-            <button class="rr-toggle" onclick="toggleRrAdvanced(this)">
-              <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-              Erweiterte Optionen (gemeinsam genutzte IT, RZK)
-            </button>
-            <div class="rr-advanced" id="rr-advanced">
+          </div>
+
+          <!-- Panel: Krankenhaus § 377 SGB V -->
+          <div id="panel-wiz-kh377" style="display:none;">
+            <div class="reha-rechner-card" style="border-color:#c7d0ec;background:#eef0f7;">
+              <h4 style="color:#3C4A7C;">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#3C4A7C" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                TI-Finanzierungsrechner für Krankenhäuser
+              </h4>
+              <p class="rr-sub">Orientierungswert nach § 377 SGB V – Werte 2026 (Veränderungswert +2,98 %)</p>
               <div class="rr-grid">
                 <div class="rr-field">
-                  <label>Einrichtungen mit gem. IT (0 = nein)</label>
-                  <input type="number" id="rr-shared" placeholder="0" min="0" oninput="calcRehaZuschlag()">
+                  <label>Anzahl Vertragsbetten</label>
+                  <input type="number" id="kh-betten" placeholder="z.B. 250" min="0" oninput="calcKH377Wiz()">
                 </div>
                 <div class="rr-field">
-                  <label>RZK nutzen?</label>
-                  <select id="rr-rzk" onchange="calcRehaZuschlag()">
-                    <option value="n">Nein</option>
-                    <option value="j">Ja</option>
+                  <label>Vereinbarte Fälle (Vorjahr)</label>
+                  <input type="number" id="kh-faelle" placeholder="z.B. 8500" min="0" oninput="calcKH377Wiz()">
+                </div>
+                <div class="rr-field">
+                  <label>TI-Betriebsbeginn</label>
+                  <select id="kh-jahr" onchange="calcKH377Wiz()">
+                    <option value="voll">Vor 2021 oder nach 2023 (Vollpauschale)</option>
+                    <option value="2021">2021 (Übergangsjahr)</option>
+                    <option value="2022">2022 (Übergangsjahr)</option>
+                    <option value="2023">2023 (letztes Übergangsjahr)</option>
                   </select>
                 </div>
-                <div class="rr-field" id="rr-shared-betten-wrap" style="display:none;">
-                  <label>Betten/Plätze gesamt (alle Einrichtungen)</label>
-                  <input type="number" id="rr-shared-betten" placeholder="z.B. 360" min="0" oninput="calcRehaZuschlag()">
-                </div>
-                <div class="rr-field" id="rr-shared-abt-wrap" style="display:none;">
-                  <label>Fachabteilungen gesamt (alle Einrichtungen)</label>
-                  <input type="number" id="rr-shared-abt" placeholder="z.B. 12" min="0" oninput="calcRehaZuschlag()">
+                <div class="rr-field" id="kh-monate-field" style="display:none;">
+                  <label>Monate Vollpauschale (1–12)</label>
+                  <input type="number" id="kh-monate-voll" placeholder="z.B. 6" min="1" max="12" value="6" oninput="calcKH377Wiz()">
                 </div>
               </div>
+              <div class="rr-result" id="kh-result-wiz" style="border-color:#c7d0ec;"></div>
             </div>
-            <div class="rr-result" id="rr-result"></div>
           </div>
+
+          <!-- Panel: Rehakliniken § 381 SGB V -->
+          <div id="panel-wiz-reha" style="display:none;">
+            <div class="reha-rechner-card">
+              <h4>
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#059669" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                TI-Finanzierungsrechner für Rehakliniken
+              </h4>
+              <p class="rr-sub">Orientierungswert nach § 381 SGB V – gültig ab 01.01.2024</p>
+              <div class="rr-grid">
+                <div class="rr-field">
+                  <label>Vertragsbetten / -plätze</label>
+                  <input type="number" id="rr-betten" placeholder="z.B. 120" min="0" oninput="calcRehaZuschlag()">
+                </div>
+                <div class="rr-field">
+                  <label>Fachabteilungen / Indikationsgruppen</label>
+                  <input type="number" id="rr-abt" placeholder="z.B. 4" min="0" oninput="calcRehaZuschlag()">
+                </div>
+                <div class="rr-field">
+                  <label>Amb. Abrechnungstage (Vorjahr)</label>
+                  <input type="number" id="rr-amb" placeholder="z.B. 800" min="0" oninput="calcRehaZuschlag()">
+                </div>
+                <div class="rr-field">
+                  <label>Stat. Abrechnungstage (Vorjahr)</label>
+                  <input type="number" id="rr-stat" placeholder="z.B. 38000" min="0" oninput="calcRehaZuschlag()">
+                </div>
+              </div>
+              <button class="rr-toggle" onclick="toggleRrAdvanced(this)">
+                <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                Erweiterte Optionen (gemeinsam genutzte IT, RZK)
+              </button>
+              <div class="rr-advanced" id="rr-advanced">
+                <div class="rr-grid">
+                  <div class="rr-field">
+                    <label>Einrichtungen mit gem. IT (0 = nein)</label>
+                    <input type="number" id="rr-shared" placeholder="0" min="0" oninput="calcRehaZuschlag()">
+                  </div>
+                  <div class="rr-field">
+                    <label>RZK nutzen?</label>
+                    <select id="rr-rzk" onchange="calcRehaZuschlag()">
+                      <option value="n">Nein</option>
+                      <option value="j">Ja</option>
+                    </select>
+                  </div>
+                  <div class="rr-field" id="rr-shared-betten-wrap" style="display:none;">
+                    <label>Betten/Plätze gesamt (alle Einrichtungen)</label>
+                    <input type="number" id="rr-shared-betten" placeholder="z.B. 360" min="0" oninput="calcRehaZuschlag()">
+                  </div>
+                  <div class="rr-field" id="rr-shared-abt-wrap" style="display:none;">
+                    <label>Fachabteilungen gesamt (alle Einrichtungen)</label>
+                    <input type="number" id="rr-shared-abt" placeholder="z.B. 12" min="0" oninput="calcRehaZuschlag()">
+                  </div>
+                </div>
+              </div>
+              <div class="rr-result" id="rr-result"></div>
+            </div>
+          </div>
+
         </div>
 
         <div style="margin-top:40px;">
@@ -3653,7 +3705,7 @@
     try { renderTopicSelect(); } catch(e) { console.warn('renderTopicSelect:', e); }
     try { updateWiz1bGesetze(); } catch(e) { console.warn('updateWiz1bGesetze:', e); }
     // Rechner immer direkt anzeigen – unabhängig von anderen Funktionen
-    const _rr = document.getElementById('reha-rechner');
+    const _rr = document.getElementById('wiz-rechner-wrap');
     if (_rr) _rr.style.display = (col === 23 || !!BG_HAS_RECHNER[col]) && wizSelectedTopics.has('ti') ? 'block' : 'none';
     try { updateRehaRechnerVisibility(); } catch(e) { console.warn('updateRehaRechnerVisibility:', e); }
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3668,19 +3720,71 @@
 
   function updateRehaRechnerVisibility() {
     const show = hasRechner();
-    const inlineEl = document.getElementById('reha-rechner');
-    if (inlineEl) inlineEl.style.display = show ? 'block' : 'none';
-    if (!show) {
+    const wrap = document.getElementById('wiz-rechner-wrap');
+    if (wrap) wrap.style.display = show ? 'block' : 'none';
+    if (show) {
+      updateWizRechnerPanel();
+    } else {
       lastRehaData = null;
       const sumEl = document.getElementById('reha-result-summary');
       if (sumEl) sumEl.style.display = 'none';
     }
   }
 
+  function getWizRechnerTyp() {
+    const ti = BG_TI_DATA[wizBGCol];
+    return ti?.rechner_typ || 'reha_381';
+  }
+
+  function updateWizRechnerPanel() {
+    const typ = getWizRechnerTyp();
+    ['panel-wiz-staffel', 'panel-wiz-kh377', 'panel-wiz-reha'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    if (typ === 'staffel') {
+      const p = document.getElementById('panel-wiz-staffel');
+      if (p) p.style.display = '';
+      const ti = BG_TI_DATA[wizBGCol];
+      renderWizStaffelTable(ti?.rechner_config || []);
+    } else if (typ === 'kh_377') {
+      const p = document.getElementById('panel-wiz-kh377');
+      if (p) p.style.display = '';
+      ['kh-betten','kh-faelle'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+      const jEl = document.getElementById('kh-jahr'); if (jEl) jEl.value = 'voll';
+      const mf = document.getElementById('kh-monate-field'); if (mf) mf.style.display = 'none';
+      const kr = document.getElementById('kh-result-wiz'); if (kr) kr.style.display = 'none';
+    } else {
+      const p = document.getElementById('panel-wiz-reha');
+      if (p) p.style.display = '';
+    }
+  }
+
+  function renderWizStaffelTable(config) {
+    const el = document.getElementById('wiz-staffel-table');
+    if (!el) return;
+    if (!config || !config.length) {
+      el.innerHTML = '<p style="color:#6b7280;font-size:0.82rem;">Noch keine Fördersätze hinterlegt.</p>';
+      return;
+    }
+    el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.85rem;margin-top:6px;">
+      <thead><tr style="background:rgba(219,234,254,0.5);">
+        <th style="text-align:left;padding:7px 10px;font-weight:700;color:#1e40af;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #bfdbfe;">Staffel / Beschreibung</th>
+        <th style="text-align:right;padding:7px 10px;font-weight:700;color:#1e40af;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #bfdbfe;">Betrag</th>
+      </tr></thead>
+      <tbody>${config.map((r, i) => `
+        <tr style="border-bottom:1px solid #dbeafe;${i % 2 === 1 ? 'background:rgba(219,234,254,0.2);' : ''}">
+          <td style="padding:8px 10px;color:#1e3a8a;">${r.label || '–'}</td>
+          <td style="padding:8px 10px;text-align:right;font-weight:700;color:#1e40af;white-space:nowrap;">${r.betrag || '–'}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
+  }
+
   function updateRehaResultSummary() {
     const sumEl = document.getElementById('reha-result-summary');
     if (!sumEl) return;
-    if (lastRehaData !== null && hasRechner()) {
+    if (lastRehaData !== null && hasRechner() && getWizRechnerTyp() === 'reha_381') {
       const d = lastRehaData;
       const fmt  = v => v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const fmtE = v => `<strong>${fmt(v)} €</strong>`;
@@ -3759,6 +3863,17 @@
           <div style="font-size:0.63rem;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;">Förderbetrag</div>
           <div style="font-size:1rem;font-weight:800;color:#1e3a8a;">${ti.foerderbetrag}</div>
         </div>` : ''}
+        ${ti.rechner_typ === 'staffel' && ti.rechner_config?.length ? `
+        <div style="margin-bottom:10px;">
+          <div style="font-size:0.63rem;font-weight:700;color:#2563eb;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Fördersätze</div>
+          <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+            ${ti.rechner_config.map((r, i) => `
+            <tr style="border-bottom:1px solid #dbeafe;${i % 2 === 1 ? 'background:rgba(219,234,254,0.3);' : ''}">
+              <td style="padding:5px 6px;color:#1e3a8a;">${r.label || '–'}</td>
+              <td style="padding:5px 6px;text-align:right;font-weight:700;color:#1e40af;white-space:nowrap;">${r.betrag || '–'}</td>
+            </tr>`).join('')}
+          </table>
+        </div>` : ''}
         <details class="rrs-block">
           <summary style="cursor:pointer;padding:8px 0;border-top:1px solid #bfdbfe;">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
@@ -3776,6 +3891,36 @@
         </details>
       </div>`;
     el.style.display = 'block';
+  }
+
+  function calcKH377Wiz() {
+    const KH_GP_VOLL = 43008.57, KH_GP_RED = 7526.50;
+    const KH_BP_VOLL = 181.29,   KH_BP_RED  = 96.83;
+    const betten = parseFloat(document.getElementById('kh-betten')?.value) || 0;
+    const faelle = parseFloat(document.getElementById('kh-faelle')?.value) || 0;
+    const jahr   = document.getElementById('kh-jahr')?.value || 'voll';
+    const mf     = document.getElementById('kh-monate-field');
+    if (mf) mf.style.display = (jahr !== 'voll') ? '' : 'none';
+    const resultEl = document.getElementById('kh-result-wiz');
+    if (!resultEl) return;
+    if (!betten || !faelle) { resultEl.style.display = 'none'; return; }
+    let mVoll = 12;
+    if (jahr !== 'voll') {
+      mVoll = Math.min(12, Math.max(1, parseInt(document.getElementById('kh-monate-voll')?.value) || 6));
+    }
+    const mRed = 12 - mVoll;
+    const gesamtVoll = KH_GP_VOLL + betten * KH_BP_VOLL;
+    const gesamtRed  = KH_GP_RED  + betten * KH_BP_RED;
+    const finanzierung = mVoll * (gesamtVoll / 12) + mRed * (gesamtRed / 12);
+    const zuschlag = Math.round(finanzierung / faelle * 100) / 100;
+    const fmt = v => v.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    resultEl.innerHTML = `
+      <div class="rr-result-row"><span>Gesamtbetrag Vollpauschale (${mVoll} Mon.)</span><strong>${fmt(mVoll * gesamtVoll / 12)} €</strong></div>
+      <div class="rr-result-row"><span>Gesamtbetrag Red. Pauschale (${mRed} Mon.)</span><strong>${fmt(mRed * gesamtRed / 12)} €</strong></div>
+      <div class="rr-result-total"><span>Finanzierungsbetrag gesamt</span><span>${fmt(finanzierung)} €</span></div>
+      <div class="rr-result-total" style="margin-top:6px;"><span>Telematikzuschlag pro Fall</span><span>${fmt(zuschlag)} €/Fall</span></div>
+      <p style="font-size:0.67rem;color:#9ca3af;margin:8px 0 0;">Orientierungswert ohne Gewähr. Maßgeblich ist die individuelle Vereinbarung.</p>`;
+    resultEl.style.display = 'block';
   }
 
   function toggleRrAdvanced(btn, advId) {
