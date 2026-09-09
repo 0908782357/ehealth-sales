@@ -403,59 +403,67 @@ async function loadBerufsgruppen() {
   const tbody = document.getElementById('bg-tbody');
   tbody.innerHTML = '<tr><td colspan="6" class="empty">Lade…</td></tr>';
 
-  const [bgRes, topicRes] = await Promise.all([
-    sb.from('berufsgruppen').select('*').order('nr', { ascending: true }),
-    sb.from('bg_topic_requirements').select('berufsgruppe_id,thema,finanzierungsart,rechtsgrundlage,has_rechner').catch(() => ({ data: null }))
-  ]);
+  try {
+    // Haupttabelle laden
+    const bgRes = await sb.from('berufsgruppen').select('*').order('nr', { ascending: true });
 
-  if (bgRes.error) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">Fehler beim Laden: ' + bgRes.error.message + '</td></tr>';
-    return;
+    if (bgRes.error) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">Fehler: ' + escHtml(bgRes.error.message) + '</td></tr>';
+      return;
+    }
+
+    const data = bgRes.data || [];
+    if (!data.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty">Noch keine Berufsgruppen angelegt.</td></tr>';
+      return;
+    }
+
+    // Themen-Anforderungen laden – optional, Fehler werden ignoriert
+    const topicMap = {};
+    try {
+      const topicRes = await sb.from('bg_topic_requirements')
+        .select('berufsgruppe_id,thema,finanzierungsart,rechtsgrundlage,has_rechner');
+      if (!topicRes.error && topicRes.data) {
+        topicRes.data.forEach(r => {
+          if (!topicMap[r.berufsgruppe_id]) topicMap[r.berufsgruppe_id] = [];
+          topicMap[r.berufsgruppe_id].push(r);
+        });
+      }
+    } catch(_) { /* Tabelle existiert noch nicht – kein Problem */ }
+
+    tbody.innerHTML = data.map(bg => {
+      const topics = topicMap[bg.id] || [];
+      const tiFromOld = !topics.length && bg.ti_finanzierungsart;
+      const activatedThemen = tiFromOld
+        ? [{ id: 'ti' }]
+        : THEMEN.filter(t => topics.find(r => r.thema === t.id && (r.finanzierungsart || r.rechtsgrundlage)));
+      const hasRechner = bg.has_rechner || topics.some(t => t.has_rechner);
+
+      const dots = activatedThemen.length
+        ? activatedThemen.map(t => {
+            const def = THEMEN.find(d => d.id === t.id) || { color: '#94a3b8', label: t.id };
+            return `<span class="topic-dot" style="background:${def.color}" title="${def.label}"></span>`;
+          }).join('') + `&nbsp;<span style="font-size:0.75rem;color:var(--gray-500);">${activatedThemen.length} Thema${activatedThemen.length !== 1 ? 'en' : ''}</span>`
+        : '<span class="ti-empty">–</span>';
+
+      return `<tr>
+        <td><strong>${bg.nr}</strong></td>
+        <td><strong>${escHtml(bg.name)}</strong></td>
+        <td>${bg.gruppe ? escHtml(bg.gruppe) : '<span class="ti-empty">–</span>'}</td>
+        <td>${dots}</td>
+        <td style="text-align:center;">${hasRechner ? '<span title="Rechner aktiv" style="color:#059669;font-size:1.1rem;">✓</span>' : '<span class="ti-empty">–</span>'}</td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-edit btn-sm" onclick="openModal('${bg.id}')">Bearbeiten</button>
+            <button class="btn btn-danger btn-sm" onclick="openConfirm('${bg.id}', '${escAttr(bg.name)}')">Löschen</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+
+  } catch(err) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Fehler: ' + escHtml(err.message || String(err)) + '</td></tr>';
   }
-
-  const data = bgRes.data || [];
-  if (!data.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">Noch keine Berufsgruppen angelegt.</td></tr>';
-    return;
-  }
-
-  // Map topic rows by berufsgruppe_id
-  const topicMap = {};
-  (topicRes.data || []).forEach(r => {
-    if (!topicMap[r.berufsgruppe_id]) topicMap[r.berufsgruppe_id] = [];
-    topicMap[r.berufsgruppe_id].push(r);
-  });
-
-  tbody.innerHTML = data.map(bg => {
-    const topics = topicMap[bg.id] || [];
-    // Fallback: use old ti_* columns if new table has no data for this BG
-    const tiFromOld = !topics.length && bg.ti_finanzierungsart;
-    const activatedThemen = tiFromOld
-      ? [{ thema: 'ti' }]
-      : THEMEN.filter(t => topics.find(r => r.thema === t.id && (r.finanzierungsart || r.rechtsgrundlage)));
-    const hasRechner = bg.has_rechner || topics.some(t => t.has_rechner);
-
-    const dots = activatedThemen.length
-      ? activatedThemen.map(t => {
-          const def = THEMEN.find(d => d.id === t.id) || { color: '#ccc', label: t.id };
-          return `<span class="topic-dot" style="background:${def.color}" title="${def.label}"></span>`;
-        }).join('') + `&nbsp;<span style="font-size:0.75rem;color:var(--gray-500);">${activatedThemen.length} Thema${activatedThemen.length !== 1 ? 'en' : ''}</span>`
-      : '<span class="ti-empty">–</span>';
-
-    return `<tr>
-      <td><strong>${bg.nr}</strong></td>
-      <td><strong>${escHtml(bg.name)}</strong></td>
-      <td>${bg.gruppe ? escHtml(bg.gruppe) : '<span class="ti-empty">–</span>'}</td>
-      <td>${dots}</td>
-      <td style="text-align:center;">${hasRechner ? '<span title="Rechner aktiv" style="color:#059669;font-size:1.1rem;">✓</span>' : '<span class="ti-empty">–</span>'}</td>
-      <td>
-        <div class="actions">
-          <button class="btn btn-edit btn-sm" onclick="openModal('${bg.id}')">Bearbeiten</button>
-          <button class="btn btn-danger btn-sm" onclick="openConfirm('${bg.id}', '${escAttr(bg.name)}')">Löschen</button>
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
 }
 
 function openModal(id) {
