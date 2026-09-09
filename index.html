@@ -3903,6 +3903,8 @@
     const el = document.getElementById('wiz2-ti-finanzierung');
     if (!el) return;
     if (!wizSelectedTopics.has('ti')) { el.style.display = 'none'; return; }
+    // Wenn ein Rechner aktiv ist, zeigt die Rechner-Card die Finanzierungsinfos — keine Dopplung
+    if (hasRechner()) { el.style.display = 'none'; return; }
     const ti = BG_TI_DATA[wizBGCol];
     if (!ti) { el.style.display = 'none'; return; }
     const detailRow = (label, val) => val ? `
