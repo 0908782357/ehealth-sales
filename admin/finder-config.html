@@ -316,7 +316,7 @@
     if (!session) { window.location.href = 'index.html'; return; }
     document.getElementById('user-email').textContent = session.user.email;
 
-    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).single();
+    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
     userRole = roleRow?.role || 'partner';
     if (userRole === 'customer') { window.location.href = 'dashboard.html'; return; }
 
@@ -324,12 +324,13 @@
 
     if (userRole === 'admin') {
       document.getElementById('nav-group-admin').style.display = '';
-      document.getElementById('nav-partners').style.display = '';
+      const navPartners = document.getElementById('nav-partners');
+      if (navPartners) navPartners.style.display = '';
       document.getElementById('admin-partner-selector').style.display = 'flex';
       await loadAdminPartnerList();
     }
     else {
-      const { data: partner } = await sb.from('partners').select('id, slug, kontakt_email, primary_color, logo_url').eq('user_id', session.user.id).single();
+      const { data: partner } = await sb.from('partners').select('id, slug, kontakt_email, primary_color, logo_url').eq('user_id', session.user.id).maybeSingle();
       if (!partner) { showToast('Kein Kunden-Konto verknüpft.', 'error'); return; }
       currentPartnerId   = partner.id;
       currentPartnerSlug = partner.slug;
