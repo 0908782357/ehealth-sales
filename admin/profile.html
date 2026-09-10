@@ -308,7 +308,7 @@
     document.getElementById('user-email').textContent = user.email;
 
     // Rolle aus user_roles laden
-    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', user.id).single();
+    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', user.id).maybeSingle();
     const role = roleRow?.role || 'partner';
 
     const badge = document.getElementById('role-badge');
@@ -333,7 +333,7 @@
     const { data: profile } = await sb.from('user_profiles')
       .select('*')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
     if (profile) {
       document.getElementById('f-vorname').value = profile.vorname || '';

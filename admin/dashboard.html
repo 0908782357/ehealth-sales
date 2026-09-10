@@ -238,7 +238,7 @@
     document.getElementById('user-email').textContent = user.email;
 
     // Rolle laden
-    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', user.id).single();
+    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', user.id).maybeSingle();
     const role = roleRow?.role || 'partner';
     const badge = document.getElementById('role-badge');
     badge.textContent = role === 'admin' ? 'Administrator' : 'Kunde';
@@ -253,17 +253,23 @@
     setupNavRole(role).catch(console.warn);
 
     // Partner-Name laden
-    const { data: partner } = await sb.from('partners').select('name').eq('user_id', user.id).single();
+    const { data: partner } = await sb.from('partners').select('id, name').eq('user_id', user.id).maybeSingle();
     document.getElementById('partner-name').textContent = partner?.name || (role === 'admin' ? 'eHealth Sales GmbH' : '–');
 
     // Produkt-Stats
-    let q = sb.from('products').select('id, published', { count: 'exact' });
-    if (role !== 'admin' && partner?.id) q = q.eq('partner_id', partner.id);
+    let prodQ = sb.from('products').select('published');
+    if (role === 'admin') {
+      // Admin sieht alle Produkte
+    } else if (partner?.id) {
+      prodQ = prodQ.eq('partner_id', partner.id);
+    } else {
+      // Kein Partner-Datensatz gefunden → keine Produkte anzeigen
+      document.getElementById('stat-products').textContent = '0';
+      document.getElementById('stat-drafts').textContent   = '0';
+      return;
+    }
 
-    const { data: allProds } = await sb.from('products')
-      .select('published')
-      .eq(role !== 'admin' ? 'partner_id' : 'published', role !== 'admin' ? partner?.id : true);
-
+    const { data: allProds } = await prodQ;
     if (allProds) {
       const pub   = allProds.filter(p => p.published).length;
       const draft = allProds.filter(p => !p.published).length;

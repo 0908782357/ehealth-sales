@@ -693,7 +693,7 @@
     if (!session) { window.location.href = 'index.html'; return; }
     document.getElementById('user-email').textContent = session.user.email;
 
-    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).single();
+    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
     userRole = roleRow?.role || 'partner';
 
     if (userRole === 'customer') { window.location.href = 'dashboard.html'; return; }
@@ -709,9 +709,9 @@
       sel.style.display = '';
       document.getElementById('f-unternehmen-text').style.display = 'none';
     } else {
-      const { data: partner } = await sb.from('partners').select('id').eq('user_id', session.user.id).single();
+      const { data: partner } = await sb.from('partners').select('id').eq('user_id', session.user.id).maybeSingle();
       myPartnerId = partner?.id;
-      const { data: prof } = await sb.from('user_profiles').select('firma').eq('user_id', session.user.id).single();
+      const { data: prof } = await sb.from('user_profiles').select('firma').eq('user_id', session.user.id).maybeSingle();
       myFirma = prof?.firma || '';
       document.getElementById('f-unternehmen-text').value = myFirma || '(Kein Unternehmen im Profil hinterlegt)';
       document.getElementById('row-published').style.display = 'none';
