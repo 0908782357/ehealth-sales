@@ -588,6 +588,49 @@
         </div>
       </div>
 
+      <!-- Landingpage Toggle -->
+      <div class="loesung-toggle-section" style="margin-top:16px;border-color:#c7d2fe;">
+        <div class="loesung-toggle-header">
+          <div>
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem;">Landingpage erstellen</div>
+            <div style="font-size:0.82rem;color:var(--gray-500);margin-top:3px;">Marketing-Seite mit öffentlich teilbarem Link unter <em>landingpage.html?id=…</em></div>
+          </div>
+          <button class="btn btn-sm btn-loesung-on" id="btn-lp-toggle" onclick="toggleLandingpage()">+ Aktivieren</button>
+        </div>
+
+        <!-- Editor (versteckt bis aktiviert) -->
+        <div class="loesung-editor" id="lp-editor" style="display:none;background:#f0f4ff;border-color:#c7d2fe;">
+          <div class="loesung-editor-title">Inhalt der Landingpage</div>
+          <div class="form-grid">
+            <div class="form-group form-full">
+              <label>Hero-Überschrift</label>
+              <input type="text" id="lp-hero-title" placeholder="Wird groß oben angezeigt (Standard: Produktname)">
+            </div>
+            <div class="form-group form-full">
+              <label>Hero-Unterzeile</label>
+              <input type="text" id="lp-hero-sub" placeholder="Kurzer ergänzender Satz unter der Überschrift">
+            </div>
+            <div class="form-group form-full">
+              <label>Teasertext *</label>
+              <textarea id="lp-teaser" placeholder="Einleitender Absatz unter dem Hero" style="min-height:80px"></textarea>
+            </div>
+            <div class="form-group form-full">
+              <label>Vorteile / Features</label>
+              <div id="lp-features-list"></div>
+              <button class="btn btn-edit btn-sm" onclick="addLpFeature('')" style="margin-top:8px;width:fit-content;">+ Vorteil hinzufügen</button>
+            </div>
+            <div class="form-group">
+              <label>CTA Button Text</label>
+              <input type="text" id="lp-cta-text" placeholder="z.B. Jetzt anfragen">
+            </div>
+            <div class="form-group">
+              <label>CTA Button URL</label>
+              <input type="url" id="lp-cta-url" placeholder="https://…">
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="modal-actions" style="margin-top:24px">
         <button class="btn btn-edit" onclick="closeModal()">Abbrechen</button>
         <button class="btn btn-edit" onclick="goStep1()">← Zurück</button>
@@ -684,6 +727,7 @@
   let myPartnerId = null;
   let myFirma = '';
   let loesungAktiv = false;
+  let landingpageAktiv = false;
   let pendingImageFile = null;
   let currentPreise = {};
   let currentAbrechnungsart = 'monatlich';
@@ -761,6 +805,7 @@
             <div>
               <strong>${p.produkt}</strong>
               ${p.loesung_aktiv ? '<div style="font-size:0.7rem;color:var(--green);font-weight:700;margin-top:1px;">Lösungsseite aktiv</div>' : ''}
+              ${p.landingpage_aktiv ? `<div style="font-size:0.7rem;color:#6366f1;font-weight:700;margin-top:1px;display:flex;align-items:center;gap:5px;">Landingpage aktiv <button onclick="copyLpUrl('${p.id}')" title="Link kopieren" style="background:#ede9fe;color:#6366f1;border:none;border-radius:4px;padding:1px 6px;font-size:0.65rem;font-weight:700;cursor:pointer;">📋 Link</button></div>` : ''}
             </div>
           </div>
         </td>
@@ -781,6 +826,18 @@
           </div>
         </td>
       </tr>`).join('');
+  }
+
+  function copyLpUrl(productId) {
+    const base = window.location.href.replace(/\/admin\/[^/]*(\?.*)?$/, '');
+    const url = `${base}/landingpage.html?id=${productId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      const tooltip = document.createElement('div');
+      tooltip.textContent = 'Link kopiert!';
+      tooltip.style.cssText = 'position:fixed;bottom:24px;right:24px;background:var(--navy);color:white;padding:10px 18px;border-radius:10px;font-size:0.85rem;font-weight:700;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.2);';
+      document.body.appendChild(tooltip);
+      setTimeout(() => tooltip.remove(), 2200);
+    });
   }
 
   function filterTable(q) { filterSearch = q.toLowerCase(); applyFilters(); }
@@ -979,11 +1036,55 @@
     (inhalt?.vorteile || []).forEach(v => addFeature(v));
   }
 
+  // ---- Landingpage ----
+  function toggleLandingpage() {
+    landingpageAktiv = !landingpageAktiv;
+    const editor = document.getElementById('lp-editor');
+    const btn    = document.getElementById('btn-lp-toggle');
+    if (landingpageAktiv) {
+      editor.style.display = '';
+      btn.textContent = '✕ Deaktivieren';
+      btn.classList.remove('btn-loesung-on');
+      btn.classList.add('btn-loesung-off');
+    } else {
+      editor.style.display = 'none';
+      btn.textContent = '+ Aktivieren';
+      btn.classList.remove('btn-loesung-off');
+      btn.classList.add('btn-loesung-on');
+    }
+  }
+
+  function addLpFeature(text) {
+    const list = document.getElementById('lp-features-list');
+    const row = document.createElement('div');
+    row.className = 'feature-row';
+    row.innerHTML = `<input type="text" placeholder="z.B. Einfache Integration" value="${text || ''}">
+      <button class="btn-rm-feat" onclick="this.parentElement.remove()">✕</button>`;
+    list.appendChild(row);
+    row.querySelector('input').focus();
+  }
+
+  function getLpFeatures() {
+    return [...document.querySelectorAll('#lp-features-list .feature-row input')]
+      .map(i => i.value.trim()).filter(Boolean);
+  }
+
+  function loadLandingpageFields(inhalt) {
+    document.getElementById('lp-hero-title').value = inhalt?.hero_title || '';
+    document.getElementById('lp-hero-sub').value   = inhalt?.hero_sub || '';
+    document.getElementById('lp-teaser').value     = inhalt?.teaser || '';
+    document.getElementById('lp-cta-text').value   = inhalt?.cta_text || '';
+    document.getElementById('lp-cta-url').value    = inhalt?.cta_url || '';
+    document.getElementById('lp-features-list').innerHTML = '';
+    (inhalt?.vorteile || []).forEach(v => addLpFeature(v));
+  }
+
   // ---- Modal ----
   function openModal(id) {
     currentId = id || null;
     pendingImageFile = null;
     loesungAktiv = false;
+    landingpageAktiv = false;
     currentPreise = {};
 
     document.getElementById('modal-title').textContent = id ? 'Produkt bearbeiten' : 'Neues Produkt';
@@ -1007,6 +1108,15 @@
     btn.classList.add('btn-loesung-on');
     btn.classList.remove('btn-loesung-off');
     loadLoesungFields(null);
+
+    // Reset landingpage
+    const lpEditor = document.getElementById('lp-editor');
+    lpEditor.style.display = 'none';
+    const lpBtn = document.getElementById('btn-lp-toggle');
+    lpBtn.textContent = '+ Aktivieren';
+    lpBtn.classList.add('btn-loesung-on');
+    lpBtn.classList.remove('btn-loesung-off');
+    loadLandingpageFields(null);
 
     if (id) {
       const p = allProducts.find(x => x.id === id);
@@ -1056,6 +1166,16 @@
         btn.classList.add('btn-loesung-off');
         loadLoesungFields(p.loesung_inhalt || {});
       }
+
+      // Page 2: landingpage
+      if (p.landingpage_aktiv) {
+        landingpageAktiv = true;
+        lpEditor.style.display = '';
+        lpBtn.textContent = '✕ Deaktivieren';
+        lpBtn.classList.remove('btn-loesung-on');
+        lpBtn.classList.add('btn-loesung-off');
+        loadLandingpageFields(p.landingpage_inhalt || {});
+      }
     } else {
       ['f-produkt','f-hersteller','f-beschreibung','f-reseller','f-artikelnummer','f-detail-page'].forEach(i => document.getElementById(i).value = '');
       if (userRole === 'admin') document.getElementById('f-unternehmen').value = '';
@@ -1096,6 +1216,11 @@
     if (loesungAktiv) {
       const teaser = document.getElementById('l-teaser').value.trim();
       if (!teaser) { showModalMsg('Bitte einen Teaser für die Lösungsseite eingeben.', 'error'); return; }
+    }
+
+    if (landingpageAktiv) {
+      const teaser = document.getElementById('lp-teaser').value.trim();
+      if (!teaser) { showModalMsg('Bitte einen Teasertext für die Landingpage eingeben.', 'error'); return; }
     }
 
     const verfuegbar = [...document.querySelectorAll('[data-grid="verfuegbar"]:checked')].map(c => parseInt(c.dataset.nr));
@@ -1153,6 +1278,23 @@
       .eq('id', savedId);
     if (loesungErr) {
       console.warn('Lösungsseite nicht gespeichert – SQL-Migration erforderlich:', loesungErr.message);
+    }
+
+    // Extended: landingpage fields
+    const landingpageInhalt = landingpageAktiv ? {
+      hero_title: document.getElementById('lp-hero-title').value.trim() || null,
+      hero_sub:   document.getElementById('lp-hero-sub').value.trim() || null,
+      teaser:     document.getElementById('lp-teaser').value.trim(),
+      vorteile:   getLpFeatures(),
+      cta_text:   document.getElementById('lp-cta-text').value.trim() || null,
+      cta_url:    document.getElementById('lp-cta-url').value.trim() || null,
+    } : null;
+
+    const { error: lpErr } = await sb.from('products')
+      .update({ landingpage_aktiv: landingpageAktiv, landingpage_inhalt: landingpageInhalt })
+      .eq('id', savedId);
+    if (lpErr) {
+      console.warn('Landingpage nicht gespeichert – SQL-Migration erforderlich:', lpErr.message);
     }
 
     // Extended: preise per Berufsgruppe + abrechnungsart + preis_flat

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Produktseite | eHealth Sales GmbH</title>
+<meta name="description" content="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+:root {
+  --navy: #3C4A7C; --navy-dark: #2d3a63; --navy-deep: #1E2D5A;
+  --green: #6DC52D; --green-dark: #59A322;
+  --bg: #F7F6F3; --surface: #ffffff;
+  --gray-100: #EEF1F8; --gray-200: #D9DFEE;
+  --gray-400: #94a3b8; --gray-500: #6B7280; --gray-700: #374151; --gray-900: #111827;
+  --shadow-sm: 0 1px 3px rgba(60,74,124,0.08); --shadow-md: 0 4px 20px rgba(60,74,124,0.12); --shadow-lg: 0 12px 48px rgba(60,74,124,0.15);
+  --radius: 14px;
+}
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--gray-900); line-height: 1.6; }
+a { text-decoration: none; color: inherit; }
+img { max-width: 100%; }
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+/* Nav */
+.nav { background: var(--navy-deep); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 16px rgba(0,0,0,0.18); }
+.nav-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; height: 68px; display: flex; align-items: center; justify-content: space-between; }
+.nav-logo { display: flex; align-items: center; gap: 12px; }
+.nav-logo img { height: 34px; border-radius: 6px; }
+.nav-logo-text { font-family: Montserrat, sans-serif; font-weight: 800; font-size: 1rem; color: white; }
+.nav-cta { background: var(--green); color: white; border: none; border-radius: 8px; padding: 10px 20px; font-size: 0.84rem; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-block; }
+.nav-cta:hover { background: var(--green-dark); }
+.nav-back { background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 7px; }
+.nav-back:hover { background: rgba(255,255,255,0.2); }
+
+/* Hero */
+.hero { background: linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 100%); padding: 72px 0 80px; }
+.hero-inner { display: flex; align-items: center; gap: 56px; }
+.hero-content { flex: 1; }
+.hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; padding: 6px 14px; font-size: 0.78rem; font-weight: 700; color: rgba(255,255,255,0.85); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 22px; }
+.hero-badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.hero-eyebrow { font-size: 0.82rem; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; }
+.hero-title { font-family: Montserrat, sans-serif; font-size: 2.5rem; font-weight: 800; color: white; line-height: 1.15; margin-bottom: 18px; }
+.hero-sub { font-size: 1.1rem; color: rgba(255,255,255,0.75); line-height: 1.7; margin-bottom: 36px; max-width: 560px; }
+.hero-actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.btn-hero-primary { background: var(--green); color: white; border: none; border-radius: 10px; padding: 15px 32px; font-size: 0.95rem; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; }
+.btn-hero-primary:hover { background: var(--green-dark); }
+.btn-hero-outline { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.25); border-radius: 10px; padding: 14px 28px; font-size: 0.92rem; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-block; }
+.btn-hero-outline:hover { background: rgba(255,255,255,0.18); }
+.hero-image-wrap { flex-shrink: 0; }
+.hero-image { width: 180px; height: 180px; border-radius: 20px; object-fit: cover; box-shadow: 0 12px 48px rgba(0,0,0,0.35); background: rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: center; }
+.hero-image img { width: 100%; height: 100%; object-fit: cover; border-radius: 20px; }
+.hero-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 22px; }
+.hero-tag { font-size: 0.72rem; font-weight: 700; padding: 4px 12px; border-radius: 999px; }
+
+/* Teaser */
+.teaser-section { background: white; border-bottom: 1px solid var(--gray-200); }
+.teaser-inner { max-width: 800px; margin: 0 auto; padding: 52px 24px; text-align: center; }
+.teaser-eyebrow { font-size: 0.72rem; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 12px; }
+.teaser-text { font-size: 1.15rem; color: var(--gray-700); line-height: 1.9; }
+
+/* Features */
+.features-section { padding: 72px 0; }
+.section-eyebrow { font-size: 0.72rem; font-weight: 700; color: var(--green); text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 10px; }
+.section-title { font-family: Montserrat, sans-serif; font-size: 1.75rem; font-weight: 800; color: var(--navy); margin-bottom: 40px; }
+.features-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.feature-card { background: white; border: 1px solid var(--gray-200); border-radius: var(--radius); padding: 22px 24px; display: flex; align-items: flex-start; gap: 16px; box-shadow: var(--shadow-sm); }
+.feature-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--green); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.feature-icon svg { width: 18px; height: 18px; stroke: white; }
+.feature-text { font-size: 0.9rem; font-weight: 500; color: var(--gray-700); line-height: 1.5; }
+
+/* Pricing */
+.pricing-section { background: white; padding: 72px 0; border-top: 1px solid var(--gray-200); border-bottom: 1px solid var(--gray-200); }
+.pricing-card { max-width: 480px; margin: 0 auto; background: var(--navy-deep); border-radius: 20px; padding: 44px; text-align: center; box-shadow: var(--shadow-lg); }
+.pricing-label { font-size: 0.72rem; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 16px; }
+.pricing-amount { font-family: Montserrat, sans-serif; font-size: 3rem; font-weight: 800; color: white; line-height: 1; margin-bottom: 6px; }
+.pricing-period { font-size: 0.88rem; color: rgba(255,255,255,0.55); margin-bottom: 28px; }
+.btn-pricing-cta { background: var(--green); color: white; border: none; border-radius: 12px; padding: 16px 36px; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-block; width: 100%; }
+.btn-pricing-cta:hover { background: var(--green-dark); }
+.pricing-note { margin-top: 14px; font-size: 0.78rem; color: rgba(255,255,255,0.35); }
+
+/* CTA Banner */
+.cta-section { background: linear-gradient(135deg, var(--navy) 0%, var(--navy-deep) 100%); padding: 72px 0; }
+.cta-inner { text-align: center; max-width: 680px; margin: 0 auto; }
+.cta-inner h2 { font-family: Montserrat, sans-serif; font-size: 2rem; font-weight: 800; color: white; margin-bottom: 14px; }
+.cta-inner p { font-size: 1rem; color: rgba(255,255,255,0.7); margin-bottom: 36px; }
+.btn-cta { background: var(--green); color: white; border: none; border-radius: 12px; padding: 16px 40px; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-block; }
+.btn-cta:hover { background: var(--green-dark); }
+
+/* Footer */
+footer { background: var(--navy-deep); padding: 28px 0; }
+footer .container { text-align: center; }
+footer p { color: rgba(255,255,255,0.4); font-size: 0.82rem; }
+footer a { color: rgba(255,255,255,0.6); }
+footer a:hover { color: white; }
+
+/* States */
+.loading { text-align: center; padding: 100px; color: var(--gray-400); }
+.error-wrap { max-width: 500px; margin: 80px auto; text-align: center; }
+.error-wrap h2 { font-size: 1.2rem; color: var(--navy); margin-bottom: 10px; }
+.error-wrap p { color: var(--gray-500); font-size: 0.9rem; }
+
+/* Mobile */
+@media (max-width: 768px) {
+  .hero-inner { flex-direction: column-reverse; gap: 28px; }
+  .hero-image { width: 120px; height: 120px; }
+  .hero-title { font-size: 1.8rem; }
+  .hero-sub { font-size: 0.95rem; }
+  .features-grid { grid-template-columns: 1fr; }
+  .pricing-card { padding: 32px 24px; }
+  .pricing-amount { font-size: 2.4rem; }
+  .cta-inner h2 { font-size: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-logo">
+      <img src="ehs-logo.jpg" alt="eHS" onerror="this.style.display='none'">
+      <span class="nav-logo-text">eHealth Sales GmbH</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button class="nav-back" onclick="history.back()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Zurück
+      </button>
+      <a id="nav-cta-link" href="index.html#kontakt" class="nav-cta">Jetzt anfragen</a>
+    </div>
+  </div>
+</nav>
+
+<div id="loading" class="loading">Seite wird geladen…</div>
+<div id="error-wrap" class="error-wrap" style="display:none">
+  <h2>Seite nicht gefunden</h2>
+  <p>Diese Landingpage ist nicht verfügbar. <a href="index.html" style="color:var(--navy);font-weight:600;">Zurück zur Startseite</a></p>
+</div>
+<div id="page" style="display:none">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-inner">
+        <div class="hero-content">
+          <div class="hero-eyebrow" id="hero-hersteller"></div>
+          <h1 class="hero-title" id="hero-title"></h1>
+          <p class="hero-sub" id="hero-sub"></p>
+          <div class="hero-actions">
+            <a id="hero-cta" href="index.html#kontakt" class="btn-hero-primary">
+              Jetzt anfragen
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/></svg>
+            </a>
+            <a href="index.html?open=loesungen" class="btn-hero-outline">Alle Lösungen</a>
+          </div>
+          <div class="hero-tags" id="hero-tags"></div>
+        </div>
+        <div class="hero-image-wrap">
+          <div class="hero-image" id="hero-image-wrap">
+            <svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="rgba(255,255,255,0.2)" stroke-width="1.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Teaser -->
+  <section class="teaser-section" id="teaser-section" style="display:none">
+    <div class="teaser-inner">
+      <div class="teaser-eyebrow">Auf einen Blick</div>
+      <p class="teaser-text" id="teaser-text"></p>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features-section" id="features-section" style="display:none">
+    <div class="container">
+      <div class="section-eyebrow">Ihre Vorteile</div>
+      <div class="section-title" id="features-title">Was Sie erwartet</div>
+      <div class="features-grid" id="features-grid"></div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section class="pricing-section" id="pricing-section" style="display:none">
+    <div class="container">
+      <div style="text-align:center;margin-bottom:36px;">
+        <div class="section-eyebrow">Transparente Preise</div>
+        <div class="section-title" style="margin-bottom:0">Ihr Investment</div>
+      </div>
+      <div class="pricing-card">
+        <div class="pricing-label" id="pricing-produkt"></div>
+        <div class="pricing-amount" id="pricing-amount"></div>
+        <div class="pricing-period" id="pricing-period"></div>
+        <a id="pricing-cta" href="admin/index.html" class="btn-pricing-cta">Im Portal bestellen</a>
+        <p class="pricing-note">* Preis zzgl. MwSt.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" id="cta-section" style="display:none">
+    <div class="container">
+      <div class="cta-inner">
+        <h2 id="cta-title">Bereit für den nächsten Schritt?</h2>
+        <p id="cta-sub">Kontaktieren Sie uns — wir begleiten Sie von der Auswahl bis zur Einrichtung.</p>
+        <a id="cta-btn" href="index.html#kontakt" class="btn-cta">Jetzt anfragen →</a>
+      </div>
+    </div>
+  </section>
+
+</div><!-- #page -->
+
+<footer>
+  <div class="container">
+    <p>© 2025 eHealth Sales GmbH &middot; <a href="index.html">Startseite</a> &middot; <a href="#">Impressum</a> &middot; <a href="#">Datenschutz</a></p>
+  </div>
+</footer>
+
+<script>
+const SB_URL  = 'https://focysklymhmcfwgxdtuk.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
+const sb = supabase.createClient(SB_URL, SB_ANON);
+
+const THEMEN = {
+  ti:               { label: 'Telematik Infrastruktur', color: '#3C4A7C' },
+  security:         { label: 'Cybersecurity',           color: '#E53E3E' },
+  telemedizin:      { label: 'Telemedizin',             color: '#38B2AC' },
+  it_infrastruktur: { label: 'IT Infrastruktur',        color: '#4299E1' },
+  modern_work:      { label: 'Modern Work',             color: '#6DC52D' },
+  prozess_digital:  { label: 'Prozess Digitalisierung', color: '#ED8936' },
+};
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function init() {
+  const id = new URLSearchParams(window.location.search).get('id');
+  if (!id) { showError(); return; }
+
+  const { data: p } = await sb.from('products')
+    .select('*')
+    .eq('id', id)
+    .eq('published', true)
+    .maybeSingle();
+
+  if (!p || !p.landingpage_aktiv || !p.landingpage_inhalt) { showError(); return; }
+
+  const lp = p.landingpage_inhalt;
+
+  document.title = `${p.produkt} | eHealth Sales GmbH`;
+  document.querySelector('meta[name="description"]').content = lp.teaser || p.beschreibung || '';
+
+  // Hero
+  document.getElementById('hero-hersteller').textContent = p.hersteller || '';
+  document.getElementById('hero-title').textContent = lp.hero_title || p.produkt;
+  const heroSub = document.getElementById('hero-sub');
+  if (lp.hero_sub) { heroSub.textContent = lp.hero_sub; } else { heroSub.style.display = 'none'; }
+
+  if (p.image_url) {
+    document.getElementById('hero-image-wrap').innerHTML = `<img src="${esc(p.image_url)}" alt="${esc(p.produkt)}">`;
+  }
+
+  const themenTags = Object.entries(THEMEN)
+    .filter(([k]) => p[k])
+    .map(([, t]) => `<span class="hero-tag" style="background:${t.color}22;color:${t.color};border:1px solid ${t.color}33">${t.label}</span>`)
+    .join('');
+  document.getElementById('hero-tags').innerHTML = themenTags;
+
+  // CTA Link (Hero)
+  if (lp.cta_url) {
+    document.getElementById('hero-cta').href = lp.cta_url;
+    document.getElementById('hero-cta').childNodes[0].textContent = lp.cta_text || 'Jetzt anfragen';
+    document.getElementById('nav-cta-link').href = lp.cta_url;
+    document.getElementById('nav-cta-link').textContent = lp.cta_text || 'Jetzt anfragen';
+  }
+
+  // Teaser
+  if ((lp.teaser || '').trim()) {
+    document.getElementById('teaser-text').textContent = lp.teaser;
+    document.getElementById('teaser-section').style.display = '';
+  }
+
+  // Features
+  const vorteile = (lp.vorteile || []).filter(Boolean);
+  if (vorteile.length) {
+    document.getElementById('features-title').textContent = `Was ${p.produkt} auszeichnet`;
+    document.getElementById('features-grid').innerHTML = vorteile.map(v => `
+      <div class="feature-card">
+        <div class="feature-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        </div>
+        <span class="feature-text">${esc(v)}</span>
+      </div>`).join('');
+    document.getElementById('features-section').style.display = '';
+  }
+
+  // Pricing
+  if (p.preis_flat != null) {
+    const formatted = Number(p.preis_flat).toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    const period = p.abrechnungsart === 'monatlich' ? 'pro Monat (netto), monatlich kündbar' : 'einmalig (netto)';
+    document.getElementById('pricing-produkt').textContent = p.produkt;
+    document.getElementById('pricing-amount').textContent = `ab ${formatted} €`;
+    document.getElementById('pricing-period').textContent = period;
+    if (lp.cta_url) document.getElementById('pricing-cta').href = lp.cta_url;
+    document.getElementById('pricing-section').style.display = '';
+  }
+
+  // CTA Banner
+  if ((lp.cta_text || '').trim() && (lp.cta_url || '').trim()) {
+    document.getElementById('cta-title').textContent = `Interesse an ${p.produkt}?`;
+    document.getElementById('cta-sub').textContent = 'Kontaktieren Sie uns — wir begleiten Sie von der Auswahl bis zur Einrichtung.';
+    document.getElementById('cta-btn').textContent = lp.cta_text + ' →';
+    document.getElementById('cta-btn').href = lp.cta_url;
+    document.getElementById('cta-section').style.display = '';
+  }
+
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('page').style.display = '';
+}
+
+function showError() {
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('error-wrap').style.display = '';
+}
+
+init();
+</script>
+</body>
+</html>
