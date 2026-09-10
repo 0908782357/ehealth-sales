@@ -3511,12 +3511,11 @@
       return !bgSet || bgSet.size === 0 || bgSet.has(col);
     });
 
-    // Collect included non-extendable product nrs to hide from product table
+    // Collect all bundle product nrs to hide from product table (shown in bundle card instead)
     const includedNrs = new Set();
     relevantBundles.forEach(b => {
       (BUNDLE_ITEMS[b.id] || []).forEach(bi => {
-        if (bi.typ === 'included' && !bi.extendable && bi.product_nr != null)
-          includedNrs.add(bi.product_nr);
+        if (bi.product_nr != null) includedNrs.add(bi.product_nr);
       });
     });
 
