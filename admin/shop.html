@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>eHS Portal – Shop</title>
+<script src="../config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -974,9 +975,103 @@
       await sb.from('order_items').insert(itemsPayload);
     }
 
+    await sendBundleOrderEmail(session.user.email, _bomItem, _bomExtras);
     closeBomModal();
     alert('Ihre Bundle-Bestellung wurde aufgegeben. Unser Team prüft die Anfrage und meldet sich bei Ihnen.');
     btn.disabled = false; btn.textContent = 'Kostenpflichtig bestellen';
+  }
+
+  async function sendBundleOrderEmail(userEmail, item, extras) {
+    if (!RESEND_API_KEY) return;
+    const bundleItems = bundleItemsByBundleId[item.bundle_id] || [];
+    const bookedExtras = Object.entries(extras).filter(([, qty]) => qty > 0);
+
+    const extrasRows = bookedExtras.map(([biId, qty]) => {
+      const bi = bundleItems.find(x => x.id === biId);
+      const name = bi?.products?.produkt || 'Zusatzleistung';
+      const preis = bi?.extra_preis != null
+        ? (bi.extra_preis * qty).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
+        : 'Auf Anfrage';
+      return `<tr>
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0">${name}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:center">${qty}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600">${preis}</td>
+      </tr>`;
+    }).join('');
+
+    const signature = `<table cellpadding="0" cellspacing="0" width="100%" style="margin-top:24px;border-top:1px solid #e2e8f0;padding-top:16px">
+      <tr><td>
+        <p style="margin:0;color:#3C4A7C;font-size:13px;font-weight:700;">eHealth Sales GmbH</p>
+        <p style="margin:4px 0 0;color:#64748b;font-size:12px;line-height:1.7;">
+          Zur Zaubernuß 13 &middot; 49124 Georgsmarienhütte<br>
+          <a href="mailto:anfrage@ehealth-sales.de" style="color:#3C4A7C;text-decoration:none;">anfrage@ehealth-sales.de</a>
+        </p>
+      </td></tr>
+    </table>`;
+
+    const internalHtml = `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto">
+      <div style="background:#3C4A7C;padding:24px 32px;border-radius:12px 12px 0 0">
+        <p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;">eHealth Sales GmbH</p>
+        <h1 style="margin:8px 0 0;color:white;font-size:1.1rem;font-weight:800;">Neue Bundle-Bestellung eingegangen</h1>
+      </div>
+      <div style="background:white;padding:24px 32px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px">
+        <p style="margin:0 0 4px"><strong>Kunde:</strong> ${userEmail}</p>
+        <p style="margin:0 0 16px;color:#64748b;font-size:0.9rem"><strong>Paket:</strong> ${item.titel}</p>
+        ${bookedExtras.length ? `<table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+          <thead><tr style="background:#f8fafc">
+            <th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#64748b;font-weight:600">Zusatzleistung</th>
+            <th style="padding:8px 12px;text-align:center;font-size:0.75rem;color:#64748b;font-weight:600">Menge</th>
+            <th style="padding:8px 12px;text-align:right;font-size:0.75rem;color:#64748b;font-weight:600">Gesamt</th>
+          </tr></thead>
+          <tbody>${extrasRows}</tbody>
+        </table>` : '<p style="color:#64748b;font-size:0.9rem">Keine Zusatzleistungen gebucht.</p>'}
+        <p style="font-size:0.82rem;color:#64748b;background:#f8fafc;padding:12px;border-radius:8px;margin:0">
+          Diese Bestellung wurde über das eHS Kunden-Portal aufgegeben. Bitte in der Bestellübersicht prüfen und freischalten.
+        </p>
+        ${signature}
+      </div>
+    </div>`;
+
+    const customerHtml = `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto">
+      <div style="background:#3C4A7C;padding:24px 32px;border-radius:12px 12px 0 0">
+        <p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;">eHealth Sales GmbH</p>
+        <h1 style="margin:8px 0 0;color:white;font-size:1.1rem;font-weight:800;">Ihre Bestellung ist eingegangen</h1>
+      </div>
+      <div style="background:white;padding:24px 32px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px">
+        <p style="margin:0 0 16px;color:#0f172a;font-size:15px;line-height:1.6;">Vielen Dank für Ihre Bestellung!</p>
+        <p style="margin:0 0 8px;color:#475569;font-size:14px;"><strong>Gebuchtes Paket:</strong> ${item.titel}</p>
+        ${bookedExtras.length ? `<p style="margin:0 0 12px;color:#475569;font-size:14px;font-weight:600;">Gebuchte Zusatzleistungen:</p>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
+          <thead><tr style="background:#f8fafc">
+            <th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#64748b;font-weight:600">Zusatzleistung</th>
+            <th style="padding:8px 12px;text-align:center;font-size:0.75rem;color:#64748b;font-weight:600">Menge</th>
+            <th style="padding:8px 12px;text-align:right;font-size:0.75rem;color:#64748b;font-weight:600">Gesamt</th>
+          </tr></thead>
+          <tbody>${extrasRows}</tbody>
+        </table>` : ''}
+        <p style="font-size:0.85rem;color:#475569;line-height:1.7;margin:0 0 20px">
+          Unser Team prüft Ihre Anfrage und meldet sich in Kürze bei Ihnen. Bei Fragen stehen wir Ihnen gerne zur Verfügung.
+        </p>
+        ${signature}
+        <p style="margin-top:20px;color:#94a3b8;font-size:11px;">Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht direkt auf diese Nachricht.</p>
+      </div>
+    </div>`;
+
+    const opts = { method: 'POST', headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' } };
+    await Promise.all([
+      fetch('https://api.resend.com/emails', { ...opts, body: JSON.stringify({
+        from: 'Anfragecenter <anfragecenter@ehealth-sales.de>',
+        to: ['anfrage@ehealth-sales.de'],
+        subject: `Bundle-Bestellung: ${item.titel} – ${userEmail}`,
+        html: internalHtml,
+      }) }).catch(() => {}),
+      fetch('https://api.resend.com/emails', { ...opts, body: JSON.stringify({
+        from: 'Anfragecenter <anfragecenter@ehealth-sales.de>',
+        to: [userEmail],
+        subject: `Ihre Bestellung: ${item.titel}`,
+        html: customerHtml,
+      }) }).catch(() => {}),
+    ]);
   }
 
   function closeBomModal() {
@@ -1055,7 +1150,7 @@
   }
 
   // ---- Warenkorb ----
-  const RESEND_API_KEY = 'HIER_RESEND_API_KEY_EINSETZEN';
+  const RESEND_API_KEY = window.RESEND_API_KEY || '';
   let cart = {};
   let cartUserId = null;
 
@@ -1209,7 +1304,7 @@
   }
 
   async function sendOrderEmail(userEmail, items) {
-    if (!RESEND_API_KEY || RESEND_API_KEY === 'HIER_RESEND_API_KEY_EINSETZEN') return;
+    if (!RESEND_API_KEY) return;
     const rows = items.map(item => {
       const preisStr = item.preis != null
         ? (item.preis * item.qty).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
@@ -1220,36 +1315,73 @@
         <td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right;font-weight:600">${preisStr}</td>
       </tr>`;
     }).join('');
-    const html = `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto">
+
+    const signature = `<table cellpadding="0" cellspacing="0" width="100%" style="margin-top:24px;border-top:1px solid #e2e8f0;padding-top:16px">
+      <tr><td>
+        <p style="margin:0;color:#3C4A7C;font-size:13px;font-weight:700;">eHealth Sales GmbH</p>
+        <p style="margin:4px 0 0;color:#64748b;font-size:12px;line-height:1.7;">
+          Zur Zaubernuß 13 &middot; 49124 Georgsmarienhütte<br>
+          <a href="mailto:anfrage@ehealth-sales.de" style="color:#3C4A7C;text-decoration:none;">anfrage@ehealth-sales.de</a>
+        </p>
+      </td></tr>
+    </table>`;
+
+    const tableHtml = `<table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:#f8fafc">
+        <th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#64748b;font-weight:600">Artikel</th>
+        <th style="padding:8px 12px;text-align:center;font-size:0.75rem;color:#64748b;font-weight:600">Menge</th>
+        <th style="padding:8px 12px;text-align:right;font-size:0.75rem;color:#64748b;font-weight:600">Gesamt</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+    const internalHtml = `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto">
       <div style="background:#3C4A7C;padding:24px 32px;border-radius:12px 12px 0 0">
-        <h1 style="color:white;margin:0;font-size:1.1rem;font-weight:800">Neue Bestellung eingegangen</h1>
+        <p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;">eHealth Sales GmbH</p>
+        <h1 style="margin:8px 0 0;color:white;font-size:1.1rem;font-weight:800;">Neue Bestellung eingegangen</h1>
       </div>
       <div style="background:white;padding:24px 32px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px">
-        <p style="margin:0 0 6px"><strong>Von:</strong> ${userEmail}</p>
+        <p style="margin:0 0 4px"><strong>Kunde:</strong> ${userEmail}</p>
         <p style="margin:0 0 16px;color:#64748b;font-size:0.9rem">${new Date().toLocaleString('de-DE')}</p>
-        <table style="width:100%;border-collapse:collapse">
-          <thead><tr style="background:#f8fafc">
-            <th style="padding:8px 12px;text-align:left;font-size:0.75rem;color:#64748b;font-weight:600">Artikel</th>
-            <th style="padding:8px 12px;text-align:center;font-size:0.75rem;color:#64748b;font-weight:600">Menge</th>
-            <th style="padding:8px 12px;text-align:right;font-size:0.75rem;color:#64748b;font-weight:600">Gesamt</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-        <p style="margin-top:20px;font-size:0.82rem;color:#64748b;background:#f8fafc;padding:12px;border-radius:8px">
-          Diese Bestellung wurde über das eHS Kunden Portal aufgegeben und wartet auf Freischaltung in der Bestellübersicht.
+        ${tableHtml}
+        <p style="margin-top:16px;font-size:0.82rem;color:#64748b;background:#f8fafc;padding:12px;border-radius:8px">
+          Diese Bestellung wurde über das eHS Kunden-Portal aufgegeben und wartet auf Freischaltung in der Bestellübersicht.
         </p>
+        ${signature}
       </div>
     </div>`;
-    await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: 'noreply@ehealth-sales.de',
-        to: ['info@ehealth-sales.de'],
+
+    const customerHtml = `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto">
+      <div style="background:#3C4A7C;padding:24px 32px;border-radius:12px 12px 0 0">
+        <p style="margin:0;color:rgba(255,255,255,0.6);font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;">eHealth Sales GmbH</p>
+        <h1 style="margin:8px 0 0;color:white;font-size:1.1rem;font-weight:800;">Ihre Bestellung ist eingegangen</h1>
+      </div>
+      <div style="background:white;padding:24px 32px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px">
+        <p style="margin:0 0 16px;color:#0f172a;font-size:15px;line-height:1.6;">Vielen Dank für Ihre Bestellung!</p>
+        ${tableHtml}
+        <p style="margin-top:16px;font-size:0.85rem;color:#475569;line-height:1.7;margin-bottom:0">
+          Unser Team prüft Ihre Anfrage und meldet sich in Kürze bei Ihnen. Bei Fragen stehen wir Ihnen gerne zur Verfügung.
+        </p>
+        ${signature}
+        <p style="margin-top:20px;color:#94a3b8;font-size:11px;">Diese E-Mail wurde automatisch generiert. Bitte antworten Sie nicht direkt auf diese Nachricht.</p>
+      </div>
+    </div>`;
+
+    const opts = { method: 'POST', headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' } };
+    await Promise.all([
+      fetch('https://api.resend.com/emails', { ...opts, body: JSON.stringify({
+        from: 'Anfragecenter <anfragecenter@ehealth-sales.de>',
+        to: ['anfrage@ehealth-sales.de'],
         subject: `Neue Bestellung von ${userEmail} – ${new Date().toLocaleDateString('de-DE')}`,
-        html,
-      }),
-    }).catch(() => {});
+        html: internalHtml,
+      }) }).catch(() => {}),
+      fetch('https://api.resend.com/emails', { ...opts, body: JSON.stringify({
+        from: 'Anfragecenter <anfragecenter@ehealth-sales.de>',
+        to: [userEmail],
+        subject: `Ihre Bestellung bei eHealth Sales – ${new Date().toLocaleDateString('de-DE')}`,
+        html: customerHtml,
+      }) }).catch(() => {}),
+    ]);
   }
 
   async function logout() { await sb.auth.signOut(); window.location.href = 'index.html'; }
