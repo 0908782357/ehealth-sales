@@ -187,6 +187,52 @@
   .btn-confirm-order:hover { background: var(--navy-dark); }
   .btn-confirm-order:disabled { opacity: 0.6; cursor: default; }
   .btn-cancel-order { padding: 12px 16px; border-radius: 9px; background: var(--gray-100); color: var(--gray-500); border: none; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+
+  /* Bundle-Bestellmodal */
+  .bom-bg { position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;display:none;align-items:flex-start;justify-content:center;padding:24px;overflow-y:auto; }
+  .bom-bg.open { display:flex; }
+  .bom-modal { background:white;border-radius:18px;width:100%;max-width:600px;box-shadow:0 20px 60px rgba(0,0,0,0.2);margin:auto;overflow:hidden; }
+  .bom-header { background:var(--navy);color:white;padding:22px 28px 18px; }
+  .bom-header h3 { font-family:Montserrat,sans-serif;font-size:1.05rem;font-weight:800;margin:0 0 4px;opacity:0.85; }
+  .bom-header .bom-name { font-family:Montserrat,sans-serif;font-size:1.25rem;font-weight:800;margin:0 0 10px; }
+  .bom-header .bom-flat-price { font-size:1.5rem;font-weight:800; }
+  .bom-header .bom-flat-price span { font-size:0.8rem;font-weight:500;opacity:0.75;margin-left:4px; }
+  .bom-body { padding:20px 28px; }
+  .bom-section-title { font-size:0.65rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:9px;margin-top:16px; }
+  .bom-section-title:first-child { margin-top:0; }
+  .bom-included-list { display:flex;flex-direction:column;gap:4px;padding:10px 14px;background:var(--gray-50);border-radius:9px; }
+  .bom-included-item { display:flex;align-items:center;gap:8px;font-size:0.82rem;color:var(--gray-700); }
+  .bom-included-item svg { width:13px;height:13px;color:var(--green);flex-shrink:0; }
+  .bom-extras-wrap { border:1.5px solid var(--gray-200);border-radius:10px;overflow:hidden;margin-bottom:4px; }
+  .bom-extras-header { display:grid;grid-template-columns:1fr 100px 90px;gap:8px;padding:7px 14px;background:var(--gray-50);border-bottom:1px solid var(--gray-200); }
+  .bom-extras-header span { font-size:0.65rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.07em; }
+  .bom-extras-header span:nth-child(2) { text-align:center; }
+  .bom-extras-header span:nth-child(3) { text-align:right; }
+  .bom-extras-row { display:grid;grid-template-columns:1fr 100px 90px;gap:8px;padding:10px 14px;border-bottom:1px solid var(--gray-100);align-items:center; }
+  .bom-extras-row:last-child { border-bottom:none; }
+  .bom-extras-row:hover { background:var(--gray-50); }
+  .bom-extras-name { font-size:0.83rem;font-weight:600;color:var(--gray-800); }
+  .bom-extras-name small { display:block;font-size:0.72rem;font-weight:400;color:var(--gray-400); }
+  .bom-qty-ctrl { display:flex;align-items:center;justify-content:center;gap:5px; }
+  .bom-qty-btn { width:24px;height:24px;border-radius:5px;border:1.5px solid var(--gray-200);background:white;cursor:pointer;font-size:0.9rem;font-weight:700;color:var(--navy);display:flex;align-items:center;justify-content:center; }
+  .bom-qty-btn:hover { background:var(--gray-100); }
+  .bom-qty-val { font-size:0.85rem;font-weight:700;min-width:18px;text-align:center; }
+  .bom-extras-price { text-align:right;font-size:0.82rem;font-variant-numeric:tabular-nums;color:var(--gray-500); }
+  .bom-no-extras { padding:16px 14px;font-size:0.82rem;color:var(--gray-400);text-align:center; }
+  .bom-summary { background:var(--gray-50);border-radius:10px;padding:12px 16px;margin:16px 0 0; }
+  .bom-summary-row { display:flex;justify-content:space-between;font-size:0.82rem;color:var(--gray-500);padding:3px 0; }
+  .bom-summary-total { display:flex;justify-content:space-between;font-size:1rem;font-weight:800;color:var(--navy);padding-top:8px;margin-top:6px;border-top:1.5px solid var(--gray-200); }
+  .bom-footer { padding:16px 28px 22px;display:flex;gap:10px; }
+  .btn-bom-confirm { flex:1;padding:12px;border-radius:9px;background:var(--navy);color:white;border:none;font-size:0.875rem;font-weight:700;cursor:pointer;transition:background 0.15s; }
+  .btn-bom-confirm:hover { background:var(--navy-dark); }
+  .btn-bom-confirm:disabled { opacity:0.6;cursor:default; }
+  .btn-bom-cancel { padding:12px 18px;border-radius:9px;background:var(--gray-100);color:var(--gray-500);border:none;font-size:0.875rem;font-weight:600;cursor:pointer; }
+  /* Bundle-Badge in Tabelle */
+  .bundle-badge { display:inline-flex;align-items:center;gap:4px;background:#ede9fe;color:#5b21b6;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:20px; }
+  /* Typ-Toggle im Admin-Modal */
+  .item-type-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+  .item-type-card { display:flex;align-items:flex-start;gap:10px;border:2px solid var(--gray-200);border-radius:10px;padding:11px 14px;cursor:pointer;background:white;transition:border-color 0.15s,background 0.15s; }
+  .item-type-card.selected { border-color:var(--navy);background:#eef0f7; }
 </style>
 </head>
 <body>
@@ -346,9 +392,34 @@
 
     <div class="form-grid">
       <div class="form-group form-full">
+        <label>Artikel-Typ</label>
+        <div class="item-type-grid">
+          <label class="item-type-card selected" id="type-card-produkt">
+            <input type="radio" name="item-type" id="f-type-produkt" value="produkt" checked style="margin-top:2px;accent-color:var(--navy);" onchange="updateModalType()">
+            <div>
+              <div style="font-weight:700;font-size:0.85rem;color:var(--navy);">📦 Einzelprodukt</div>
+              <div style="font-size:0.74rem;color:var(--gray-500);margin-top:2px;">Ein einzelnes Produkt aus dem Katalog.</div>
+            </div>
+          </label>
+          <label class="item-type-card" id="type-card-bundle">
+            <input type="radio" name="item-type" id="f-type-bundle" value="bundle" style="margin-top:2px;accent-color:var(--navy);" onchange="updateModalType()">
+            <div>
+              <div style="font-weight:700;font-size:0.85rem;color:var(--navy);">🎁 Bundle</div>
+              <div style="font-size:0.74rem;color:var(--gray-500);margin-top:2px;">Produktpaket mit optionalen Extras.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+      <div class="form-group form-full" id="f-product-wrap">
         <label>Verknüpftes Produkt</label>
         <select id="f-product-id" onchange="autoFillProductPrice()">
           <option value="">– Kein Produkt verknüpft –</option>
+        </select>
+      </div>
+      <div class="form-group form-full" id="f-bundle-wrap" style="display:none;">
+        <label>Verknüpftes Bundle</label>
+        <select id="f-bundle-id" onchange="autoFillBundlePrice()">
+          <option value="">– Bundle auswählen –</option>
         </select>
       </div>
       <div class="form-group form-full">
@@ -416,6 +487,37 @@
   </div>
 </div>
 
+<!-- Bundle-Bestellmodal -->
+<div class="bom-bg" id="bom-bg" onclick="if(event.target===this)closeBomModal()">
+  <div class="bom-modal">
+    <div class="bom-header">
+      <h3>Bundle bestellen</h3>
+      <div class="bom-name" id="bom-name">–</div>
+      <div class="bom-flat-price" id="bom-flat-price">–</div>
+    </div>
+    <div class="bom-body">
+      <div class="bom-section-title">Im Bundle enthalten</div>
+      <div class="bom-included-list" id="bom-included"></div>
+      <div class="bom-section-title" id="bom-extras-label" style="display:none;">Zusätzlich dazubuchen</div>
+      <div class="bom-extras-wrap" id="bom-extras-wrap" style="display:none;">
+        <div class="bom-extras-header">
+          <span>Produkt</span><span style="text-align:center;">Menge</span><span style="text-align:right;">Preis</span>
+        </div>
+        <div id="bom-extras"></div>
+      </div>
+      <div class="bom-summary">
+        <div class="bom-summary-row"><span>Pauschalpreis Bundle</span><span id="bom-sum-flat">–</span></div>
+        <div class="bom-summary-row" id="bom-sum-extras-row" style="display:none;"><span>Zusätzliche Optionen</span><span id="bom-sum-extras">+ 0,00 €</span></div>
+        <div class="bom-summary-total"><span>Gesamt / Monat</span><span id="bom-sum-total">–</span></div>
+      </div>
+    </div>
+    <div class="bom-footer">
+      <button class="btn-bom-cancel" onclick="closeBomModal()">Abbrechen</button>
+      <button class="btn-bom-confirm" id="bom-confirm-btn" onclick="confirmBundleOrder()">Kostenpflichtig bestellen</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const SUPABASE_URL  = 'https://focysklymhmcfwgxdtuk.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
@@ -423,11 +525,15 @@
 
   let allItems = [];
   let allProducts = [];
+  let allBundles = [];
+  let bundleItemsByBundleId = {};
   let currentId = null;
   let userRole = 'partner';
   let myPartnerId = null;
   let myFirma = '';
   let filterTopicVal = '';
+  let _bomItem = null;
+  let _bomExtras = {};
 
   const TOPIC_LABELS = {
     ti:             'Telematikinfrastruktur',
@@ -490,6 +596,18 @@
       o.textContent = p.produkt + (p.hersteller ? ' (' + p.hersteller + ')' : '');
       sel.appendChild(o);
     });
+    // Bundles für Admin-Modal laden
+    if (userRole === 'admin') {
+      const { data: bd } = await sb.from('bundles').select('id, name, preise').eq('aktiv', true).order('name');
+      allBundles = bd || [];
+      const bsel = document.getElementById('f-bundle-id');
+      bsel.innerHTML = '<option value="">– Bundle auswählen –</option>';
+      allBundles.forEach(b => {
+        const o = document.createElement('option');
+        o.value = b.id; o.textContent = b.name;
+        bsel.appendChild(o);
+      });
+    }
   }
 
   function autoFillProductPrice() {
@@ -505,13 +623,25 @@
   }
 
   async function loadItems() {
-    let q = sb.from('shop_items')
-      .select('*, products(produkt, hersteller, unternehmen, partner_id, image_url, loesung_aktiv, detail_page, ti, security, telemedizin, it_infrastruktur, modern_work, prozess_digital)')
+    const { data, error } = await sb.from('shop_items')
+      .select('*, products(produkt, hersteller, unternehmen, partner_id, image_url, loesung_aktiv, detail_page, ti, security, telemedizin, it_infrastruktur, modern_work, prozess_digital), bundles(id, name, beschreibung, themen, preise, aktiv)')
       .order('created_at', { ascending: false });
-
-    const { data, error } = await q;
     if (error) { console.error(error); return; }
     allItems = data || [];
+
+    // Bundle-Items für alle referenzierten Bundles laden
+    const bundleIds = [...new Set(allItems.filter(i => i.bundle_id).map(i => i.bundle_id))];
+    bundleItemsByBundleId = {};
+    if (bundleIds.length) {
+      const { data: biData } = await sb.from('bundle_items')
+        .select('*, products(id, produkt, beschreibung)')
+        .in('bundle_id', bundleIds)
+        .order('sort_order');
+      (biData || []).forEach(bi => {
+        if (!bundleItemsByBundleId[bi.bundle_id]) bundleItemsByBundleId[bi.bundle_id] = [];
+        bundleItemsByBundleId[bi.bundle_id].push(bi);
+      });
+    }
     applyShopFilter();
   }
 
@@ -526,9 +656,22 @@
   function applyShopFilter() {
     let items = allItems;
     if (filterTopicVal) {
-      items = allItems.filter(item => item.products && item.products[filterTopicVal] === true);
+      items = allItems.filter(item => {
+        if (item.bundle_id) return (item.bundles?.themen || []).includes(filterTopicVal.replace('_infrastruktur','').replace('_digital','').replace('_work',''));
+        return item.products && item.products[filterTopicVal] === true;
+      });
     }
     renderGrid(items);
+  }
+
+  function autoFillBundlePrice() {
+    const id = document.getElementById('f-bundle-id').value;
+    if (!id) return;
+    const b = allBundles.find(x => x.id === id);
+    if (!b?.preise) return;
+    const prices = Object.values(b.preise).filter(v => v > 0);
+    if (prices.length) document.getElementById('f-preis').value = Math.min(...prices);
+    document.getElementById('f-preis-einheit').value = 'pro Monat';
   }
 
   function renderGrid(items) {
@@ -560,6 +703,27 @@
              onerror="this.parentElement.innerHTML='<svg fill=none viewBox=&quot;0 0 24 24&quot; stroke=currentColor stroke-width=1.5 style=&quot;width:26px;height:26px;color:var(--gray-400)&quot;><path stroke-linecap=round stroke-linejoin=round d=&quot;M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z&quot;/></svg>'">`
         : `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="width:26px;height:26px;color:var(--gray-400)"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`;
 
+      const isBundle = !!item.bundle_id;
+      const bundleData = isBundle ? item.bundles : null;
+
+      // Subzeile: Produkt-Referenz
+      let subLine = '';
+      if (isBundle && bundleData) {
+        subLine = `<div class="shop-list-sub"><span class="bundle-badge">🎁 Bundle</span> ${bundleData.name}</div>`;
+      } else if (item.products) {
+        subLine = `<div class="shop-list-sub">${item.products.produkt}${item.products.hersteller ? ' · ' + item.products.hersteller : ''}</div>`;
+      }
+
+      // Kundenseitige Aktionen
+      const customerActions = isBundle
+        ? `<button class="btn btn-sm btn-primary" onclick="openBomModal('${item.id}')">Konfigurieren &amp; bestellen</button>`
+        : `${detailPage
+            ? `<a class="btn btn-sm btn-edit" href="../${detailPage}" target="_blank" style="text-decoration:none;">Mehr erfahren</a>`
+            : hasLoesung
+              ? `<a class="btn btn-sm btn-edit" href="loesung.html?id=${item.product_id}" style="text-decoration:none;">Mehr erfahren</a>`
+              : `<a class="btn btn-sm btn-edit" href="../index.html?open=kontakt" style="text-decoration:none;">Anfragen</a>`}
+          <button class="btn btn-sm btn-primary" data-item-id="${item.id}" onclick="addToCart('${item.id}')">In den Warenkorb</button>`;
+
       return `<tr>
         <td class="shop-td-img">
           <div class="shop-list-img">
@@ -569,13 +733,15 @@
         </td>
         <td>
           <div class="shop-list-title">${item.titel}</div>
-          ${item.products ? `<div class="shop-list-sub">${item.products.produkt}${item.products.hersteller ? ' · ' + item.products.hersteller : ''}</div>` : ''}
+          ${subLine}
           ${item.beschreibung ? `<div class="shop-list-desc">${item.beschreibung}</div>` : ''}
           ${topicTags ? `<div class="shop-list-tags">${topicTags}</div>` : ''}
           ${userRole === 'admin' ? `<div style="margin-top:5px;">
-            ${item.requires_token
-              ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#92400e;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:20px;">🔑 Token-Zugang</span>`
-              : `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--gray-100);color:var(--gray-500);font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:20px;">📦 Klassisch</span>`}
+            ${isBundle
+              ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#ede9fe;color:#5b21b6;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:20px;">🎁 Bundle-Artikel</span>`
+              : item.requires_token
+                ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#92400e;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:20px;">🔑 Token-Zugang</span>`
+                : `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--gray-100);color:var(--gray-500);font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:20px;">📦 Klassisch</span>`}
           </div>` : ''}
         </td>
         <td class="shop-td-price">
@@ -590,17 +756,10 @@
               <button class="btn btn-sm btn-edit" onclick="openModal('${item.id}')">Bearbeiten</button>
               <button class="btn btn-sm ${item.aktiv ? 'btn-toggle' : 'btn-toggle inactive'}"
                 onclick="toggleAktiv('${item.id}', ${item.aktiv})">${item.aktiv ? 'Aktiv' : 'Inaktiv'}</button>
-              ${hasLoesung ? `<a class="btn btn-sm" href="loesung.html?id=${item.product_id}" target="_blank" style="text-decoration:none;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;">Lösungsseite</a>` : ''}
-              ${detailPage ? `<a class="btn btn-sm" href="../${detailPage}" target="_blank" style="text-decoration:none;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;">Landingpage</a>` : ''}
+              ${!isBundle && hasLoesung ? `<a class="btn btn-sm" href="loesung.html?id=${item.product_id}" target="_blank" style="text-decoration:none;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;">Lösungsseite</a>` : ''}
+              ${!isBundle && detailPage ? `<a class="btn btn-sm" href="../${detailPage}" target="_blank" style="text-decoration:none;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;">Landingpage</a>` : ''}
               <button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}','${item.titel.replace(/'/g,"\\'")}')">Löschen</button>
-            ` : `
-              ${detailPage
-                ? `<a class="btn btn-sm btn-edit" href="../${detailPage}" target="_blank" style="text-decoration:none;">Mehr erfahren</a>`
-                : hasLoesung
-                  ? `<a class="btn btn-sm btn-edit" href="loesung.html?id=${item.product_id}" style="text-decoration:none;">Mehr erfahren</a>`
-                  : `<a class="btn btn-sm btn-edit" href="../index.html?open=kontakt" style="text-decoration:none;">Anfragen</a>`}
-              <button class="btn btn-sm btn-primary" data-item-id="${item.id}" onclick="addToCart('${item.id}')">In den Warenkorb</button>
-            `}
+            ` : customerActions}
           </div>
         </td>
       </tr>`;
@@ -632,7 +791,11 @@
     if (id) {
       const item = allItems.find(x => x.id === id);
       if (!item) return;
+      const isBundle = !!item.bundle_id;
+      document.getElementById('f-type-bundle').checked  = isBundle;
+      document.getElementById('f-type-produkt').checked = !isBundle;
       document.getElementById('f-product-id').value   = item.product_id || '';
+      document.getElementById('f-bundle-id').value    = item.bundle_id  || '';
       document.getElementById('f-titel').value         = item.titel || '';
       document.getElementById('f-beschreibung').value  = item.beschreibung || '';
       document.getElementById('f-preis').value         = item.preis != null ? item.preis : '';
@@ -644,7 +807,10 @@
       document.getElementById('f-order-classic').checked = !item.requires_token;
       if (item.bild_url) { preview.src = item.bild_url; preview.style.display = 'block'; }
     } else {
+      document.getElementById('f-type-produkt').checked = true;
+      document.getElementById('f-type-bundle').checked  = false;
       document.getElementById('f-product-id').value   = '';
+      document.getElementById('f-bundle-id').value    = '';
       document.getElementById('f-titel').value         = '';
       document.getElementById('f-beschreibung').value  = '';
       document.getElementById('f-preis').value         = '';
@@ -655,11 +821,168 @@
       document.getElementById('f-order-classic').checked = true;
       document.getElementById('f-order-token').checked   = false;
     }
+    updateModalType();
     updateOrderTypeUI();
     document.getElementById('modal-bg').classList.add('open');
   }
 
   function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+
+  function updateModalType() {
+    const isBundle = document.getElementById('f-type-bundle').checked;
+    document.getElementById('f-product-wrap').style.display = isBundle ? 'none' : '';
+    document.getElementById('f-bundle-wrap').style.display  = isBundle ? '' : 'none';
+    document.getElementById('type-card-produkt').classList.toggle('selected', !isBundle);
+    document.getElementById('type-card-bundle').classList.toggle('selected', isBundle);
+    // Bundle nutzen immer 'pro Monat'
+    if (isBundle) document.getElementById('f-preis-einheit').value = 'pro Monat';
+  }
+
+  // ---- Bundle-Bestellmodal (Kundenseite) ----
+  function openBomModal(itemId) {
+    const item = allItems.find(x => x.id === itemId);
+    if (!item || !item.bundle_id) return;
+    _bomItem = item;
+    _bomExtras = {};
+
+    const bundleItems = bundleItemsByBundleId[item.bundle_id] || [];
+    const preis = item.preis != null ? parseFloat(item.preis) : null;
+
+    document.getElementById('bom-name').textContent = item.titel;
+    document.getElementById('bom-flat-price').innerHTML = preis != null
+      ? preis.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
+        + `<span>${item.preis_einheit || 'pro Monat'}</span>`
+      : 'Auf Anfrage';
+
+    // Enthaltene Produkte (non-extendable included)
+    const included = bundleItems.filter(bi => bi.typ === 'included');
+    document.getElementById('bom-included').innerHTML = included.length
+      ? included.map(bi => `<div class="bom-included-item">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          <span>${bi.products?.produkt || '–'}${bi.included_quantity > 1 ? ` × ${bi.included_quantity}` : ''}</span>
+        </div>`).join('')
+      : '<div style="font-size:0.82rem;color:var(--gray-400);">Keine enthaltenen Produkte hinterlegt.</div>';
+
+    // Buchbare Extras: extendable + addon
+    const extras = bundleItems.filter(bi => bi.extendable || bi.typ === 'addon');
+    const extrasWrap  = document.getElementById('bom-extras-wrap');
+    const extrasLabel = document.getElementById('bom-extras-label');
+    if (extras.length) {
+      extrasWrap.style.display  = '';
+      extrasLabel.style.display = '';
+      renderBomExtras(extras);
+    } else {
+      extrasWrap.style.display  = 'none';
+      extrasLabel.style.display = 'none';
+      document.getElementById('bom-extras').innerHTML = '';
+    }
+
+    updateBomSummary(extras);
+    document.getElementById('bom-confirm-btn').disabled = false;
+    document.getElementById('bom-confirm-btn').textContent = 'Kostenpflichtig bestellen';
+    document.getElementById('bom-bg').classList.add('open');
+  }
+
+  function renderBomExtras(extras) {
+    document.getElementById('bom-extras').innerHTML = extras.map(bi => {
+      const qty = _bomExtras[bi.id] || 0;
+      const preisHtml = bi.extra_preis != null
+        ? (bi.extra_preis * Math.max(qty, 1)).toLocaleString('de-DE', { style:'currency', currency:'EUR' })
+          + ` <span style="font-size:0.72rem;color:var(--gray-400);">${bi.extra_preis_einheit || 'pro Monat'}</span>`
+        : '<span style="color:var(--gray-400);">Auf Anfrage</span>';
+      const typBadge = bi.typ === 'addon'
+        ? '<span style="font-size:0.65rem;background:#ede9fe;color:#5b21b6;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px;">Optional</span>'
+        : '<span style="font-size:0.65rem;background:#dcfce7;color:#15803d;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px;">Erweiterbar</span>';
+      return `<div class="bom-extras-row">
+        <div class="bom-extras-name">
+          ${bi.products?.produkt || '–'}${typBadge}
+          ${bi.included_quantity > 1 && bi.typ !== 'addon' ? `<small>im Bundle: ${bi.included_quantity} enthalten</small>` : ''}
+        </div>
+        <div class="bom-qty-ctrl">
+          <button class="bom-qty-btn" onclick="updateBomQty('${bi.id}', -1, ${JSON.stringify(extras).replace(/"/g,"'")})">−</button>
+          <span class="bom-qty-val" id="bomqty_${bi.id}">${qty}</span>
+          <button class="bom-qty-btn" onclick="updateBomQty('${bi.id}', 1, ${JSON.stringify(extras).replace(/"/g,"'")})">+</button>
+        </div>
+        <div class="bom-extras-price" id="bompr_${bi.id}">${qty > 0 ? preisHtml : '<span style="color:var(--gray-300);">–</span>'}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function updateBomQty(biId, delta, extras) {
+    _bomExtras[biId] = Math.max(0, (_bomExtras[biId] || 0) + delta);
+    renderBomExtras(extras);
+    updateBomSummary(extras);
+  }
+
+  function updateBomSummary(extras) {
+    const preis = _bomItem?.preis != null ? parseFloat(_bomItem.preis) : null;
+    document.getElementById('bom-sum-flat').textContent = preis != null
+      ? preis.toLocaleString('de-DE', { style:'currency', currency:'EUR' })
+      : 'Auf Anfrage';
+
+    let extrasTotal = 0;
+    (extras || []).forEach(bi => {
+      const qty = _bomExtras[bi.id] || 0;
+      if (qty > 0 && bi.extra_preis != null) extrasTotal += bi.extra_preis * qty;
+    });
+
+    const extrasRow = document.getElementById('bom-sum-extras-row');
+    if (extrasTotal > 0) {
+      extrasRow.style.display = '';
+      document.getElementById('bom-sum-extras').textContent =
+        '+ ' + extrasTotal.toLocaleString('de-DE', { style:'currency', currency:'EUR' });
+    } else {
+      extrasRow.style.display = 'none';
+    }
+
+    const total = (preis || 0) + extrasTotal;
+    document.getElementById('bom-sum-total').textContent = preis != null
+      ? total.toLocaleString('de-DE', { style:'currency', currency:'EUR' })
+      : 'Auf Anfrage';
+  }
+
+  async function confirmBundleOrder() {
+    const btn = document.getElementById('bom-confirm-btn');
+    btn.disabled = true; btn.textContent = 'Wird gesendet…';
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { btn.disabled = false; btn.textContent = 'Kostenpflichtig bestellen'; return; }
+
+    const { data: order, error: ordErr } = await sb.from('orders').insert({
+      user_id: session.user.id, shop_item_id: _bomItem.id,
+      status: 'pending', quantity: 1, email: session.user.email,
+      created_at: new Date().toISOString(),
+    }).select('id').single();
+
+    if (ordErr) { alert('Fehler: ' + ordErr.message); btn.disabled = false; btn.textContent = 'Kostenpflichtig bestellen'; return; }
+
+    // order_items für gebuchte Extras anlegen
+    const extras = Object.entries(_bomExtras).filter(([, qty]) => qty > 0);
+    if (extras.length && order) {
+      const bundleItems = bundleItemsByBundleId[_bomItem.bundle_id] || [];
+      const itemsPayload = extras.map(([biId, qty]) => {
+        const bi = bundleItems.find(x => x.id === biId);
+        return {
+          order_id: order.id,
+          bundle_item_id: biId,
+          product_id: bi?.product_id || null,
+          product_name: bi?.products?.produkt || null,
+          quantity: qty,
+          preis: bi?.extra_preis ?? null,
+          preis_einheit: bi?.extra_preis_einheit || null,
+        };
+      });
+      await sb.from('order_items').insert(itemsPayload);
+    }
+
+    closeBomModal();
+    alert('Ihre Bundle-Bestellung wurde aufgegeben. Unser Team prüft die Anfrage und meldet sich bei Ihnen.');
+    btn.disabled = false; btn.textContent = 'Kostenpflichtig bestellen';
+  }
+
+  function closeBomModal() {
+    document.getElementById('bom-bg').classList.remove('open');
+    _bomItem = null; _bomExtras = {};
+  }
 
   function updateOrderTypeUI() {
     const isToken = document.getElementById('f-order-token').checked;
@@ -685,8 +1008,10 @@
     if (!titel) { showMsg('Bitte einen Titel eingeben.', 'error'); return; }
 
     const preisRaw = document.getElementById('f-preis').value;
+    const isBundle = document.getElementById('f-type-bundle').checked;
     const payload = {
-      product_id:    document.getElementById('f-product-id').value || null,
+      product_id:    isBundle ? null : (document.getElementById('f-product-id').value || null),
+      bundle_id:     isBundle ? (document.getElementById('f-bundle-id').value || null) : null,
       titel,
       beschreibung:  document.getElementById('f-beschreibung').value.trim() || null,
       preis:         preisRaw !== '' ? parseFloat(preisRaw) : null,
@@ -694,7 +1019,7 @@
       bild_url:      document.getElementById('f-bild-url').value.trim() || null,
       link_url:      document.getElementById('f-link-url').value.trim() || null,
       aktiv:          document.getElementById('f-aktiv').checked,
-      requires_token: document.getElementById('f-order-token').checked,
+      requires_token: !isBundle && document.getElementById('f-order-token').checked,
       updated_at:     new Date().toISOString()
     };
 
