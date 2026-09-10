@@ -82,27 +82,32 @@
   .filter-btn:hover { border-color: var(--navy); color: var(--navy); }
   .filter-btn.active { background: var(--navy); border-color: var(--navy); color: white; }
 
-  /* List */
-  .shop-list { display: flex; flex-direction: column; gap: 0; background: white; border-radius: 14px; border: 1px solid var(--gray-200); overflow: hidden; }
-  .shop-list-item { display: flex; align-items: center; gap: 18px; padding: 16px 20px; border-bottom: 1px solid var(--gray-100); transition: background 0.12s; }
-  .shop-list-item:last-child { border-bottom: none; }
-  .shop-list-item:hover { background: var(--gray-50); }
-  .shop-list-img { width: 72px; height: 72px; border-radius: 10px; object-fit: cover; background: var(--gray-100); flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+  /* Shop Table */
+  .shop-table-wrap { background: white; border-radius: 14px; border: 1px solid var(--gray-200); overflow: hidden; }
+  .shop-table { width: 100%; border-collapse: collapse; }
+  .shop-table thead th { font-size: 0.68rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.08em; padding: 10px 14px; background: var(--gray-50); border-bottom: 1px solid var(--gray-200); text-align: left; white-space: nowrap; }
+  .shop-table thead .th-price { text-align: right; padding-right: 8px; }
+  .shop-table tbody tr { border-bottom: 1px solid var(--gray-100); transition: background 0.12s; }
+  .shop-table tbody tr:last-child { border-bottom: none; }
+  .shop-table tbody tr:hover { background: var(--gray-50); }
+  .shop-table td { padding: 12px 14px; vertical-align: middle; }
+  .shop-td-img { width: 68px; padding: 10px 8px 10px 16px !important; }
+  .shop-list-img { width: 64px; height: 64px; border-radius: 10px; background: var(--gray-100); flex-shrink: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
   .shop-list-img img { width: 100%; height: 100%; object-fit: cover; }
-  .shop-list-img svg { width: 28px; height: 28px; color: var(--gray-400); }
+  .shop-list-img svg { width: 26px; height: 26px; color: var(--gray-400); }
   .inactive-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; border-radius: 10px; }
   .inactive-badge { background: var(--gray-400); color: white; font-size: 0.62rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.06em; }
-  .shop-list-body { flex: 1; min-width: 0; }
-  .shop-list-title { font-weight: 700; font-size: 0.95rem; color: var(--navy); }
-  .shop-list-sub { font-size: 0.75rem; color: var(--gray-400); margin-top: 1px; margin-bottom: 5px; }
-  .shop-list-desc { font-size: 0.82rem; color: var(--gray-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 500px; }
-  .shop-list-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+  .shop-list-title { font-weight: 700; font-size: 0.93rem; color: var(--navy); }
+  .shop-list-sub { font-size: 0.74rem; color: var(--gray-400); margin-top: 1px; margin-bottom: 4px; }
+  .shop-list-desc { font-size: 0.81rem; color: var(--gray-500); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 420px; }
+  .shop-list-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 5px; }
   .topic-tag { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; }
-  .shop-list-price { text-align: right; flex-shrink: 0; min-width: 110px; }
-  .price-main { font-size: 1.1rem; font-weight: 800; color: var(--navy); }
-  .price-unit { font-size: 0.72rem; color: var(--gray-400); margin-top: 1px; }
+  .shop-td-price { width: 120px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; padding-right: 8px !important; }
+  .price-main { font-size: 1.05rem; font-weight: 800; color: var(--navy); }
   .price-na { font-size: 0.82rem; color: var(--gray-400); font-style: italic; }
-  .shop-list-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; min-width: 160px; }
+  .shop-td-unit { width: 100px; font-size: 0.72rem; color: var(--gray-400); white-space: nowrap; }
+  .shop-td-actions { width: 1%; white-space: nowrap; text-align: right; padding-right: 16px !important; }
+  .shop-td-actions .btn-wrap { display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
 
   .badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; }
   .badge-green { background: #f0fdf4; color: #16a34a; }
@@ -327,8 +332,8 @@
       <button class="filter-btn" onclick="filterShop('prozess_digital')">Prozess-Digitalisierung</button>
     </div>
 
-    <div class="shop-list" id="shop-grid">
-      <div class="empty">Laden…</div>
+    <div id="shop-grid" style="overflow-x:auto;">
+      <div class="shop-table-wrap"><div class="empty">Laden…</div></div>
     </div>
   </main>
 </div>
@@ -529,13 +534,13 @@
   function renderGrid(items) {
     const grid = document.getElementById('shop-grid');
     if (!items.length) {
-      grid.innerHTML = `<div class="empty">
+      grid.innerHTML = `<div class="shop-table-wrap"><div class="empty">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
         Keine Artikel gefunden.
-      </div>`;
+      </div></div>`;
       return;
     }
-    grid.innerHTML = items.map(item => {
+    const rows = items.map(item => {
       const preis = item.preis != null
         ? parseFloat(item.preis).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
         : null;
@@ -543,7 +548,6 @@
       const hasLoesung = !!item.products?.loesung_aktiv && !!item.product_id;
       const detailPage = item.products?.detail_page || null;
 
-      // Themen-Tags
       const topicTags = Object.keys(TOPIC_LABELS)
         .filter(k => item.products && item.products[k] === true)
         .map(k => {
@@ -553,50 +557,69 @@
 
       const imgBlock = imgSrc
         ? `<img src="${imgSrc}" alt="${item.titel}" style="width:100%;height:100%;object-fit:cover;"
-             onerror="this.parentElement.innerHTML='<svg fill=none viewBox=&quot;0 0 24 24&quot; stroke=currentColor stroke-width=1.5 style=&quot;width:28px;height:28px;color:var(--gray-400)&quot;><path stroke-linecap=round stroke-linejoin=round d=&quot;M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z&quot;/></svg>'">`
-        : `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="width:28px;height:28px;color:var(--gray-400)"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`;
+             onerror="this.parentElement.innerHTML='<svg fill=none viewBox=&quot;0 0 24 24&quot; stroke=currentColor stroke-width=1.5 style=&quot;width:26px;height:26px;color:var(--gray-400)&quot;><path stroke-linecap=round stroke-linejoin=round d=&quot;M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z&quot;/></svg>'">`
+        : `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" style="width:26px;height:26px;color:var(--gray-400)"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>`;
 
-      return `
-      <div class="shop-list-item">
-        <div class="shop-list-img">
-          ${imgBlock}
-          ${!item.aktiv ? '<div class="inactive-overlay"><span class="inactive-badge">Inaktiv</span></div>' : ''}
-        </div>
-        <div class="shop-list-body">
+      return `<tr>
+        <td class="shop-td-img">
+          <div class="shop-list-img">
+            ${imgBlock}
+            ${!item.aktiv ? '<div class="inactive-overlay"><span class="inactive-badge">Inaktiv</span></div>' : ''}
+          </div>
+        </td>
+        <td>
           <div class="shop-list-title">${item.titel}</div>
           ${item.products ? `<div class="shop-list-sub">${item.products.produkt}${item.products.hersteller ? ' · ' + item.products.hersteller : ''}</div>` : ''}
           ${item.beschreibung ? `<div class="shop-list-desc">${item.beschreibung}</div>` : ''}
           ${topicTags ? `<div class="shop-list-tags">${topicTags}</div>` : ''}
-          ${userRole === 'admin' ? `<div style="margin-top:6px;">
+          ${userRole === 'admin' ? `<div style="margin-top:5px;">
             ${item.requires_token
               ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#fef3c7;color:#92400e;font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:20px;">🔑 Token-Zugang</span>`
               : `<span style="display:inline-flex;align-items:center;gap:4px;background:var(--gray-100);color:var(--gray-500);font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:20px;">📦 Klassisch</span>`}
           </div>` : ''}
-        </div>
-        <div class="shop-list-price">
-          ${preis
-            ? `<div class="price-main">${preis}</div><div class="price-unit">${item.preis_einheit || ''}</div>`
-            : `<div class="price-na">Auf Anfrage</div>`}
-        </div>
-        <div class="shop-list-actions">
-          ${userRole === 'admin' ? `
-            <button class="btn btn-sm btn-edit" onclick="openModal('${item.id}')">Bearbeiten</button>
-            <button class="btn btn-sm ${item.aktiv ? 'btn-toggle' : 'btn-toggle inactive'}"
-              onclick="toggleAktiv('${item.id}', ${item.aktiv})">${item.aktiv ? 'Aktiv' : 'Inaktiv'}</button>
-            ${hasLoesung ? `<a class="btn btn-sm" href="loesung.html?id=${item.product_id}" target="_blank" style="text-decoration:none;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;">Lösungsseite</a>` : ''}
-            ${detailPage ? `<a class="btn btn-sm" href="../${detailPage}" target="_blank" style="text-decoration:none;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;">Landingpage</a>` : ''}
-            <button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}','${item.titel.replace(/'/g,"\\'")}')">Löschen</button>
-          ` : `
-            ${detailPage
-              ? `<a class="btn btn-sm btn-edit" href="../${detailPage}" target="_blank" style="text-decoration:none;">Mehr erfahren</a>`
-              : hasLoesung
-                ? `<a class="btn btn-sm btn-edit" href="loesung.html?id=${item.product_id}" style="text-decoration:none;">Mehr erfahren</a>`
-                : `<a class="btn btn-sm btn-edit" href="../index.html?open=kontakt" style="text-decoration:none;">Anfragen</a>`}
-            <button class="btn btn-sm btn-primary" data-item-id="${item.id}" onclick="addToCart('${item.id}')">In den Warenkorb</button>
-          `}
-        </div>
-      </div>`;
+        </td>
+        <td class="shop-td-price">
+          ${preis ? `<span class="price-main">${preis}</span>` : `<span class="price-na">Auf Anfrage</span>`}
+        </td>
+        <td class="shop-td-unit">
+          ${preis && item.preis_einheit ? item.preis_einheit : ''}
+        </td>
+        <td class="shop-td-actions">
+          <div class="btn-wrap">
+            ${userRole === 'admin' ? `
+              <button class="btn btn-sm btn-edit" onclick="openModal('${item.id}')">Bearbeiten</button>
+              <button class="btn btn-sm ${item.aktiv ? 'btn-toggle' : 'btn-toggle inactive'}"
+                onclick="toggleAktiv('${item.id}', ${item.aktiv})">${item.aktiv ? 'Aktiv' : 'Inaktiv'}</button>
+              ${hasLoesung ? `<a class="btn btn-sm" href="loesung.html?id=${item.product_id}" target="_blank" style="text-decoration:none;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;">Lösungsseite</a>` : ''}
+              ${detailPage ? `<a class="btn btn-sm" href="../${detailPage}" target="_blank" style="text-decoration:none;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;">Landingpage</a>` : ''}
+              <button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}','${item.titel.replace(/'/g,"\\'")}')">Löschen</button>
+            ` : `
+              ${detailPage
+                ? `<a class="btn btn-sm btn-edit" href="../${detailPage}" target="_blank" style="text-decoration:none;">Mehr erfahren</a>`
+                : hasLoesung
+                  ? `<a class="btn btn-sm btn-edit" href="loesung.html?id=${item.product_id}" style="text-decoration:none;">Mehr erfahren</a>`
+                  : `<a class="btn btn-sm btn-edit" href="../index.html?open=kontakt" style="text-decoration:none;">Anfragen</a>`}
+              <button class="btn btn-sm btn-primary" data-item-id="${item.id}" onclick="addToCart('${item.id}')">In den Warenkorb</button>
+            `}
+          </div>
+        </td>
+      </tr>`;
     }).join('');
+
+    grid.innerHTML = `<div class="shop-table-wrap">
+      <table class="shop-table">
+        <thead>
+          <tr>
+            <th style="padding-left:16px;"></th>
+            <th>Produkt</th>
+            <th class="th-price">Preis</th>
+            <th>Einheit</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
   }
 
   function openModal(id) {
