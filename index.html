@@ -4587,7 +4587,7 @@
       await _sb.from('anfragen').insert(payload);
     } catch(e) { console.warn('Anfrage-Insert fehlgeschlagen:', e); }
 
-    if (RESEND_API_KEY && RESEND_API_KEY !== 'HIER_RESEND_API_KEY_EINSETZEN') {
+    {
       const firma   = payload.firma   ? `<br><strong>Einrichtung:</strong> ${payload.firma}`   : '';
       const telefon = payload.telefon ? `<br><strong>Telefon:</strong> ${payload.telefon}`     : '';
       const notiz   = payload.nachricht ? `<br><br><em>${payload.nachricht}</em>`               : '';
@@ -4599,12 +4599,11 @@
           <tr><td><a href="mailto:anfrage@ehealth-sales.de" style="color:#3C4A7C;text-decoration:none;">anfrage@ehealth-sales.de</a></td></tr>
         </table>`;
 
+      const _eOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' } };
+
       // Interne Benachrichtigung an anfrage@ehealth-sales.de
-      fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      fetch('/send-email.php', { ..._eOpts,
         body: JSON.stringify({
-          from: 'Anfragecenter <anfragecenter@ehealth-sales.de>',
           to: ['anfrage@ehealth-sales.de'],
           subject: `Neue Anfrage: ${name} – ${payload.berufsgruppe || 'Produktfinder'}`,
           html: `<div style="font-family:Inter,sans-serif;max-width:600px">
@@ -4620,11 +4619,8 @@
       }).catch(() => {});
 
       // Bestätigung an den Kunden
-      fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      fetch('/send-email.php', { ..._eOpts,
         body: JSON.stringify({
-          from: 'Anfragecenter <anfragecenter@ehealth-sales.de>',
           to: [email],
           subject: 'Ihre Anfrage bei eHealth Sales – wir melden uns!',
           html: `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto">

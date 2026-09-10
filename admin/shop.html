@@ -1057,15 +1057,15 @@
       </div>
     </div>`;
 
-    const opts = { method: 'POST', headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' } };
+    const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' } };
     await Promise.all([
-      fetch('https://api.resend.com/emails', { ...opts, body: JSON.stringify({
+      fetch('/send-email.php', { ...opts, body: JSON.stringify({
         from: 'Anfragecenter <anfragecenter@ehealth-sales.de>',
         to: ['anfrage@ehealth-sales.de'],
         subject: `Bundle-Bestellung: ${item.titel} – ${userEmail}`,
         html: internalHtml,
       }) }).catch(() => {}),
-      fetch('https://api.resend.com/emails', { ...opts, body: JSON.stringify({
+      fetch('/send-email.php', { ...opts, body: JSON.stringify({
         from: 'Anfragecenter <anfragecenter@ehealth-sales.de>',
         to: [userEmail],
         subject: `Ihre Bestellung: ${item.titel}`,
@@ -1304,7 +1304,6 @@
   }
 
   async function sendOrderEmail(userEmail, items) {
-    if (!RESEND_API_KEY) return;
     const rows = items.map(item => {
       const preisStr = item.preis != null
         ? (item.preis * item.qty).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
@@ -1367,15 +1366,15 @@
       </div>
     </div>`;
 
-    const opts = { method: 'POST', headers: { 'Authorization': `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' } };
+    const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' } };
     await Promise.all([
-      fetch('https://api.resend.com/emails', { ...opts, body: JSON.stringify({
+      fetch('/send-email.php', { ...opts, body: JSON.stringify({
         from: 'Anfragecenter <anfragecenter@ehealth-sales.de>',
         to: ['anfrage@ehealth-sales.de'],
         subject: `Neue Bestellung von ${userEmail} – ${new Date().toLocaleDateString('de-DE')}`,
         html: internalHtml,
       }) }).catch(() => {}),
-      fetch('https://api.resend.com/emails', { ...opts, body: JSON.stringify({
+      fetch('/send-email.php', { ...opts, body: JSON.stringify({
         from: 'Anfragecenter <anfragecenter@ehealth-sales.de>',
         to: [userEmail],
         subject: `Ihre Bestellung bei eHealth Sales – ${new Date().toLocaleDateString('de-DE')}`,
