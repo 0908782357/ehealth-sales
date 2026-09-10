@@ -398,9 +398,9 @@
     if (!session) { window.location.href = 'index.html'; return; }
     currentUser = session.user;
     document.getElementById('user-email').textContent = currentUser.email;
-    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', currentUser.id).single();
+    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', currentUser.id).maybeSingle();
     userRole = roleRow?.role || 'partner';
-    const { data: profile } = await sb.from('user_profiles').select('vorname,nachname,firma').eq('user_id', currentUser.id).single();
+    const { data: profile } = await sb.from('user_profiles').select('vorname,nachname,firma').eq('user_id', currentUser.id).maybeSingle();
     currentProfile = profile;
     if (userRole === 'admin') {
       document.getElementById('nav-group-admin').style.display = '';
