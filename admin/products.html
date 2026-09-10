@@ -337,10 +337,6 @@
       <div class="step-item" id="bundle-tab-ind-2" onclick="switchBundleTab(2)" style="cursor:pointer;">
         <div class="step-num">2</div><div class="step-label">Bundle-Inhalt</div>
       </div>
-      <div class="step-sep">›</div>
-      <div class="step-item" id="bundle-tab-ind-3" onclick="switchBundleTab(3)" style="cursor:pointer;">
-        <div class="step-num">3</div><div class="step-label">Berufsgruppen</div>
-      </div>
     </div>
 
     <!-- Tab 1: Grunddaten -->
@@ -371,7 +367,7 @@
           <textarea id="b-beschreibung" placeholder="Kurze Beschreibung des Bundles…"></textarea>
         </div>
         <div class="form-group form-full">
-          <label>Pauschalpreis pro Berufsgruppe</label>
+          <label>Pauschalpreis pro Berufsgruppe <span style="font-size:0.72rem;color:var(--gray-400);font-weight:400;">— Aktivierte Gruppen sind auch im Produktfinder sichtbar</span></label>
           <div style="display:flex;align-items:center;gap:10px;background:var(--gray-50);border:1.5px solid var(--gray-200);border-radius:10px;padding:12px 16px;margin-bottom:12px;flex-wrap:wrap;">
             <label style="font-size:0.72rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.06em;white-space:nowrap;">Einheitspreis</label>
             <div style="display:flex;align-items:center;gap:8px;">
@@ -412,13 +408,6 @@
       </p>
     </div>
 
-    <!-- Tab 3: Berufsgruppen -->
-    <div id="bundle-tab-3" style="display:none;">
-      <p style="font-size:0.82rem;color:var(--gray-500);margin-bottom:14px;">
-        Wähle, für welche Berufsgruppen dieses Bundle sichtbar ist. Wenn keine ausgewählt ist, gilt das Bundle für alle Berufsgruppen.
-      </p>
-      <div id="b-bg-grid" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-    </div>
 
     <div class="modal-actions" style="margin-top:22px;">
       <button class="btn btn-edit" onclick="closeBundleModal()">Abbrechen</button>
@@ -1292,12 +1281,11 @@
 
   // ---- Bundle-Tab navigation ----
   function switchBundleTab(n) {
-    [1,2,3].forEach(i => {
+    [1,2].forEach(i => {
       document.getElementById(`bundle-tab-${i}`).style.display = i === n ? '' : 'none';
       document.getElementById(`bundle-tab-ind-${i}`).classList.toggle('active', i === n);
     });
     if (n === 2) renderBundleItemRows();
-    if (n === 3) buildBundleBGGrid();
   }
 
   // ---- Product picker for Tab 2 ----
@@ -1569,9 +1557,11 @@
       }
       // bundle_berufsgruppen: delete + re-insert
       await sb.from('bundle_berufsgruppen').delete().eq('bundle_id', bundleId);
-      if (bundleBGsData.length) {
+      // Derive visible BGs from the price checkboxes (checked = has price = visible)
+      const visibleBGs = Object.keys(getBundlePreise()).map(Number);
+      if (visibleBGs.length) {
         const { error: bgErr } = await sb.from('bundle_berufsgruppen').insert(
-          bundleBGsData.map(nr => ({ bundle_id: bundleId, berufsgruppe_nr: nr }))
+          visibleBGs.map(nr => ({ bundle_id: bundleId, berufsgruppe_nr: nr }))
         );
         if (bgErr) { showModalMsg('Berufsgruppen: ' + bgErr.message, 'error'); return; }
       }
