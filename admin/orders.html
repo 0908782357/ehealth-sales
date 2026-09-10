@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>eHS Portal – Bestellungen</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../config.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -418,7 +419,7 @@
     chv?.classList.toggle('open', isOpen);
   }
 
-  const RESEND_API_KEY = 'HIER_RESEND_API_KEY_EINSETZEN';
+  const RESEND_API_KEY = window.RESEND_API_KEY || '';
 
   async function approveOrder(orderId, shopItemId, requiresToken) {
     const order = allOrders.find(o => o.id === orderId);
