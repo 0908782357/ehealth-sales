@@ -893,6 +893,16 @@
     .offer-bundle-select-btn { margin-top:18px; background:rgba(255,255,255,0.15); color:white; border:2px solid rgba(255,255,255,0.45); border-radius:8px; padding:9px 22px; font-size:0.875rem; font-weight:700; cursor:pointer; transition:background .15s,border-color .15s; display:inline-flex; align-items:center; gap:7px; }
     .offer-bundle-select-btn:hover { background:rgba(255,255,255,0.25); }
     .offer-bundle-select-btn.selected { background:var(--green); border-color:var(--green); }
+    .bundle-extras-wrap { margin-top:14px; padding-top:14px; border-top:1px solid rgba(255,255,255,0.15); }
+    .bundle-extras-label { font-size:0.63rem; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; opacity:0.6; margin-bottom:10px; }
+    .bundle-extra-row { display:flex; align-items:center; gap:10px; padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.08); }
+    .bundle-extra-row:last-child { border-bottom:none; }
+    .bundle-extra-name { flex:1; font-size:0.82rem; }
+    .bundle-extra-price { font-size:0.72rem; opacity:0.65; white-space:nowrap; }
+    .bundle-extra-qty-ctrl { display:inline-flex; align-items:center; border:1.5px solid rgba(255,255,255,0.35); border-radius:8px; overflow:hidden; flex-shrink:0; }
+    .bundle-extra-qty-btn { background:rgba(255,255,255,0.12); border:none; color:white; font-size:1rem; font-weight:700; width:28px; height:28px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .1s; }
+    .bundle-extra-qty-btn:hover { background:rgba(255,255,255,0.25); }
+    .bundle-extra-qty-val { min-width:30px; text-align:center; font-weight:700; font-size:0.85rem; color:white; display:flex; align-items:center; justify-content:center; height:28px; border-left:1px solid rgba(255,255,255,0.25); border-right:1px solid rgba(255,255,255,0.25); padding:0 4px; }
     .offer-bundle-header.bundle-selected { box-shadow:0 0 0 3px var(--green); }
     .offer-qty-ctrl { display:inline-flex; align-items:center; border:1.5px solid var(--gray-200); border-radius:8px; overflow:hidden; }
     .offer-qty-btn { background:white; border:none; color:var(--navy); font-size:1.15rem; font-weight:700; width:34px; height:34px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .1s; flex-shrink:0; }
@@ -3068,8 +3078,11 @@
   ];
 
   let BUNDLES = [];
+  let BUNDLE_ITEMS = {};   // bundle_id → [{id, typ, extendable, product_nr, product_name, extra_preis, extra_preis_einheit}]
+  let BUNDLE_BGS = {};     // bundle_id → Set of berufsgruppe_nr (empty = alle)
   let wizSelected = {};
   let wizBundleSelected = {};
+  let wizBundleExtras = {}; // `${bundleId}:${itemId}` → qty
   let wizProductQty = {};
   let wizBGCol = null;
   let wizBGName = '';
@@ -3488,29 +3501,74 @@
 
     // Bundle-Header
     wizBundleSelected = {};
+    wizBundleExtras = {};
     wizProductQty = {};
     const bundleHeader = document.getElementById('wiz-bundle-header');
-    const relevantBundles = BUNDLES.filter(b =>
-      b.preise && b.preise[colStr] != null &&
-      (b.themen || []).some(t => wizSelectedTopics.has(t))
-    );
+    const relevantBundles = BUNDLES.filter(b => {
+      if (!b.preise || b.preise[colStr] == null) return false;
+      if (!(b.themen || []).some(t => wizSelectedTopics.has(t))) return false;
+      const bgSet = BUNDLE_BGS[b.id];
+      return !bgSet || bgSet.size === 0 || bgSet.has(col);
+    });
+
+    // Collect included non-extendable product nrs to hide from product table
+    const includedNrs = new Set();
+    relevantBundles.forEach(b => {
+      (BUNDLE_ITEMS[b.id] || []).forEach(bi => {
+        if (bi.typ === 'included' && !bi.extendable && bi.product_nr != null)
+          includedNrs.add(bi.product_nr);
+      });
+    });
+
     if (relevantBundles.length) {
       bundleHeader.style.display = '';
       bundleHeader.innerHTML = relevantBundles.map(b => {
         const preis = b.preise[colStr];
-        const pills = (b.produkt_nrs || []).map(nr => {
-          const p = PRODUCTS.find(x => x.nr === nr);
-          return p ? `<span class="offer-bundle-pill">${p.produkt}</span>` : '';
-        }).join('');
+        const items = BUNDLE_ITEMS[b.id] || [];
+        const includedItems = items.filter(i => i.typ === 'included');
+        const bookableItems = items.filter(i => i.typ === 'addon' || (i.typ === 'included' && i.extendable));
+
+        const pills = includedItems.length
+          ? includedItems.map(i => `<span class="offer-bundle-pill">${i.product_name || '–'}</span>`).join('')
+          : (b.produkt_nrs || []).map(nr => {
+              const p = PRODUCTS.find(x => x.nr === nr);
+              return p ? `<span class="offer-bundle-pill">${p.produkt}</span>` : '';
+            }).join('');
+
         const preisHtml = preis === 0
           ? 'Auf Anfrage'
           : preis.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €<span> / Monat netto</span>';
-        return `<div class="offer-bundle-header" id="hdr_${b.id}" style="display:flex;align-items:center;gap:24px;">
+
+        const extrasHtml = bookableItems.length
+          ? `<div class="bundle-extras-wrap">
+               <div class="bundle-extras-label">Zusätzlich dazubuchen</div>
+               ${bookableItems.map(i => {
+                 const extraKey = `${b.id}:${i.id}`;
+                 const safeKey = extraKey.replace(/[^a-zA-Z0-9]/g, '-');
+                 const extraPreis = i.extra_preis;
+                 const preisLabel = extraPreis != null && extraPreis > 0
+                   ? extraPreis.toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2}) + ' €' + (i.extra_preis_einheit ? ` / ${i.extra_preis_einheit}` : '')
+                   : 'auf Anfrage';
+                 return `<div class="bundle-extra-row">
+                   <span class="bundle-extra-name">${i.product_name || '–'}</span>
+                   <span class="bundle-extra-price">${preisLabel}</span>
+                   <div class="bundle-extra-qty-ctrl">
+                     <button class="bundle-extra-qty-btn" onclick="changeBundleExtra('${extraKey}',-1,${col})">−</button>
+                     <span class="bundle-extra-qty-val" id="bex-${safeKey}">0</span>
+                     <button class="bundle-extra-qty-btn" onclick="changeBundleExtra('${extraKey}',+1,${col})">+</button>
+                   </div>
+                 </div>`;
+               }).join('')}
+             </div>`
+          : '';
+
+        return `<div class="offer-bundle-header" id="hdr_${b.id}" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
           <div style="flex:1;min-width:0;">
             <div class="offer-bundle-label">Empfohlenes Paket</div>
             <div class="offer-bundle-name">${b.name}</div>
             ${b.beschreibung ? `<div class="offer-bundle-desc">${b.beschreibung}</div>` : ''}
             ${pills ? `<div class="offer-bundle-pills">${pills}</div>` : ''}
+            ${extrasHtml}
           </div>
           <div style="flex-shrink:0;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:12px;">
             <div class="offer-bundle-price">${preisHtml}</div>
@@ -3523,12 +3581,16 @@
       bundleHeader.innerHTML = '';
     }
 
-    // Angebots-Tabelle
+    // Angebots-Tabelle (included non-extendable items already shown in bundle card)
     const tbody = document.getElementById('wiz-results');
     const tfoot = document.getElementById('wiz-offer-total');
     wizSelected = {};
 
-    if (!allItems.length) {
+    const tableItems = relevantBundles.length > 0
+      ? allItems.filter(p => !includedNrs.has(p.nr))
+      : allItems;
+
+    if (!tableItems.length) {
       tbody.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:32px;color:var(--gray-400);">
         Für diese Auswahl sind aktuell keine Produkte verfügbar.
       </td></tr>`;
@@ -3536,7 +3598,7 @@
       return;
     }
 
-    tbody.innerHTML = allItems.map(p => {
+    tbody.innerHTML = tableItems.map(p => {
       const preis = p.preise ? p.preise[colStr] : null;
       const isEinmalig = p.abrechnungsart === 'einmalig';
       const einheitLabel = p.einheit ? `<span style="font-size:0.78rem;color:var(--gray-400);white-space:nowrap;">${p.einheit}</span>` : '';
@@ -3579,8 +3641,29 @@
     const sel = btn.classList.toggle('selected');
     hdr.classList.toggle('bundle-selected', sel);
     wizBundleSelected[btnId] = sel ? preis : 0;
+    if (!sel) {
+      // Clear extras for this bundle when deselected
+      const bundleId = btnId.replace('b_', '');
+      Object.keys(wizBundleExtras).forEach(k => {
+        if (k.startsWith(bundleId + ':')) {
+          wizBundleExtras[k] = 0;
+          const safeKey = k.replace(/[^a-zA-Z0-9]/g, '-');
+          const el = document.getElementById('bex-' + safeKey);
+          if (el) el.textContent = '0';
+        }
+      });
+    }
     const chkSvg = '<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
     btn.innerHTML = sel ? chkSvg + ' Ausgewählt' : 'Auswählen';
+    updateOfferTotal(col);
+  }
+
+  function changeBundleExtra(extraKey, delta, col) {
+    const qty = Math.max(0, (wizBundleExtras[extraKey] || 0) + delta);
+    wizBundleExtras[extraKey] = qty;
+    const safeKey = extraKey.replace(/[^a-zA-Z0-9]/g, '-');
+    const el = document.getElementById('bex-' + safeKey);
+    if (el) el.textContent = qty;
     updateOfferTotal(col);
   }
 
@@ -3597,12 +3680,21 @@
     const fmt = v => v.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
     const monthlyItems = [], onetimeItems = [];
 
-    // Bundles (immer monatlich)
+    // Bundles + Extras (immer monatlich)
     Object.entries(wizBundleSelected).forEach(([btnId, preis]) => {
       if (!(preis > 0)) return;
       const bundleId = btnId.replace('b_', '');
       const bundle = BUNDLES.find(b => b.id === bundleId);
       if (bundle) monthlyItems.push({ name: bundle.name + ' (Paket)', preis, qty: 1 });
+      // Extras für dieses Bundle
+      const bundleItems = BUNDLE_ITEMS[bundleId] || [];
+      Object.entries(wizBundleExtras).forEach(([extraKey, qty]) => {
+        if (!qty || !extraKey.startsWith(bundleId + ':')) return;
+        const itemId = extraKey.split(':')[1];
+        const bi = bundleItems.find(i => i.id === itemId);
+        if (!bi || !(bi.extra_preis > 0)) return;
+        monthlyItems.push({ name: bi.product_name || '–', preis: bi.extra_preis, qty });
+      });
     });
 
     // Einzelprodukte
@@ -4456,8 +4548,17 @@
     const selectedLines = [];
     Object.entries(wizBundleSelected).forEach(([btnId, preis]) => {
       if (!(preis > 0)) return;
-      const bundle = BUNDLES.find(b => b.id === btnId.replace('b_', ''));
+      const bundleId = btnId.replace('b_', '');
+      const bundle = BUNDLES.find(b => b.id === bundleId);
       if (bundle) selectedLines.push(bundle.name + ' (Paket)');
+      // Extras
+      const bundleItems = BUNDLE_ITEMS[bundleId] || [];
+      Object.entries(wizBundleExtras).forEach(([extraKey, qty]) => {
+        if (!qty || !extraKey.startsWith(bundleId + ':')) return;
+        const itemId = extraKey.split(':')[1];
+        const bi = bundleItems.find(i => i.id === itemId);
+        if (bi) selectedLines.push(`${bi.product_name || '–'} × ${qty} (Extra)`);
+      });
     });
     // Einzelprodukte mit Qty > 0
     Object.entries(wizProductQty).forEach(([nr, qty]) => {
@@ -4704,6 +4805,25 @@
       // Bundles laden
       const { data: bundleData } = await _sb.from('bundles').select('*').eq('aktiv', true);
       BUNDLES = bundleData || [];
+
+      // Bundle-Items + BG-Sichtbarkeit laden
+      if (BUNDLES.length) {
+        const bundleIds = BUNDLES.map(b => b.id);
+        const [{ data: biData }, { data: bgData2 }] = await Promise.all([
+          _sb.from('bundle_items').select('*, products(id, nr, produkt)').in('bundle_id', bundleIds).order('sort_order'),
+          _sb.from('bundle_berufsgruppen').select('bundle_id, berufsgruppe_nr').in('bundle_id', bundleIds)
+        ]);
+        BUNDLE_ITEMS = {};
+        (biData || []).forEach(bi => {
+          if (!BUNDLE_ITEMS[bi.bundle_id]) BUNDLE_ITEMS[bi.bundle_id] = [];
+          BUNDLE_ITEMS[bi.bundle_id].push({ ...bi, product_nr: bi.products?.nr, product_name: bi.products?.produkt });
+        });
+        BUNDLE_BGS = {};
+        (bgData2 || []).forEach(row => {
+          if (!BUNDLE_BGS[row.bundle_id]) BUNDLE_BGS[row.bundle_id] = new Set();
+          BUNDLE_BGS[row.bundle_id].add(row.berufsgruppe_nr);
+        });
+      }
 
       // Berufsgruppen laden
       let bgData = null;
