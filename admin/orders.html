@@ -100,6 +100,20 @@
   .order-org   { font-size: 0.78rem; color: var(--gray-500); }
   .order-msg   { font-size: 0.78rem; color: var(--gray-500); font-style: italic; max-width: 260px; }
   .order-date  { font-size: 0.75rem; color: var(--gray-400); }
+
+  /* Bundle-Extras */
+  .bundle-chevron { background: none; border: none; cursor: pointer; color: var(--gray-400); padding: 2px 5px; border-radius: 5px; font-size: 0.75rem; transition: transform 0.2s, color 0.15s; display: inline-flex; align-items: center; vertical-align: middle; margin-left: 6px; }
+  .bundle-chevron:hover { color: var(--navy); background: var(--gray-100); }
+  .bundle-chevron.open { transform: rotate(90deg); color: var(--navy); }
+  .bundle-badge { display: inline-flex; align-items: center; gap: 3px; background: #ede9fe; color: #5b21b6; font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; vertical-align: middle; }
+  .extras-row { display: none; }
+  .extras-row.open { display: table-row; }
+  .extras-row td { padding: 0 16px 14px 40px; background: var(--gray-50); border-bottom: 1px solid var(--gray-200); }
+  .extras-inner { background: white; border: 1.5px solid var(--gray-200); border-radius: 10px; overflow: hidden; margin-top: 2px; }
+  .extras-inner table { margin: 0; }
+  .extras-inner th { font-size: 0.63rem; padding: 7px 12px; background: var(--gray-50); }
+  .extras-inner td { font-size: 0.78rem; padding: 8px 12px; color: var(--gray-700); }
+  .extras-inner tr:last-child td { border-bottom: none; }
 </style>
 </head>
 <body>
@@ -246,7 +260,7 @@
   async function loadOrders() {
     const { data, error } = await sb
       .from('orders')
-      .select('*, shop_items(titel, requires_token, link_url)')
+      .select('*, shop_items(titel, requires_token, link_url, bundle_id)')
       .order('created_at', { ascending: false });
     if (error) { console.error(error); return; }
 
@@ -262,8 +276,9 @@
 
     allOrders = (data || []).map(o => ({ ...o, _profile: profiles[o.user_id] || null }));
 
-    // Load existing tokens from DB for all orders
     const orderIds = allOrders.map(o => o.id);
+
+    // Load existing tokens from DB for all orders
     dbTokens = {};
     if (orderIds.length) {
       const { data: tokRows } = await sb
@@ -273,6 +288,20 @@
         .eq('valid', true);
       (tokRows || []).forEach(t => { dbTokens[t.order_id] = t.token; });
     }
+
+    // Load order_items (bundle extras) grouped by order
+    let orderItemsMap = {};
+    if (orderIds.length) {
+      const { data: oiRows } = await sb
+        .from('order_items')
+        .select('*')
+        .in('order_id', orderIds);
+      (oiRows || []).forEach(oi => {
+        if (!orderItemsMap[oi.order_id]) orderItemsMap[oi.order_id] = [];
+        orderItemsMap[oi.order_id].push(oi);
+      });
+    }
+    allOrders = allOrders.map(o => ({ ...o, _items: orderItemsMap[o.id] || [] }));
 
     renderTable(currentTab);
   }
@@ -327,13 +356,48 @@
       const custEmail = o.email || p?.email || '–';
       const firma = p?.firma || '';
 
+      // Bundle-Erkennung: hat shop_item eine bundle_id, oder gibt es order_items
+      const isBundle = !!(o.shop_items?.bundle_id || (o._items && o._items.length > 0));
+      const chevron = isBundle
+        ? `<button class="bundle-chevron" id="chv-${o.id}" onclick="toggleExtras('${o.id}')" title="Extras anzeigen">
+             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+           </button>`
+        : '';
+      const bundleBadge = isBundle
+        ? `<span class="bundle-badge">📦 Bundle</span> `
+        : '';
+
+      let extrasRow = '';
+      if (isBundle) {
+        const items = o._items || [];
+        const extrasHtml = items.length
+          ? `<div class="extras-inner">
+               <table>
+                 <thead><tr>
+                   <th>Produkt</th><th>Menge</th><th style="text-align:right">Preis</th>
+                 </tr></thead>
+                 <tbody>
+                   ${items.map(it => `<tr>
+                     <td>${it.product_name || '–'}</td>
+                     <td>${it.quantity ?? 1}</td>
+                     <td style="text-align:right;font-variant-numeric:tabular-nums">${it.preis != null ? Number(it.preis).toFixed(2).replace('.', ',') + ' €' : '–'}${it.preis_einheit ? `&thinsp;<span style="color:var(--gray-400);font-size:0.7rem">/${it.preis_einheit}</span>` : ''}</td>
+                   </tr>`).join('')}
+                 </tbody>
+               </table>
+             </div>`
+          : `<div style="color:var(--gray-400);font-size:0.8rem;padding:4px 0">Keine Extras gebucht.</div>`;
+        extrasRow = `<tr class="extras-row" id="extras-${o.id}">
+          <td colspan="6">${extrasHtml}</td>
+        </tr>`;
+      }
+
       return `<tr>
         <td>
           <div class="order-name">${fullName || custEmail}</div>
           ${fullName ? `<div class="order-email">${custEmail}</div>` : ''}
           ${firma ? `<div class="order-org">${firma}</div>` : ''}
         </td>
-        <td>${o.shop_items?.titel || '–'}</td>
+        <td>${bundleBadge}${o.shop_items?.titel || '–'}${chevron}</td>
         <td><div class="order-msg">${o.quantity ? `Menge: ${o.quantity}` : '–'}</div></td>
         <td><div class="order-date">${date}</div></td>
         <td>${statusBadge}</td>
@@ -342,8 +406,16 @@
           ${deleteBtn}
           ${tokenSection}
         </td>
-      </tr>`;
+      </tr>${extrasRow}`;
     }).join('');
+  }
+
+  function toggleExtras(orderId) {
+    const row = document.getElementById(`extras-${orderId}`);
+    const chv = document.getElementById(`chv-${orderId}`);
+    if (!row) return;
+    const isOpen = row.classList.toggle('open');
+    chv?.classList.toggle('open', isOpen);
   }
 
   const RESEND_API_KEY = 'HIER_RESEND_API_KEY_EINSETZEN';
