@@ -345,13 +345,13 @@
     if (!session) { window.location.href = 'index.html'; return; }
     document.getElementById('user-email').textContent = session.user.email;
 
-    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).single();
+    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
     if (!roleRow || roleRow.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
     document.getElementById('nav-group-admin').style.display = '';
+    setupNavRole('admin').catch(console.warn);
 
     await loadPartners();
   }
-    setupNavRole(role).catch(console.warn);
 
   async function logout() {
     await sb.auth.signOut();
