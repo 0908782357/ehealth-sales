@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>eHS Portal – Shop</title>
-<script src="../config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -558,7 +557,7 @@
     if (!session) { window.location.href = 'index.html'; return; }
     document.getElementById('user-email').textContent = session.user.email;
 
-    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).single();
+    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
     userRole = roleRow?.role || 'partner';
 
     if (userRole === 'admin') {
@@ -568,9 +567,9 @@
     setupNavRole(userRole).catch(console.warn);
 
     if (userRole !== 'admin') {
-      const { data: partner } = await sb.from('partners').select('id').eq('user_id', session.user.id).single();
+      const { data: partner } = await sb.from('partners').select('id').eq('user_id', session.user.id).maybeSingle();
       myPartnerId = partner?.id;
-      const { data: prof } = await sb.from('user_profiles').select('firma').eq('user_id', session.user.id).single();
+      const { data: prof } = await sb.from('user_profiles').select('firma').eq('user_id', session.user.id).maybeSingle();
       myFirma = prof?.firma || '';
     }
 
