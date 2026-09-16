@@ -602,8 +602,8 @@ function openDetailModal(anfrageId) {
       .replace(/\s*\([^)]+\)\s*$/, '')   // abschließendes "(Paket)" / "(Hersteller)" entfernen
       .trim();
   }
-  console.log('[preise] allProducts names:', allProducts.map(p => p.produkt));
-  console.log('[preise] allShopItems:', allShopItems.length, allShopItems.map(s => ({ titel: s.titel, bundle: s.bundles?.name, preis: s.preis })));
+  console.log('[preise] shopItem titels:', JSON.stringify(allShopItems.map(s => s.titel)));
+  console.log('[preise] bundle names:', JSON.stringify(allShopItems.map(s => s.bundles?.name)));
   console.log('[preise] rohtext:', a.produkte);
   console.log('[preise] splits:', produktNamen);
   console.log('[preise] baseNames:', produktNamen.map(prodBaseName));
