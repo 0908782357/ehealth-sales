@@ -418,7 +418,7 @@ async function init() {
 async function loadPartners() {
   const [partnerRes, productRes] = await Promise.all([
     sb.from('user_profiles').select('id, vorname, nachname, firma, email').eq('rolle', 'partner').order('firma'),
-    sb.from('products').select('produkt, preis_flat, abrechnungsart').eq('published', true),
+    sb.from('products').select('produkt, preis_flat, abrechnungsart'),
   ]);
   partners = partnerRes.data || [];
   allProducts = productRes.data || [];
@@ -514,12 +514,6 @@ function renderAnfragen(rows) {
       }
     }
 
-    const chipHtml = userRole === 'admin' && weiterleitungen.length > 1
-      ? weiterleitungen.map(w =>
-          `<span class="weiterleitung-chip">✓ ${esc(weiterleitungName(w))} <span style="opacity:0.6;font-weight:400;">${fmt(w.weitergeleitet_am).split(',')[0]}</span></span>`
-        ).join('')
-      : '';
-
     const notizHtml = a._notiz
       ? `<div class="notiz-box"><strong>Notiz von eHealth Sales</strong>${esc(a._notiz)}</div>`
       : '';
@@ -555,19 +549,25 @@ function renderAnfragen(rows) {
         ${notizHtml}
       </div>
       <div class="anfrage-card-footer">
-        <div class="footer-status">${chipHtml || statusHtml}</div>
-        <div class="footer-actions">
+        <div class="footer-actions" style="width:100%;justify-content:flex-end;">
           ${userRole === 'admin' ? `
             <button class="btn btn-weiterleiten btn-sm"
-              onclick="openModal('${esc(a.id)}','${esc(a.name || '')}','${esc(a.produkte || '')}')">
+              onclick="event.stopPropagation();openModal('${esc(a.id)}','${esc(a.name || '')}','${esc(a.produkte || '')}')">
               <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
               Weiterleiten
             </button>
           ` : ''}
-          <button class="btn btn-antworten btn-sm" onclick="openConfirmGeantwortet(${a.id}, '${esc(a.email)}', '${esc(a.name || '')}'); window.open('mailto:${esc(a.email)}?subject=Ihre Anfrage bei eHealth Sales', '_blank')">
+          <button class="btn btn-antworten btn-sm" onclick="event.stopPropagation();openConfirmGeantwortet(${a.id},'${esc(a.email)}','${esc(a.name||'')}');window.open('mailto:${esc(a.email)}?subject=Ihre Anfrage bei eHealth Sales','_blank')">
             <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             Direkt antworten
           </button>
+          ${userRole === 'admin' ? `
+            <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;" title="Anfrage löschen"
+              onclick="event.stopPropagation();deleteAnfrage(${a.id},'${esc(a.name||'')}')">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              Löschen
+            </button>
+          ` : ''}
         </div>
       </div>
     </div>`;
@@ -587,7 +587,8 @@ function openDetailModal(anfrageId) {
   let produktZeilen = '';
   if (produktNamen.length) {
     produktZeilen = produktNamen.map(name => {
-      const prod = allProducts.find(p => p.produkt === name);
+      const nameLower = name.toLowerCase();
+      const prod = allProducts.find(p => (p.produkt || '').toLowerCase() === nameLower);
       const preis = prod?.preis_flat;
       const abrech = prod?.abrechnungsart || '';
       if (preis) gesamtpreis += preis;
@@ -698,6 +699,18 @@ function openConfirmGeantwortet(anfrageId, email, name) {
 
 function closeConfirmModal() {
   document.getElementById('modal-confirm-bg').classList.remove('open');
+}
+
+async function deleteAnfrage(anfrageId, name) {
+  if (!confirm(`Anfrage von „${name}" wirklich löschen?\n\nDiese Aktion kann nicht rückgängig gemacht werden.`)) return;
+  const { error } = await sb.from('anfragen').delete().eq('id', anfrageId);
+  if (error) {
+    alert('Fehler beim Löschen: ' + error.message);
+    return;
+  }
+  allAnfragen = allAnfragen.filter(a => Number(a.id) !== Number(anfrageId));
+  document.getElementById('header-count').textContent = `${allAnfragen.length} Anfrage${allAnfragen.length !== 1 ? 'n' : ''}`;
+  applyFilter();
 }
 
 async function markGeantwortet() {
