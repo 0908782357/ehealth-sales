@@ -373,7 +373,7 @@
 
 <!-- Verkaufschance Modal -->
 <div class="modal-bg" id="vc-modal-bg" onclick="if(event.target===this)closeVcModal()">
-  <div class="modal" style="max-width:460px;">
+  <div class="modal" style="max-width:520px;">
     <div class="modal-header" style="background:#5b21b6;">
       <h2 id="vc-modal-title">Verkaufschance</h2>
       <button class="modal-close" onclick="closeVcModal()">✕</button>
@@ -382,15 +382,31 @@
       <div class="msg" id="vc-msg"></div>
       <input type="hidden" id="vc-edit-id">
       <input type="hidden" id="vc-kunden-id">
+      <div class="form-group">
+        <label>Produkte *</label>
+        <div class="produkt-checks" id="vc-produkt-checks" style="max-height:130px;overflow-y:auto;border:1.5px solid var(--gray-200);border-radius:10px;padding:8px 10px;"></div>
+      </div>
       <div class="form-row">
-        <div class="form-group">
-          <label>Produkt *</label>
-          <input type="text" id="vc-produkt" placeholder="Produktname" list="vc-produkt-list" oninput="vcProduktAutofill(this.value)">
-          <datalist id="vc-produkt-list"></datalist>
-        </div>
         <div class="form-group">
           <label>Wert (€)</label>
           <input type="number" id="vc-wert" placeholder="0,00" min="0" step="0.01">
+        </div>
+        <div class="form-group">
+          <label>Abrechnungsart</label>
+          <select id="vc-abrechnungsart" onchange="toggleVcLaufzeit()">
+            <option value="monatlich">Monatlich</option>
+            <option value="einmalig">Einmalig</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" id="vc-laufzeit-group">
+          <label>Laufzeit (Monate)</label>
+          <input type="number" id="vc-laufzeit" placeholder="12" min="1" step="1">
+        </div>
+        <div class="form-group">
+          <label>Wahrscheinlichkeit (%)</label>
+          <input type="number" id="vc-wahrscheinlichkeit" placeholder="50" min="0" max="100" step="5">
         </div>
       </div>
       <div class="form-row">
@@ -407,7 +423,7 @@
       </div>
       <div class="form-group">
         <label>Notiz</label>
-        <textarea id="vc-notiz" placeholder="Interne Notiz zur Verkaufschance…" style="min-height:70px;"></textarea>
+        <textarea id="vc-notiz" placeholder="Interne Notiz zur Verkaufschance…" style="min-height:60px;"></textarea>
       </div>
       <div class="modal-actions">
         <button class="btn btn-edit" onclick="closeVcModal()">Abbrechen</button>
@@ -531,7 +547,7 @@ function renderKunden(rows) {
     const anfragenCount = (k.anfragen || []).length;
     const vcList = allVerkaufschancen.filter(v => v.kunden_id === k.id);
     const pipelineAktiv = vcList.filter(v => v.status !== 'verloren');
-    const pipelineWert = pipelineAktiv.reduce((s, v) => s + (v.wert || 0), 0);
+    const pipelineWert = pipelineAktiv.reduce((s, v) => s + calcPipeline(v), 0);
     const pipelineBadge = vcList.length
       ? `<span class="pipeline-badge">${vcList.length} Chance${vcList.length !== 1 ? 'n' : ''}${pipelineWert > 0 ? ' · ' + pipelineWert.toLocaleString('de-DE', {style:'currency', currency:'EUR'}) : ''}</span>`
       : '';
@@ -678,30 +694,35 @@ async function saveKunde() {
     return;
   }
 
-  // Anfrage verknüpfen + Verkaufschancen auto-erstellen (wenn aus Anfrage angelegt)
+  // Anfrage verknüpfen + eine Verkaufschance für alle Produkte anlegen (wenn aus Anfrage angelegt)
   const fromAnfrageId = document.getElementById('edit-id').value;
   if (fromAnfrageId && kundeId && !currentEditId) {
     await sb.from('anfragen').update({ kunden_id: kundeId }).eq('id', fromAnfrageId);
-    // Für jedes ausgewählte Produkt eine Verkaufschance anlegen
     const selectedProd = getSelectedProdukte();
     if (selectedProd.length) {
-      const vcRows = selectedProd.map(prodName => {
+      let totalWert = 0;
+      let abrechnungsart = 'monatlich';
+      selectedProd.forEach(prodName => {
         const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === prodName.toLowerCase());
         let wert = prod?.preis_flat ?? null;
         if (wert == null && prod?.preise && typeof prod.preise === 'object') {
           const vals = Object.values(prod.preise).map(Number).filter(v => v > 0);
           if (vals.length) wert = Math.min(...vals);
         }
-        return {
-          kunden_id: kundeId,
-          anfrage_id: Number(fromAnfrageId),
-          produkt: prodName,
-          wert,
-          status: 'offen',
-        };
+        if (wert != null) totalWert += wert;
+        if (prod?.abrechnungsart === 'einmalig') abrechnungsart = 'einmalig';
       });
-      const { data: newVcs } = await sb.from('verkaufschancen').insert(vcRows).select();
-      if (newVcs) allVerkaufschancen.unshift(...newVcs);
+      const vcRow = {
+        kunden_id: kundeId,
+        anfrage_id: Number(fromAnfrageId),
+        produkte: selectedProd.join(', '),
+        wert: totalWert > 0 ? totalWert : null,
+        abrechnungsart,
+        wahrscheinlichkeit: 50,
+        status: 'offen',
+      };
+      const { data: newVc } = await sb.from('verkaufschancen').insert(vcRow).select().single();
+      if (newVc) allVerkaufschancen.unshift(newVc);
     }
     history.replaceState({}, '', 'kunden.html');
   }
@@ -733,42 +754,65 @@ function vcStatusCls(s) {
 function vcStatusLabel(s) {
   return { offen:'Offen', in_gespraech:'In Gespräch', angebot:'Angebot', gewonnen:'Gewonnen', verloren:'Verloren' }[s] || s;
 }
+function calcPipeline(v) {
+  const wert = v.wert || 0;
+  const laufzeit = v.abrechnungsart === 'monatlich' && v.laufzeit ? v.laufzeit : 1;
+  const w = v.wahrscheinlichkeit != null ? v.wahrscheinlichkeit : 50;
+  return wert * laufzeit * (w / 100);
+}
 
 function renderVcSection(kundenId) {
   const vcList = allVerkaufschancen.filter(v => v.kunden_id === kundenId);
   const aktiv = vcList.filter(v => v.status !== 'verloren');
-  const total = aktiv.reduce((s, v) => s + (v.wert || 0), 0);
+  const totalPipeline = aktiv.reduce((s, v) => s + calcPipeline(v), 0);
 
-  const tableRows = vcList.length ? vcList.map(v => `
+  const tableRows = vcList.length ? vcList.map(v => {
+    const pipeline = calcPipeline(v);
+    const produkte = v.produkte || v.produkt || '–';
+    const laufzeitLabel = v.abrechnungsart === 'monatlich' && v.laufzeit ? v.laufzeit + ' M' : '–';
+    const wkeit = v.wahrscheinlichkeit != null ? v.wahrscheinlichkeit : 50;
+    return `
     <tr>
-      <td style="font-weight:600;color:var(--navy);">${esc(v.produkt)}</td>
-      <td>${v.wert != null ? v.wert.toLocaleString('de-DE', {style:'currency',currency:'EUR'}) : '–'}</td>
+      <td style="font-weight:600;color:var(--navy);max-width:160px;" title="${esc(produkte)}">${esc(produkte.length > 40 ? produkte.substring(0,40)+'…' : produkte)}</td>
+      <td style="text-align:right;">${v.wert != null ? v.wert.toLocaleString('de-DE', {style:'currency',currency:'EUR'}) : '–'}</td>
+      <td style="text-align:right;color:var(--gray-500);">${laufzeitLabel}</td>
+      <td style="text-align:right;color:var(--gray-500);">${wkeit} %</td>
+      <td style="text-align:right;font-weight:700;color:#059669;">${pipeline > 0 ? pipeline.toLocaleString('de-DE', {style:'currency',currency:'EUR'}) : '–'}</td>
       <td>
         <select class="vc-status-sel ${vcStatusCls(v.status)}" onchange="changeVcStatus('${v.id}', this.value, '${kundenId}'); this.className='vc-status-sel '+vcStatusCls(this.value)">
           ${['offen','in_gespraech','angebot','gewonnen','verloren'].map(s =>
             `<option value="${s}" ${v.status===s?'selected':''}>${vcStatusLabel(s)}</option>`).join('')}
         </select>
       </td>
-      <td title="${esc(v.notiz||'')}">
+      <td>
         <button class="vc-notiz-btn" onclick="openVcModal('${kundenId}','${v.id}')" title="${v.notiz ? esc(v.notiz) : 'Bearbeiten'}">
           ${v.notiz ? '📝' : '✏️'}
         </button>
       </td>
       <td><button class="vc-del-btn" onclick="deleteVc('${v.id}','${kundenId}')">✕</button></td>
-    </tr>`).join('')
-  : `<tr><td colspan="5" style="color:var(--gray-400);font-size:0.82rem;padding:10px 8px;">Noch keine Verkaufschancen</td></tr>`;
+    </tr>`;
+  }).join('')
+  : `<tr><td colspan="8" style="color:var(--gray-400);font-size:0.82rem;padding:10px 8px;">Noch keine Verkaufschancen</td></tr>`;
 
   return `
     <div class="pipeline-header">
       <span class="pipeline-title">Verkaufschancen (${vcList.length})</span>
       <span style="display:flex;align-items:center;gap:10px;">
-        ${total > 0 ? `<span class="pipeline-total">${total.toLocaleString('de-DE', {style:'currency',currency:'EUR'})} Pipeline</span>` : ''}
+        ${totalPipeline > 0 ? `<span class="pipeline-total">${totalPipeline.toLocaleString('de-DE', {style:'currency',currency:'EUR'})} Pipeline</span>` : ''}
         <button class="btn btn-sm" style="background:#ede9fe;color:#5b21b6;padding:4px 10px;" onclick="openVcModal('${kundenId}')">+ Chance</button>
       </span>
     </div>
     <div style="overflow-x:auto;">
       <table class="pipeline-table">
-        <thead><tr><th>Produkt</th><th style="text-align:right;">Wert</th><th>Status</th><th></th><th></th></tr></thead>
+        <thead><tr>
+          <th>Produkte</th>
+          <th style="text-align:right;">Wert</th>
+          <th style="text-align:right;">Laufzeit</th>
+          <th style="text-align:right;">W'keit</th>
+          <th style="text-align:right;">Pipeline</th>
+          <th>Status</th>
+          <th></th><th></th>
+        </tr></thead>
         <tbody>${tableRows}</tbody>
       </table>
     </div>`;
@@ -857,21 +901,33 @@ function openVcModal(kundenId, vcId = null) {
   document.getElementById('vc-modal-title').textContent = vc ? 'Verkaufschance bearbeiten' : 'Neue Verkaufschance';
   document.getElementById('vc-edit-id').value = vcId || '';
   document.getElementById('vc-kunden-id').value = kundenId;
-  const vcProdukt = vc?.produkt || '';
-  const vcWert = vc?.wert ?? null;
-  document.getElementById('vc-produkt').value = vcProdukt;
-  // Wert: gespeicherten Wert nutzen; wenn null/leer → Preis aus Produktliste nachschlagen
-  const autoWert = vcWert != null ? vcWert : (vcProdukt ? vcProdPreis(vcProdukt) : null);
-  document.getElementById('vc-wert').value = autoWert != null ? autoWert : '';
+
+  // Produkt-Checkboxen befüllen
+  const vcProdukte = vc?.produkte || vc?.produkt || '';
+  const selectedProdukte = vcProdukte.split(/[,\n]/).map(p => p.trim()).filter(Boolean);
+  const namen = produktNamen();
+  document.getElementById('vc-produkt-checks').innerHTML = namen.length
+    ? namen.map(p => `<label class="produkt-check-label"><input type="checkbox" value="${esc(p)}" ${selectedProdukte.includes(p) ? 'checked' : ''} onchange="vcCheckboxChange()"> ${esc(p)}</label>`).join('')
+    : '<span style="color:var(--gray-400);font-size:0.82rem;">Keine Produkte gefunden</span>';
+
+  const abrech = vc?.abrechnungsart || 'monatlich';
+  document.getElementById('vc-abrechnungsart').value = abrech;
+  document.getElementById('vc-laufzeit').value = vc?.laufzeit ?? '';
+  document.getElementById('vc-wahrscheinlichkeit').value = vc?.wahrscheinlichkeit ?? 50;
+  document.getElementById('vc-wert').value = vc?.wert != null ? vc.wert : '';
   document.getElementById('vc-status').value = vc?.status || 'offen';
   document.getElementById('vc-notiz').value = vc?.notiz || '';
   document.getElementById('vc-msg').className = 'msg';
-  // Datalist befüllen
-  document.getElementById('vc-produkt-list').innerHTML = produktNamen().map(p => `<option value="${esc(p)}">`).join('');
+  toggleVcLaufzeit();
   document.getElementById('vc-modal-bg').classList.add('open');
 }
 
 function closeVcModal() { document.getElementById('vc-modal-bg').classList.remove('open'); }
+
+function toggleVcLaufzeit() {
+  const abrech = document.getElementById('vc-abrechnungsart').value;
+  document.getElementById('vc-laufzeit-group').style.display = abrech === 'monatlich' ? '' : 'none';
+}
 
 function vcProdPreis(name) {
   const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === name.toLowerCase().trim());
@@ -884,26 +940,37 @@ function vcProdPreis(name) {
   return null;
 }
 
-function vcProduktAutofill(name) {
+function vcCheckboxChange() {
   const wertInput = document.getElementById('vc-wert');
-  if (!name || wertInput.value) return;
-  const preis = vcProdPreis(name);
-  if (preis != null) wertInput.value = preis;
+  if (wertInput.value) return;
+  const checked = [...document.querySelectorAll('#vc-produkt-checks input:checked')].map(i => i.value);
+  if (!checked.length) return;
+  let sum = 0;
+  checked.forEach(name => { const p = vcProdPreis(name); if (p != null) sum += p; });
+  if (sum > 0) wertInput.value = sum;
 }
 
 async function saveVc() {
-  const produkt = document.getElementById('vc-produkt').value.trim();
+  const checked = [...document.querySelectorAll('#vc-produkt-checks input:checked')].map(i => i.value);
   const msg = document.getElementById('vc-msg');
-  if (!produkt) { msg.textContent = 'Produkt ist Pflichtfeld.'; msg.className = 'msg error'; return; }
+  if (!checked.length) { msg.textContent = 'Mindestens ein Produkt auswählen.'; msg.className = 'msg error'; return; }
 
   const kundenId = document.getElementById('vc-kunden-id').value;
   const vcId = document.getElementById('vc-edit-id').value;
   const wertRaw = document.getElementById('vc-wert').value;
   const wert = wertRaw !== '' ? parseFloat(wertRaw) : null;
+  const abrechnungsart = document.getElementById('vc-abrechnungsart').value;
+  const laufzeitRaw = document.getElementById('vc-laufzeit').value;
+  const laufzeit = abrechnungsart === 'monatlich' && laufzeitRaw ? parseInt(laufzeitRaw, 10) : null;
+  const wRaw = document.getElementById('vc-wahrscheinlichkeit').value;
+  const wahrscheinlichkeit = wRaw !== '' ? parseInt(wRaw, 10) : 50;
 
   const payload = {
-    produkt,
+    produkte: checked.join(', '),
     wert: isNaN(wert) ? null : wert,
+    abrechnungsart,
+    laufzeit,
+    wahrscheinlichkeit,
     status: document.getElementById('vc-status').value,
     notiz: document.getElementById('vc-notiz').value.trim() || null,
     updated_at: new Date().toISOString(),
