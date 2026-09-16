@@ -420,7 +420,7 @@ async function loadPartners() {
   const [partnerRes, productRes, shopRes] = await Promise.all([
     sb.from('user_profiles').select('id, vorname, nachname, firma, email').eq('rolle', 'partner').order('firma'),
     sb.from('products').select('produkt, preis_flat, abrechnungsart'),
-    sb.from('shop_items').select('titel, preis, preis_einheit, bundles(name)'),
+    sb.from('shop_items').select('titel, preis, preis_einheit'),
   ]);
   partners = partnerRes.data || [];
   allProducts = productRes.data || [];
