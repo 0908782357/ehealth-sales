@@ -157,6 +157,34 @@
 
   .empty { text-align: center; color: var(--gray-400); padding: 56px; font-size: 0.875rem; }
   .spinner { text-align: center; padding: 48px; color: var(--gray-400); font-size: 0.875rem; }
+
+  /* Pipeline / Verkaufschancen */
+  .pipeline-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--gray-100); }
+  .pipeline-title { font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gray-400); }
+  .pipeline-total { font-size: 0.78rem; font-weight: 700; color: #059669; }
+  .pipeline-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+  .pipeline-table th { text-align: left; font-size: 0.65rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.05em; padding: 5px 8px; border-bottom: 1px solid var(--gray-200); }
+  .pipeline-table th:nth-child(2) { text-align: right; }
+  .pipeline-table td { padding: 9px 8px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+  .pipeline-table td:nth-child(2) { text-align: right; font-weight: 600; color: var(--navy); white-space: nowrap; }
+  .pipeline-table tr:last-child td { border-bottom: none; }
+  .vc-status-sel {
+    border: none; border-radius: 20px; padding: 3px 10px;
+    font-size: 0.72rem; font-weight: 700; cursor: pointer; font-family: inherit; outline: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 6px center; padding-right: 22px;
+  }
+  .vc-s-offen       { background: #fef3c7; color: #92400e; }
+  .vc-s-in_gespraech{ background: #dbeafe; color: #1e40af; }
+  .vc-s-angebot     { background: #ede9fe; color: #5b21b6; }
+  .vc-s-gewonnen    { background: #d1fae5; color: #065f46; }
+  .vc-s-verloren    { background: var(--gray-100); color: var(--gray-500); }
+  .vc-notiz-btn { background: none; border: none; cursor: pointer; color: var(--gray-400); padding: 2px 4px; border-radius: 5px; font-size: 0.78rem; }
+  .vc-notiz-btn:hover { color: var(--navy); background: var(--gray-100); }
+  .vc-del-btn { background: none; border: none; cursor: pointer; color: #fca5a5; padding: 2px 4px; border-radius: 5px; font-size: 0.82rem; }
+  .vc-del-btn:hover { color: #ef4444; background: #fee2e2; }
+  .pipeline-badge { font-size: 0.7rem; font-weight: 700; color: #059669; background: #d1fae5; border-radius: 20px; padding: 2px 8px; white-space: nowrap; }
+  .pipeline-badge.verloren { color: var(--gray-500); background: var(--gray-100); }
 </style>
 </head>
 <body>
@@ -343,14 +371,62 @@
   </div>
 </div>
 
+<!-- Verkaufschance Modal -->
+<div class="modal-bg" id="vc-modal-bg" onclick="if(event.target===this)closeVcModal()">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header" style="background:#5b21b6;">
+      <h2 id="vc-modal-title">Verkaufschance</h2>
+      <button class="modal-close" onclick="closeVcModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="msg" id="vc-msg"></div>
+      <input type="hidden" id="vc-edit-id">
+      <input type="hidden" id="vc-kunden-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Produkt *</label>
+          <input type="text" id="vc-produkt" placeholder="Produktname" list="vc-produkt-list">
+          <datalist id="vc-produkt-list"></datalist>
+        </div>
+        <div class="form-group">
+          <label>Wert (€)</label>
+          <input type="number" id="vc-wert" placeholder="0,00" min="0" step="0.01">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Status</label>
+          <select id="vc-status">
+            <option value="offen">Offen</option>
+            <option value="in_gespraech">In Gespräch</option>
+            <option value="angebot">Angebot gemacht</option>
+            <option value="gewonnen">Gewonnen</option>
+            <option value="verloren">Verloren</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Notiz</label>
+        <textarea id="vc-notiz" placeholder="Interne Notiz zur Verkaufschance…" style="min-height:70px;"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-edit" onclick="closeVcModal()">Abbrechen</button>
+        <button class="btn btn-primary" style="background:#5b21b6;" onclick="saveVc()">Speichern</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL  = 'https://focysklymhmcfwgxdtuk.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { flowType: 'implicit' } });
 
 let allKunden = [];
-let allProducts = [];
+let allProducts = [];      // [{produkt, preis_flat, abrechnungsart}]
+let allVerkaufschancen = [];
 let currentEditId = null;
+let detailOpenKundeId = null;
 
 function toggleNavGroup(h) { h.closest('.nav-group').classList.toggle('open'); }
 function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -374,13 +450,15 @@ async function init() {
   if (role !== 'admin') { window.location.href = 'dashboard.html'; return; }
   document.getElementById('nav-group-admin').style.display = '';
 
-  // Produkte und Kunden parallel laden
-  const [kundenRes, prodRes] = await Promise.all([
+  // Kunden, Produkte und Verkaufschancen parallel laden
+  const [kundenRes, prodRes, vcRes] = await Promise.all([
     sb.from('kunden').select('*, anfragen(id, produkte, created_at, status)').order('created_at', { ascending: false }),
-    sb.from('products').select('produkt'),
+    sb.from('products').select('produkt, preis_flat, abrechnungsart'),
+    sb.from('verkaufschancen').select('*').order('created_at', { ascending: false }),
   ]);
   allKunden = kundenRes.data || [];
-  allProducts = (prodRes.data || []).map(p => p.produkt).filter(Boolean).sort();
+  allProducts = (prodRes.data || []).filter(p => p.produkt);
+  allVerkaufschancen = vcRes.data || [];
 
   renderProduktChecks([]);
 
@@ -399,13 +477,16 @@ async function init() {
   applyFilter();
 }
 
+function produktNamen() { return allProducts.map(p => p.produkt).sort(); }
+
 function renderProduktChecks(selected) {
   const container = document.getElementById('produkt-checks');
-  if (!allProducts.length) {
+  const namen = produktNamen();
+  if (!namen.length) {
     container.innerHTML = '<span style="color:var(--gray-400);font-size:0.82rem;">Keine Produkte gefunden</span>';
     return;
   }
-  container.innerHTML = allProducts.map(p => `
+  container.innerHTML = namen.map(p => `
     <label class="produkt-check-label">
       <input type="checkbox" value="${esc(p)}" ${selected.includes(p) ? 'checked' : ''}> ${esc(p)}
     </label>`).join('');
@@ -439,6 +520,12 @@ function renderKunden(rows) {
 
   grid.innerHTML = rows.map(k => {
     const anfragenCount = (k.anfragen || []).length;
+    const vcList = allVerkaufschancen.filter(v => v.kunden_id === k.id);
+    const pipelineAktiv = vcList.filter(v => v.status !== 'verloren');
+    const pipelineWert = pipelineAktiv.reduce((s, v) => s + (v.wert || 0), 0);
+    const pipelineBadge = vcList.length
+      ? `<span class="pipeline-badge">${vcList.length} Chance${vcList.length !== 1 ? 'n' : ''}${pipelineWert > 0 ? ' · ' + pipelineWert.toLocaleString('de-DE', {style:'currency', currency:'EUR'}) : ''}</span>`
+      : '';
     let kontaktHtml = '';
     if (k.naechster_kontakt) {
       const d = new Date(k.naechster_kontakt);
@@ -482,6 +569,7 @@ function renderKunden(rows) {
             <svg width="11" height="11" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
             ${anfragenCount} Anfrage${anfragenCount !== 1 ? 'n' : ''}
           </span>
+          ${pipelineBadge}
           ${kontaktHtml}
         </div>
         <div style="display:flex;gap:6px;" onclick="event.stopPropagation()">
@@ -571,11 +659,26 @@ async function saveKunde() {
     return;
   }
 
-  // Anfrage verknüpfen (wenn aus Anfrage angelegt)
+  // Anfrage verknüpfen + Verkaufschancen auto-erstellen (wenn aus Anfrage angelegt)
   const fromAnfrageId = document.getElementById('edit-id').value;
-  if (fromAnfrageId && kundeId) {
+  if (fromAnfrageId && kundeId && !currentEditId) {
     await sb.from('anfragen').update({ kunden_id: kundeId }).eq('id', fromAnfrageId);
-    // URL bereinigen
+    // Für jedes ausgewählte Produkt eine Verkaufschance anlegen
+    const selectedProd = getSelectedProdukte();
+    if (selectedProd.length) {
+      const vcRows = selectedProd.map(prodName => {
+        const prod = allProducts.find(p => p.produkt === prodName);
+        return {
+          kunden_id: kundeId,
+          anfrage_id: Number(fromAnfrageId),
+          produkt: prodName,
+          wert: prod?.preis_flat ?? null,
+          status: 'offen',
+        };
+      });
+      const { data: newVcs } = await sb.from('verkaufschancen').insert(vcRows).select();
+      if (newVcs) allVerkaufschancen.unshift(...newVcs);
+    }
     history.replaceState({}, '', 'kunden.html');
   }
 
@@ -599,16 +702,64 @@ async function deleteKunde(id, name) {
   applyFilter();
 }
 
+// ---- VC-Hilfsfunktionen ----
+function vcStatusCls(s) {
+  return { offen:'vc-s-offen', in_gespraech:'vc-s-in_gespraech', angebot:'vc-s-angebot', gewonnen:'vc-s-gewonnen', verloren:'vc-s-verloren' }[s] || 'vc-s-offen';
+}
+function vcStatusLabel(s) {
+  return { offen:'Offen', in_gespraech:'In Gespräch', angebot:'Angebot', gewonnen:'Gewonnen', verloren:'Verloren' }[s] || s;
+}
+
+function renderVcSection(kundenId) {
+  const vcList = allVerkaufschancen.filter(v => v.kunden_id === kundenId);
+  const aktiv = vcList.filter(v => v.status !== 'verloren');
+  const total = aktiv.reduce((s, v) => s + (v.wert || 0), 0);
+
+  const tableRows = vcList.length ? vcList.map(v => `
+    <tr>
+      <td style="font-weight:600;color:var(--navy);">${esc(v.produkt)}</td>
+      <td>${v.wert != null ? v.wert.toLocaleString('de-DE', {style:'currency',currency:'EUR'}) : '–'}</td>
+      <td>
+        <select class="vc-status-sel ${vcStatusCls(v.status)}" onchange="changeVcStatus('${v.id}', this.value, '${kundenId}'); this.className='vc-status-sel '+vcStatusCls(this.value)">
+          ${['offen','in_gespraech','angebot','gewonnen','verloren'].map(s =>
+            `<option value="${s}" ${v.status===s?'selected':''}>${vcStatusLabel(s)}</option>`).join('')}
+        </select>
+      </td>
+      <td title="${esc(v.notiz||'')}">
+        <button class="vc-notiz-btn" onclick="openVcModal('${kundenId}','${v.id}')" title="${v.notiz ? esc(v.notiz) : 'Bearbeiten'}">
+          ${v.notiz ? '📝' : '✏️'}
+        </button>
+      </td>
+      <td><button class="vc-del-btn" onclick="deleteVc('${v.id}','${kundenId}')">✕</button></td>
+    </tr>`).join('')
+  : `<tr><td colspan="5" style="color:var(--gray-400);font-size:0.82rem;padding:10px 8px;">Noch keine Verkaufschancen</td></tr>`;
+
+  return `
+    <div class="pipeline-header">
+      <span class="pipeline-title">Verkaufschancen (${vcList.length})</span>
+      <span style="display:flex;align-items:center;gap:10px;">
+        ${total > 0 ? `<span class="pipeline-total">${total.toLocaleString('de-DE', {style:'currency',currency:'EUR'})} Pipeline</span>` : ''}
+        <button class="btn btn-sm" style="background:#ede9fe;color:#5b21b6;padding:4px 10px;" onclick="openVcModal('${kundenId}')">+ Chance</button>
+      </span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="pipeline-table">
+        <thead><tr><th>Produkt</th><th style="text-align:right;">Wert</th><th>Status</th><th></th><th></th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>`;
+}
+
 // ---- Detail-Modal ----
 function openDetailModal(id) {
   const k = allKunden.find(x => x.id === id);
   if (!k) return;
+  detailOpenKundeId = id;
 
   document.getElementById('detail-title').textContent = k.name + (k.firma ? ` – ${k.firma}` : '');
   document.getElementById('detail-status-pill').innerHTML = statusPill(k.status);
 
   const anfragen = k.anfragen || [];
-
   const produktPills = (k.produkte || []).length
     ? `<div class="produkt-pills">${k.produkte.map(p => `<span class="produkt-pill">${esc(p)}</span>`).join('')}</div>`
     : '<span style="color:var(--gray-400);font-size:0.82rem;">–</span>';
@@ -619,7 +770,7 @@ function openDetailModal(id) {
       <div style="flex:1;">
         <div class="anfrage-row-name">Anfrage vom ${fmt(a.created_at)}</div>
         <div class="anfrage-row-tags">${tags.map(t => `<span class="anfrage-tag">${esc(t)}</span>`).join('')}</div>
-        ${a.status ? `<div class="anfrage-row-meta" style="margin-top:4px;">${esc(a.status)}</div>` : ''}
+        ${a.status && a.status !== 'offen' ? `<div class="anfrage-row-meta" style="margin-top:4px;">${esc(a.status)}</div>` : ''}
       </div>
       <a href="anfragen.html" style="font-size:0.75rem;color:var(--navy);text-decoration:none;white-space:nowrap;">→ Anfrage</a>
     </div>`;
@@ -637,10 +788,14 @@ function openDetailModal(id) {
       </div>
     </div>
 
-    <div class="detail-section">
-      <div class="detail-section-title">Gebuchte / interessante Produkte</div>
-      ${produktPills}
+    <div class="detail-section" id="vc-section">
+      ${renderVcSection(id)}
     </div>
+
+    ${(k.produkte||[]).length ? `<div class="detail-section">
+      <div class="detail-section-title">Interessante Produkte</div>
+      ${produktPills}
+    </div>` : ''}
 
     ${k.notizen ? `<div class="detail-section">
       <div class="detail-section-title">Notizen</div>
@@ -648,13 +803,13 @@ function openDetailModal(id) {
     </div>` : ''}
 
     <div class="detail-section">
-      <div class="detail-section-title">Verknüpfte Anfragen (${anfragen.length})</div>
+      <div class="detail-section-title">Anfragen-Historie (${anfragen.length})</div>
       ${anfragenHtml}
     </div>
 
     <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:8px;border-top:1px solid var(--gray-100);margin-top:4px;">
       <button class="btn btn-edit btn-sm" onclick="closeDetailModal();openEditModal('${esc(k.id)}')">Bearbeiten</button>
-      <button class="btn btn-primary btn-sm" onclick="closeDetailModal()" style="background:#0369a1;"><a href="mailto:${esc(k.email||'')}" style="color:white;text-decoration:none;">E-Mail senden</a></button>
+      ${k.email ? `<a class="btn btn-sm" style="background:#e0f2fe;color:#0369a1;text-decoration:none;" href="mailto:${esc(k.email)}">E-Mail senden</a>` : ''}
       <button class="btn btn-edit btn-sm" onclick="closeDetailModal()">Schließen</button>
     </div>
   `;
@@ -662,7 +817,92 @@ function openDetailModal(id) {
   document.getElementById('detail-bg').classList.add('open');
 }
 
-function closeDetailModal() { document.getElementById('detail-bg').classList.remove('open'); }
+function closeDetailModal() {
+  document.getElementById('detail-bg').classList.remove('open');
+  detailOpenKundeId = null;
+}
+
+function refreshVcSection(kundenId) {
+  const sec = document.getElementById('vc-section');
+  if (sec) sec.innerHTML = renderVcSection(kundenId);
+}
+
+// ---- Verkaufschancen CRUD ----
+function openVcModal(kundenId, vcId = null) {
+  const vc = vcId ? allVerkaufschancen.find(v => v.id === vcId) : null;
+  document.getElementById('vc-modal-title').textContent = vc ? 'Verkaufschance bearbeiten' : 'Neue Verkaufschance';
+  document.getElementById('vc-edit-id').value = vcId || '';
+  document.getElementById('vc-kunden-id').value = kundenId;
+  document.getElementById('vc-produkt').value = vc?.produkt || '';
+  document.getElementById('vc-wert').value = vc?.wert ?? '';
+  document.getElementById('vc-status').value = vc?.status || 'offen';
+  document.getElementById('vc-notiz').value = vc?.notiz || '';
+  document.getElementById('vc-msg').className = 'msg';
+  // Datalist befüllen
+  document.getElementById('vc-produkt-list').innerHTML = produktNamen().map(p => `<option value="${esc(p)}">`).join('');
+  document.getElementById('vc-modal-bg').classList.add('open');
+}
+
+function closeVcModal() { document.getElementById('vc-modal-bg').classList.remove('open'); }
+
+async function saveVc() {
+  const produkt = document.getElementById('vc-produkt').value.trim();
+  const msg = document.getElementById('vc-msg');
+  if (!produkt) { msg.textContent = 'Produkt ist Pflichtfeld.'; msg.className = 'msg error'; return; }
+
+  const kundenId = document.getElementById('vc-kunden-id').value;
+  const vcId = document.getElementById('vc-edit-id').value;
+  const wertRaw = document.getElementById('vc-wert').value;
+  const wert = wertRaw !== '' ? parseFloat(wertRaw) : null;
+
+  const payload = {
+    produkt,
+    wert: isNaN(wert) ? null : wert,
+    status: document.getElementById('vc-status').value,
+    notiz: document.getElementById('vc-notiz').value.trim() || null,
+    updated_at: new Date().toISOString(),
+  };
+
+  let error;
+  if (vcId) {
+    ({ error } = await sb.from('verkaufschancen').update(payload).eq('id', vcId));
+    if (!error) {
+      const idx = allVerkaufschancen.findIndex(v => v.id === vcId);
+      if (idx >= 0) allVerkaufschancen[idx] = { ...allVerkaufschancen[idx], ...payload };
+    }
+  } else {
+    const { data, error: e } = await sb.from('verkaufschancen')
+      .insert({ ...payload, kunden_id: kundenId }).select().single();
+    error = e;
+    if (!error && data) allVerkaufschancen.unshift(data);
+  }
+
+  if (error) { msg.textContent = error.message; msg.className = 'msg error'; return; }
+
+  closeVcModal();
+  if (kundenId === detailOpenKundeId) refreshVcSection(kundenId);
+  applyFilter();
+}
+
+async function changeVcStatus(vcId, newStatus, kundenId) {
+  const { error } = await sb.from('verkaufschancen')
+    .update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', vcId);
+  if (!error) {
+    const vc = allVerkaufschancen.find(v => v.id === vcId);
+    if (vc) vc.status = newStatus;
+    applyFilter();
+  }
+}
+
+async function deleteVc(vcId, kundenId) {
+  if (!confirm('Verkaufschance löschen?')) return;
+  const { error } = await sb.from('verkaufschancen').delete().eq('id', vcId);
+  if (!error) {
+    allVerkaufschancen = allVerkaufschancen.filter(v => v.id !== vcId);
+    if (kundenId === detailOpenKundeId) refreshVcSection(kundenId);
+    applyFilter();
+  }
+}
 
 init();
 </script>
