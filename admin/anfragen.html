@@ -602,6 +602,9 @@ function openDetailModal(anfrageId) {
       .replace(/\s*\([^)]+\)\s*$/, '')   // abschließendes "(Paket)" / "(Hersteller)" entfernen
       .trim();
   }
+  console.log('[preise] mit Preis:', allProducts.filter(p=>p.preis_flat!=null).map(p=>`${p.produkt}:${p.preis_flat}`));
+  console.log('[preise] anfrage.produkte RAW:', JSON.stringify(a.produkte));
+  console.log('[preise] baseNames:', JSON.stringify(produktNamen.map(prodBaseName)));
   let gesamtpreis = 0;
   let produktZeilen = '';
   if (produktNamen.length) {
