@@ -595,7 +595,9 @@ function openCreateModal(prefill, fromAnfrageId) {
   document.getElementById('f-naechster-kontakt').value = '';
   document.getElementById('f-notizen').value = '';
   document.getElementById('modal-msg').className = 'msg';
-  const preProd = prefill?.produkte ? prefill.produkte.split(',').map(p => p.trim()) : [];
+  const preProd = prefill?.produkte ? prefill.produkte.split(',').map(p =>
+    p.trim().replace(/\s*\[[^\]]+\]/, '').replace(/\s*×\s*\d+(\s*\(Extra\))?/i, '').trim()
+  ) : [];
   renderProduktChecks(preProd);
   document.getElementById('modal-bg').classList.add('open');
 }
