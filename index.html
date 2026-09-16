@@ -4598,10 +4598,11 @@
           <tr><td><a href="mailto:anfrage@ehealth-sales.de" style="color:#3C4A7C;text-decoration:none;">anfrage@ehealth-sales.de</a></td></tr>
         </table>`;
 
-      const _eOpts = { method: 'POST', headers: { 'Content-Type': 'application/json' } };
+      const _MAIL_URL = 'https://focysklymhmcfwgxdtuk.supabase.co/functions/v1/send-email';
+      const _eOpts = { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg' } };
 
       // Interne Benachrichtigung an anfrage@ehealth-sales.de
-      fetch('/send-email.php', { ..._eOpts,
+      fetch(_MAIL_URL, { ..._eOpts,
         body: JSON.stringify({
           to: ['anfrage@ehealth-sales.de'],
           subject: `Neue Anfrage: ${name} – ${payload.berufsgruppe || 'Produktfinder'}`,
@@ -4618,7 +4619,7 @@
       }).catch(() => {});
 
       // Bestätigung an den Kunden
-      fetch('/send-email.php', { ..._eOpts,
+      fetch(_MAIL_URL, { ..._eOpts,
         body: JSON.stringify({
           to: [email],
           subject: 'Ihre Anfrage bei eHealth Sales – wir melden uns!',

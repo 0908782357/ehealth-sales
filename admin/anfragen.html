@@ -834,9 +834,9 @@ async function submitWeiterleitung() {
       .map(p => `<li style="margin-bottom:4px;">${p.trim()}</li>`).join('');
     const notizHtml = notiz ? `<div style="background:#eff6ff;border-left:3px solid #3C4A7C;border-radius:6px;padding:10px 14px;margin:14px 0;font-size:0.85rem;color:#374151;"><strong>Notiz von eHealth Sales:</strong><br>${notiz}</div>` : '';
 
-    fetch('/send-email.php', {
+    fetch('https://focysklymhmcfwgxdtuk.supabase.co/functions/v1/send-email', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg' },
       body: JSON.stringify({
         to: [partner.email],
         subject: `Neue Kundenanfrage für Sie – ${anfrage?.name || currentAnfrageName}`,
