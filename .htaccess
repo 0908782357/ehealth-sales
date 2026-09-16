@@ -1,0 +1,17 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # PHP-Dateien direkt durch den PHP-Handler laufen lassen
+    RewriteRule ^send-email\.php$ - [L]
+
+    # Alle anderen existierenden Dateien/Verzeichnisse direkt ausliefern
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+</IfModule>
+
+# PHP-Handler explizit setzen (Strato CGI-Kompatibilität)
+<FilesMatch "\.php$">
+    SetHandler application/x-httpd-php
+</FilesMatch>
