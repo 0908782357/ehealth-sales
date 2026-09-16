@@ -2570,7 +2570,7 @@
     if (pageId === 'produktfinder') {
       document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
       document.getElementById('wiz-step0').classList.add('active');
-      wizStep0Pref = null; wizStep0TopicId = null; wizBGCol = null; wizBGName = ''; wizSelectedTopics = new Set(); assessmentAnswers = []; assessmentCurrentQ = 0;
+      wizStep0Pref = null; wizStep0TopicId = null; wizBGCol = null; wizBGName = ''; wizSelectedTopics = new Set(); assessmentAnswers = []; assessmentCurrentQ = 0; wizFilterPraeferenz = [];
       renderWizSummary();
     }
   }
