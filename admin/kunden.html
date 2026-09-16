@@ -385,7 +385,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>Produkt *</label>
-          <input type="text" id="vc-produkt" placeholder="Produktname" list="vc-produkt-list">
+          <input type="text" id="vc-produkt" placeholder="Produktname" list="vc-produkt-list" oninput="vcProduktAutofill(this.value)">
           <datalist id="vc-produkt-list"></datalist>
         </div>
         <div class="form-group">
@@ -667,7 +667,7 @@ async function saveKunde() {
     const selectedProd = getSelectedProdukte();
     if (selectedProd.length) {
       const vcRows = selectedProd.map(prodName => {
-        const prod = allProducts.find(p => p.produkt === prodName);
+        const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === prodName.toLowerCase().trim());
         return {
           kunden_id: kundeId,
           anfrage_id: Number(fromAnfrageId),
@@ -844,6 +844,13 @@ function openVcModal(kundenId, vcId = null) {
 }
 
 function closeVcModal() { document.getElementById('vc-modal-bg').classList.remove('open'); }
+
+function vcProduktAutofill(name) {
+  const wertInput = document.getElementById('vc-wert');
+  if (!name || wertInput.value) return; // nur ausfüllen wenn Feld noch leer
+  const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === name.toLowerCase().trim());
+  if (prod?.preis_flat != null) wertInput.value = prod.preis_flat;
+}
 
 async function saveVc() {
   const produkt = document.getElementById('vc-produkt').value.trim();

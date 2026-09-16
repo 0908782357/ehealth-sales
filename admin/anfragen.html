@@ -595,7 +595,7 @@ function openDetailModal(anfrageId) {
   if (produktNamen.length) {
     produktZeilen = produktNamen.map(name => {
       const nameLower = name.toLowerCase();
-      const prod = allProducts.find(p => (p.produkt || '').toLowerCase() === nameLower);
+      const prod = allProducts.find(p => (p.produkt || '').toLowerCase().trim() === nameLower.trim());
       const preis = prod?.preis_flat;
       const abrech = prod?.abrechnungsart || '';
       if (preis) gesamtpreis += preis;
