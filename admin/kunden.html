@@ -322,7 +322,7 @@
       <div class="form-row">
         <div class="form-group">
           <label>Berufsgruppe</label>
-          <input type="text" id="f-berufsgruppe" placeholder="z.B. Hausarzt">
+          <select id="f-berufsgruppe"><option value="">– Bitte wählen –</option></select>
         </div>
         <div class="form-group">
           <label>Status</label>
@@ -423,8 +423,9 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { flowType: 'implicit' } });
 
 let allKunden = [];
-let allProducts = [];      // [{produkt, preis_flat, abrechnungsart}]
+let allProducts = [];
 let allVerkaufschancen = [];
+let allBerufsgruppen = [];
 let currentEditId = null;
 let detailOpenKundeId = null;
 
@@ -451,14 +452,16 @@ async function init() {
   document.getElementById('nav-group-admin').style.display = '';
 
   // Kunden, Produkte und Verkaufschancen parallel laden
-  const [kundenRes, prodRes, vcRes] = await Promise.all([
+  const [kundenRes, prodRes, vcRes, bgRes] = await Promise.all([
     sb.from('kunden').select('*, anfragen(id, produkte, created_at, status)').order('created_at', { ascending: false }),
     sb.from('products').select('produkt, preis_flat, abrechnungsart, preise'),
     sb.from('verkaufschancen').select('*').order('created_at', { ascending: false }),
+    sb.from('berufsgruppen').select('id, name').order('nr', { ascending: true }),
   ]);
   allKunden = kundenRes.data || [];
   allProducts = (prodRes.data || []).filter(p => p.produkt);
   allVerkaufschancen = vcRes.data || [];
+  allBerufsgruppen = bgRes.data || [];
 
   renderProduktChecks([]);
 
@@ -478,6 +481,12 @@ async function init() {
 }
 
 function produktNamen() { return allProducts.map(p => p.produkt).sort(); }
+
+function populateBGSelect(selectedName) {
+  const sel = document.getElementById('f-berufsgruppe');
+  sel.innerHTML = '<option value="">– Bitte wählen –</option>'
+    + allBerufsgruppen.map(bg => `<option value="${esc(bg.name)}" ${bg.name === selectedName ? 'selected' : ''}>${esc(bg.name)}</option>`).join('');
+}
 
 function renderProduktChecks(selected) {
   const container = document.getElementById('produkt-checks');
@@ -590,7 +599,7 @@ function openCreateModal(prefill, fromAnfrageId) {
   document.getElementById('f-firma').value = prefill?.firma || '';
   document.getElementById('f-email').value = prefill?.email || '';
   document.getElementById('f-telefon').value = prefill?.telefon || '';
-  document.getElementById('f-berufsgruppe').value = prefill?.berufsgruppe || '';
+  populateBGSelect(prefill?.berufsgruppe || '');
   document.getElementById('f-status').value = 'interessent';
   document.getElementById('f-naechster-kontakt').value = '';
   document.getElementById('f-notizen').value = '';
@@ -620,7 +629,7 @@ function openEditModal(id) {
   document.getElementById('f-firma').value = k.firma || '';
   document.getElementById('f-email').value = k.email || '';
   document.getElementById('f-telefon').value = k.telefon || '';
-  document.getElementById('f-berufsgruppe').value = k.berufsgruppe || '';
+  populateBGSelect(k.berufsgruppe || '');
   document.getElementById('f-status').value = k.status || 'interessent';
   document.getElementById('f-naechster-kontakt').value = k.naechster_kontakt || '';
   document.getElementById('f-notizen').value = k.notizen || '';
@@ -848,8 +857,12 @@ function openVcModal(kundenId, vcId = null) {
   document.getElementById('vc-modal-title').textContent = vc ? 'Verkaufschance bearbeiten' : 'Neue Verkaufschance';
   document.getElementById('vc-edit-id').value = vcId || '';
   document.getElementById('vc-kunden-id').value = kundenId;
-  document.getElementById('vc-produkt').value = vc?.produkt || '';
-  document.getElementById('vc-wert').value = vc?.wert ?? '';
+  const vcProdukt = vc?.produkt || '';
+  const vcWert = vc?.wert ?? null;
+  document.getElementById('vc-produkt').value = vcProdukt;
+  // Wert: gespeicherten Wert nutzen; wenn null/leer → Preis aus Produktliste nachschlagen
+  const autoWert = vcWert != null ? vcWert : (vcProdukt ? vcProdPreis(vcProdukt) : null);
+  document.getElementById('vc-wert').value = autoWert != null ? autoWert : '';
   document.getElementById('vc-status').value = vc?.status || 'offen';
   document.getElementById('vc-notiz').value = vc?.notiz || '';
   document.getElementById('vc-msg').className = 'msg';
@@ -860,11 +873,22 @@ function openVcModal(kundenId, vcId = null) {
 
 function closeVcModal() { document.getElementById('vc-modal-bg').classList.remove('open'); }
 
+function vcProdPreis(name) {
+  const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === name.toLowerCase().trim());
+  if (!prod) return null;
+  if (prod.preis_flat != null) return prod.preis_flat;
+  if (prod.preise && typeof prod.preise === 'object') {
+    const vals = Object.values(prod.preise).map(Number).filter(v => v > 0);
+    if (vals.length) return Math.min(...vals);
+  }
+  return null;
+}
+
 function vcProduktAutofill(name) {
   const wertInput = document.getElementById('vc-wert');
-  if (!name || wertInput.value) return; // nur ausfüllen wenn Feld noch leer
-  const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === name.toLowerCase().trim());
-  if (prod?.preis_flat != null) wertInput.value = prod.preis_flat;
+  if (!name || wertInput.value) return;
+  const preis = vcProdPreis(name);
+  if (preis != null) wertInput.value = preis;
 }
 
 async function saveVc() {
