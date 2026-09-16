@@ -365,6 +365,7 @@ let myProfileId = null;
 let allAnfragen = [];
 let partners = [];
 let allProducts = [];     // für Preisabfrage im Detail-Modal
+let allShopItems = [];    // Bundles/Shop-Artikel mit Preisen
 let currentAnfrageId = null;
 let currentAnfrageName = '';
 let currentAnfrageProdukte = '';
@@ -416,12 +417,14 @@ async function init() {
 }
 
 async function loadPartners() {
-  const [partnerRes, productRes] = await Promise.all([
+  const [partnerRes, productRes, shopRes] = await Promise.all([
     sb.from('user_profiles').select('id, vorname, nachname, firma, email').eq('rolle', 'partner').order('firma'),
     sb.from('products').select('produkt, preis_flat, abrechnungsart'),
+    sb.from('shop_items').select('titel, preis, preis_einheit, bundles(name)'),
   ]);
   partners = partnerRes.data || [];
   allProducts = productRes.data || [];
+  allShopItems = shopRes.data || [];
   const sel = document.getElementById('modal-partner-select');
   sel.innerHTML = '<option value="">– Bitte wählen –</option>'
     + partners.map(p => `<option value="${p.id}">${esc(partnerLabel(p))}</option>`).join('');
@@ -608,8 +611,18 @@ function openDetailModal(anfrageId) {
   if (produktNamen.length) {
     produktZeilen = produktNamen.map(name => {
       const baseName = prodBaseName(name);
-      const prod = allProducts.find(p => (p.produkt || '').toLowerCase().trim() === baseName.toLowerCase());
-      console.log('[preise] match:', JSON.stringify(baseName), '→', prod ? `${prod.produkt} = ${prod.preis_flat}` : 'KEIN TREFFER');
+      const bn = baseName.toLowerCase();
+      // 1. Einzelprodukt in products-Tabelle suchen
+      let prod = allProducts.find(p => (p.produkt || '').toLowerCase().trim() === bn);
+      // 2. Fallback: Bundle/Shop-Artikel (Titel oder verknüpfter Bundle-Name)
+      if (!prod) {
+        const si = allShopItems.find(s =>
+          (s.titel || '').toLowerCase().trim() === bn ||
+          (s.bundles?.name || '').toLowerCase().trim() === bn
+        );
+        if (si) prod = { preis_flat: si.preis, abrechnungsart: si.preis_einheit || '' };
+      }
+      console.log('[preise] match:', JSON.stringify(baseName), '→', prod ? `preis_flat=${prod.preis_flat}` : 'KEIN TREFFER');
       const preis = prod?.preis_flat;
       const abrech = prod?.abrechnungsart || '';
       if (preis) gesamtpreis += preis;
