@@ -453,7 +453,7 @@ async function init() {
   // Kunden, Produkte und Verkaufschancen parallel laden
   const [kundenRes, prodRes, vcRes] = await Promise.all([
     sb.from('kunden').select('*, anfragen(id, produkte, created_at, status)').order('created_at', { ascending: false }),
-    sb.from('products').select('produkt, preis_flat, abrechnungsart'),
+    sb.from('products').select('produkt, preis_flat, abrechnungsart, preise'),
     sb.from('verkaufschancen').select('*').order('created_at', { ascending: false }),
   ]);
   allKunden = kundenRes.data || [];
@@ -678,11 +678,16 @@ async function saveKunde() {
     if (selectedProd.length) {
       const vcRows = selectedProd.map(prodName => {
         const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === prodName.toLowerCase());
+        let wert = prod?.preis_flat ?? null;
+        if (wert == null && prod?.preise && typeof prod.preise === 'object') {
+          const vals = Object.values(prod.preise).map(Number).filter(v => v > 0);
+          if (vals.length) wert = Math.min(...vals);
+        }
         return {
           kunden_id: kundeId,
           anfrage_id: Number(fromAnfrageId),
           produkt: prodName,
-          wert: prod?.preis_flat ?? null,
+          wert,
           status: 'offen',
         };
       });

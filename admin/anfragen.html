@@ -419,7 +419,7 @@ async function init() {
 async function loadPartners() {
   const [partnerRes, productRes, shopRes] = await Promise.all([
     sb.from('user_profiles').select('id, vorname, nachname, firma, email').eq('rolle', 'partner').order('firma'),
-    sb.from('products').select('produkt, preis_flat, abrechnungsart'),
+    sb.from('products').select('produkt, preis_flat, abrechnungsart, preise'),
     sb.from('shop_items').select('titel, preis, preis_einheit'),
   ]);
   partners = partnerRes.data || [];
@@ -602,9 +602,17 @@ function openDetailModal(anfrageId) {
       .replace(/\s*\([^)]+\)\s*$/, '')   // abschließendes "(Paket)" / "(Hersteller)" entfernen
       .trim();
   }
-  console.log('[preise] mit Preis:', allProducts.filter(p=>p.preis_flat!=null).map(p=>`${p.produkt}:${p.preis_flat}`));
-  console.log('[preise] anfrage.produkte RAW:', JSON.stringify(a.produkte));
-  console.log('[preise] baseNames:', JSON.stringify(produktNamen.map(prodBaseName)));
+  // Besten verfügbaren Preis ermitteln: preis_flat → BG-Preise (Minimum) → shop_items
+  function getPreis(prod) {
+    if (!prod) return null;
+    if (prod.preis_flat != null) return { wert: prod.preis_flat, abrech: prod.abrechnungsart || '', geschaetzt: false };
+    if (prod.preise && typeof prod.preise === 'object') {
+      const vals = Object.values(prod.preise).map(Number).filter(v => v > 0);
+      if (vals.length) return { wert: Math.min(...vals), abrech: prod.abrechnungsart || '', geschaetzt: true };
+    }
+    return null;
+  }
+
   let gesamtpreis = 0;
   let produktZeilen = '';
   if (produktNamen.length) {
@@ -613,23 +621,21 @@ function openDetailModal(anfrageId) {
       const bn = baseName.toLowerCase();
       // 1. Exakter Treffer in products
       let prod = allProducts.find(p => (p.produkt || '').toLowerCase().trim() === bn);
-      // 2. Exakter Treffer in shop_items (Bundle-Titel oder Bundle-Name)
+      // 2. Exakter Treffer in shop_items (Bundle-Titel)
       if (!prod) {
-        const si = allShopItems.find(s =>
-          (s.titel || '').toLowerCase().trim() === bn ||
-          (s.bundles?.name || '').toLowerCase().trim() === bn
-        );
+        const si = allShopItems.find(s => (s.titel || '').toLowerCase().trim() === bn);
         if (si) prod = { preis_flat: si.preis, abrechnungsart: si.preis_einheit || '' };
       }
-      // 3. Prefix-Fallback: Produktname ist Anfang des Basenames ("TI Gateway" ⊂ "TI Gateway Paket")
+      // 3. Prefix-Fallback: "TI Gateway" ⊂ "TI Gateway Paket"
       if (!prod) {
         prod = allProducts.find(p => {
           const pn = (p.produkt || '').toLowerCase().trim();
           return pn.length > 4 && bn.startsWith(pn);
         });
       }
-      const preis = prod?.preis_flat;
-      const abrech = prod?.abrechnungsart || '';
+      const preisInfo = getPreis(prod);
+      const preis = preisInfo?.wert ?? null;
+      const abrech = preisInfo?.abrech || '';
       if (preis) gesamtpreis += preis;
       return `<tr>
         <td>${esc(name)}</td>
