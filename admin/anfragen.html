@@ -288,9 +288,9 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { flowType: 'implicit' } });
 
 let userRole = 'partner';
-let myPartnerId = null;
+let myProfileId = null;   // user_profiles.id des eingeloggten Partners
 let allAnfragen = [];
-let partners = [];
+let partners = [];        // portal-Nutzer mit rolle='partner'
 let currentAnfrageId = null;
 let currentAnfrageName = '';
 let currentAnfrageProdukte = '';
@@ -309,6 +309,10 @@ function produktTags(produkte) {
   return produkte.split(',').map(p => `<span class="produkt-tag">${esc(p.trim())}</span>`).join('');
 }
 
+function partnerLabel(p) {
+  return p.firma || [p.vorname, p.nachname].filter(Boolean).join(' ') || p.email || '–';
+}
+
 async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { window.location.href = 'index.html'; return; }
@@ -324,8 +328,9 @@ async function init() {
     document.getElementById('filter-status').style.display = '';
     await loadPartners();
   } else {
-    const { data: p } = await sb.from('partners').select('id').eq('user_id', session.user.id).maybeSingle();
-    myPartnerId = p?.id;
+    // Partner: eigenes user_profiles.id ermitteln
+    const { data: prof } = await sb.from('user_profiles').select('id').eq('user_id', session.user.id).maybeSingle();
+    myProfileId = prof?.id;
     document.getElementById('page-sub').textContent = 'Anfragen, die an Sie weitergeleitet wurden';
     document.getElementById('filter-status').style.display = 'none';
   }
@@ -335,12 +340,16 @@ async function init() {
 }
 
 async function loadPartners() {
-  const { data, error } = await sb.from('partners').select('id,name,kontakt_email').order('name');
+  // Alle Portal-Nutzer mit rolle='partner' aus user_profiles laden
+  const { data, error } = await sb.from('user_profiles')
+    .select('id, vorname, nachname, firma, email')
+    .eq('rolle', 'partner')
+    .order('firma');
   if (error) console.error('loadPartners error:', error);
   partners = data || [];
   const sel = document.getElementById('modal-partner-select');
   sel.innerHTML = '<option value="">– Bitte wählen –</option>'
-    + partners.map(p => `<option value="${p.id}" data-email="${esc(p.kontakt_email || '')}">${esc(p.name)}</option>`).join('');
+    + partners.map(p => `<option value="${p.id}" data-email="${esc(p.email || '')}">${esc(partnerLabel(p))}</option>`).join('');
 }
 
 async function loadAnfragen() {
@@ -352,16 +361,15 @@ async function loadAnfragen() {
 
   if (userRole === 'admin') {
     const { data: rows } = await sb.from('anfragen')
-      .select('*, anfragen_weiterleitungen(id, partner_id, notiz, weitergeleitet_am, partners(name))')
+      .select('*, anfragen_weiterleitungen(id, user_profile_id, notiz, weitergeleitet_am, user_profiles(vorname, nachname, firma))')
       .order('created_at', { ascending: false });
     data = rows || [];
   } else {
-    if (!myPartnerId) { document.getElementById('spinner').style.display = 'none'; return; }
+    if (!myProfileId) { document.getElementById('spinner').style.display = 'none'; return; }
     const { data: rows } = await sb.from('anfragen_weiterleitungen')
       .select('id, notiz, weitergeleitet_am, anfragen(*)')
-      .eq('partner_id', myPartnerId)
+      .eq('user_profile_id', myProfileId)
       .order('weitergeleitet_am', { ascending: false });
-    // Flatten: pull anfrage up, attach weiterleitung notiz
     data = (rows || []).map(r => ({
       ...(r.anfragen || {}),
       _weitergeleitet_am: r.weitergeleitet_am,
@@ -396,6 +404,11 @@ function applyFilter() {
   renderAnfragen(rows);
 }
 
+function weiterleitungName(w) {
+  const p = w.user_profiles;
+  return p ? (p.firma || [p.vorname, p.nachname].filter(Boolean).join(' ') || '–') : '–';
+}
+
 function renderAnfragen(rows) {
   const list = document.getElementById('anfragen-list');
   const empty = document.getElementById('empty');
@@ -406,31 +419,27 @@ function renderAnfragen(rows) {
   list.innerHTML = rows.map(a => {
     const weiterleitungen = a.anfragen_weiterleitungen || [];
 
-    // Status pill
     let statusHtml = '';
     if (userRole === 'admin') {
       if (weiterleitungen.length === 0) {
         statusHtml = '<span class="status-pill status-offen">Offen</span>';
       } else if (weiterleitungen.length === 1) {
-        statusHtml = `<span class="status-pill status-weitergeleitet">✓ Weitergeleitet an ${esc(weiterleitungen[0].partners?.name || '–')}</span>`;
+        statusHtml = `<span class="status-pill status-weitergeleitet">✓ Weitergeleitet an ${esc(weiterleitungName(weiterleitungen[0]))}</span>`;
       } else {
         statusHtml = `<span class="status-pill status-mehrfach">Weitergeleitet (${weiterleitungen.length}×)</span>`;
       }
     }
 
-    // Weiterleitungs-Chips für Admin
     const chipHtml = userRole === 'admin' && weiterleitungen.length > 1
       ? weiterleitungen.map(w =>
-          `<span class="weiterleitung-chip">✓ ${esc(w.partners?.name || '?')} <span style="opacity:0.6;font-weight:400;">${fmt(w.weitergeleitet_am).split(',')[0]}</span></span>`
+          `<span class="weiterleitung-chip">✓ ${esc(weiterleitungName(w))} <span style="opacity:0.6;font-weight:400;">${fmt(w.weitergeleitet_am).split(',')[0]}</span></span>`
         ).join('')
       : '';
 
-    // Notiz für Partner
     const notizHtml = a._notiz
       ? `<div class="notiz-box"><strong>Notiz von eHealth Sales</strong>${esc(a._notiz)}</div>`
       : '';
 
-    // Weitergeleitet-am für Partner
     const wdatHtml = a._weitergeleitet_am
       ? `<div class="anfrage-row"><span class="anfrage-row-label">Weitergeleitet</span><span class="anfrage-row-val">${fmt(a._weitergeleitet_am)}</span></div>`
       : '';
@@ -498,18 +507,18 @@ function openModal(anfrageId, name, produkte) {
 function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
 
 async function submitWeiterleitung() {
-  const partnerId = document.getElementById('modal-partner-select').value;
+  const profileId = document.getElementById('modal-partner-select').value;
   const notiz = document.getElementById('modal-notiz').value.trim() || null;
   const msg = document.getElementById('modal-msg');
 
-  if (!partnerId) { msg.textContent = 'Bitte einen Partner auswählen.'; msg.className = 'msg error'; return; }
+  if (!profileId) { msg.textContent = 'Bitte einen Partner auswählen.'; msg.className = 'msg error'; return; }
 
-  const partner = partners.find(p => p.id === partnerId);
+  const partner = partners.find(p => p.id === profileId);
   const { data: { session } } = await sb.auth.getSession();
 
   const { error } = await sb.from('anfragen_weiterleitungen').insert({
     anfrage_id: currentAnfrageId,
-    partner_id: partnerId,
+    user_profile_id: profileId,
     notiz,
     weitergeleitet_von: session?.user?.id || null,
   });
@@ -526,7 +535,7 @@ async function submitWeiterleitung() {
   const anfrage = allAnfragen.find(a => Number(a.id) === currentAnfrageId);
 
   // E-Mail an Partner
-  if (partner?.kontakt_email) {
+  if (partner?.email) {
     const produktListe = (anfrage?.produkte || currentAnfrageProdukte || '').split(',')
       .map(p => `<li style="margin-bottom:4px;">${p.trim()}</li>`).join('');
     const notizHtml = notiz ? `<div style="background:#eff6ff;border-left:3px solid #3C4A7C;border-radius:6px;padding:10px 14px;margin:14px 0;font-size:0.85rem;color:#374151;"><strong>Notiz von eHealth Sales:</strong><br>${notiz}</div>` : '';
@@ -535,14 +544,14 @@ async function submitWeiterleitung() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        to: [partner.kontakt_email],
+        to: [partner.email],
         subject: `Neue Kundenanfrage für Sie – ${anfrage?.name || currentAnfrageName}`,
         html: `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;">
           <div style="background:#3C4A7C;padding:24px 32px;border-radius:12px 12px 0 0;">
             <h1 style="color:white;margin:0;font-size:1.1rem;font-weight:800;">Neue Anfrage von eHealth Sales</h1>
           </div>
           <div style="background:white;padding:24px 32px;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;">
-            <p style="margin:0 0 16px;">Hallo <strong>${esc(partner.name)}</strong>,<br><br>
+            <p style="margin:0 0 16px;">Hallo <strong>${esc(partnerLabel(partner))}</strong>,<br><br>
             ein Interessent hat sich über den eHealth Sales Produktfinder gemeldet und wir leiten diese Anfrage an Sie weiter.</p>
             <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
               <tr><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:0.82rem;color:#64748b;width:120px;">Name</td>
@@ -572,7 +581,7 @@ async function submitWeiterleitung() {
     }).catch(() => {});
   }
 
-  msg.textContent = `Anfrage erfolgreich an ${partner?.name || 'Partner'} weitergeleitet${partner?.kontakt_email ? ' und E-Mail versendet' : ''}.`;
+  msg.textContent = `Anfrage erfolgreich an ${partner ? partnerLabel(partner) : 'Partner'} weitergeleitet${partner?.email ? ' und E-Mail versendet' : ''}.`;
   msg.className = 'msg success';
   setTimeout(() => { closeModal(); loadAnfragen(); }, 1800);
 }
