@@ -602,6 +602,7 @@ function openDetailModal(anfrageId) {
       .replace(/\s*\([^)]+\)\s*$/, '')   // abschließendes "(Paket)" / "(Hersteller)" entfernen
       .trim();
   }
+  console.log('[VERSION] v9-getPreis');
   // Besten verfügbaren Preis ermitteln: preis_flat → BG-Preise (Minimum) → shop_items
   function getPreis(prod) {
     if (!prod) return null;
