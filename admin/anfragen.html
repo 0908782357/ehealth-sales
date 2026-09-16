@@ -602,20 +602,15 @@ function openDetailModal(anfrageId) {
       .replace(/\s*\([^)]+\)\s*$/, '')   // abschließendes "(Paket)" / "(Hersteller)" entfernen
       .trim();
   }
-  console.log('[preise] shopItem titels:', JSON.stringify(allShopItems.map(s => s.titel)));
-  console.log('[preise] bundle names:', JSON.stringify(allShopItems.map(s => s.bundles?.name)));
-  console.log('[preise] rohtext:', a.produkte);
-  console.log('[preise] splits:', produktNamen);
-  console.log('[preise] baseNames:', produktNamen.map(prodBaseName));
   let gesamtpreis = 0;
   let produktZeilen = '';
   if (produktNamen.length) {
     produktZeilen = produktNamen.map(name => {
       const baseName = prodBaseName(name);
       const bn = baseName.toLowerCase();
-      // 1. Einzelprodukt in products-Tabelle suchen
+      // 1. Exakter Treffer in products
       let prod = allProducts.find(p => (p.produkt || '').toLowerCase().trim() === bn);
-      // 2. Fallback: Bundle/Shop-Artikel (Titel oder verknüpfter Bundle-Name)
+      // 2. Exakter Treffer in shop_items (Bundle-Titel oder Bundle-Name)
       if (!prod) {
         const si = allShopItems.find(s =>
           (s.titel || '').toLowerCase().trim() === bn ||
@@ -623,7 +618,13 @@ function openDetailModal(anfrageId) {
         );
         if (si) prod = { preis_flat: si.preis, abrechnungsart: si.preis_einheit || '' };
       }
-      console.log('[preise] match:', JSON.stringify(baseName), '→', prod ? `preis_flat=${prod.preis_flat}` : 'KEIN TREFFER');
+      // 3. Prefix-Fallback: Produktname ist Anfang des Basenames ("TI Gateway" ⊂ "TI Gateway Paket")
+      if (!prod) {
+        prod = allProducts.find(p => {
+          const pn = (p.produkt || '').toLowerCase().trim();
+          return pn.length > 4 && bn.startsWith(pn);
+        });
+      }
       const preis = prod?.preis_flat;
       const abrech = prod?.abrechnungsart || '';
       if (preis) gesamtpreis += preis;
