@@ -589,14 +589,27 @@ function openDetailModal(anfrageId) {
   document.getElementById('detail-modal-title').textContent = a.name || '–';
 
   // Produkte mit Preisen zusammenführen
-  const produktNamen = (a.produkte || '').split(',').map(p => p.trim()).filter(Boolean);
+  // Format-agnostisch: Komma- und Zeilenumbruch-Trenner; "- ", [Artikelnr.], × Menge, (Suffix) entfernen
+  const produktNamen = (a.produkte || '').split(/\n|,/).map(p => p.trim()).filter(Boolean);
+  function prodBaseName(label) {
+    return label
+      .replace(/^-\s+/, '')              // "- Produktname" → "Produktname"
+      .replace(/\s*\[[^\]]+\]/g, '')     // "[ART-01]" entfernen
+      .replace(/\s*×\s*\d+(\s*\([^)]*\))?/i, '') // "× 2 (Extra)" entfernen
+      .replace(/\s*\([^)]+\)\s*$/, '')   // abschließendes "(Paket)" / "(Hersteller)" entfernen
+      .trim();
+  }
+  console.log('[preise] allProducts:', allProducts.length, allProducts.slice(0,3));
+  console.log('[preise] rohtext:', a.produkte);
+  console.log('[preise] splits:', produktNamen);
+  console.log('[preise] baseNames:', produktNamen.map(prodBaseName));
   let gesamtpreis = 0;
   let produktZeilen = '';
   if (produktNamen.length) {
     produktZeilen = produktNamen.map(name => {
-      // Basisnamen extrahieren: "[Artikelnummer]" und "× Menge (Extra)" abschneiden
-      const baseName = name.replace(/\s*\[[^\]]+\]/, '').replace(/\s*×\s*\d+(\s*\(Extra\))?/i, '').trim();
+      const baseName = prodBaseName(name);
       const prod = allProducts.find(p => (p.produkt || '').toLowerCase().trim() === baseName.toLowerCase());
+      console.log('[preise] match:', JSON.stringify(baseName), '→', prod ? `${prod.produkt} = ${prod.preis_flat}` : 'KEIN TREFFER');
       const preis = prod?.preis_flat;
       const abrech = prod?.abrechnungsart || '';
       if (preis) gesamtpreis += preis;

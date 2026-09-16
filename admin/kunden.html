@@ -595,9 +595,17 @@ function openCreateModal(prefill, fromAnfrageId) {
   document.getElementById('f-naechster-kontakt').value = '';
   document.getElementById('f-notizen').value = '';
   document.getElementById('modal-msg').className = 'msg';
-  const preProd = prefill?.produkte ? prefill.produkte.split(',').map(p =>
-    p.trim().replace(/\s*\[[^\]]+\]/, '').replace(/\s*×\s*\d+(\s*\(Extra\))?/i, '').trim()
-  ) : [];
+  function prodBaseName(label) {
+    return label
+      .replace(/^-\s+/, '')
+      .replace(/\s*\[[^\]]+\]/g, '')
+      .replace(/\s*×\s*\d+(\s*\([^)]*\))?/i, '')
+      .replace(/\s*\([^)]+\)\s*$/, '')
+      .trim();
+  }
+  const preProd = prefill?.produkte
+    ? prefill.produkte.split(/\n|,/).map(p => prodBaseName(p.trim())).filter(Boolean)
+    : [];
   renderProduktChecks(preProd);
   document.getElementById('modal-bg').classList.add('open');
 }
@@ -669,7 +677,7 @@ async function saveKunde() {
     const selectedProd = getSelectedProdukte();
     if (selectedProd.length) {
       const vcRows = selectedProd.map(prodName => {
-        const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === prodName.toLowerCase().trim());
+        const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === prodName.toLowerCase());
         return {
           kunden_id: kundeId,
           anfrage_id: Number(fromAnfrageId),
