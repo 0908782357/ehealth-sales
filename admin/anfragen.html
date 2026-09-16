@@ -335,7 +335,8 @@ async function init() {
 }
 
 async function loadPartners() {
-  const { data } = await sb.from('partners').select('id,name,kontakt_email').order('name');
+  const { data, error } = await sb.from('partners').select('id,name,kontakt_email').order('name');
+  if (error) console.error('loadPartners error:', error);
   partners = data || [];
   const sel = document.getElementById('modal-partner-select');
   sel.innerHTML = '<option value="">– Bitte wählen –</option>'
