@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Events & Webinare | eHealth Alliance</title>
+  <meta name="description" content="Online-Events und Webinare der eHealth Alliance Mitglieder zu Themen der digitalen Gesundheitsversorgung.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* Base styles */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    :root {
+      --brand-500: #3C4A7C;
+      --brand-600: #2A3460;
+      --green: #6DC52D;
+      --green-dark: #59A322;
+      --line: #E5E7EB;
+      --line-strong: #D1D5DB;
+      --bg: #FFFFFF;
+      --bg-soft: #F3F4F6;
+      --ink: #111827;
+      --ink-soft: #6B7280;
+      --muted: #9CA3AF;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #F9FAFB;
+      color: var(--ink);
+      line-height: 1.6;
+    }
+
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; }
+
+    /* Header & Nav */
+    .site-header {
+      background: white;
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+
+    .logo {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--brand-500);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      margin-left: 40px;
+    }
+
+    .nav-links a {
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--ink-soft);
+      transition: all 0.15s;
+    }
+
+    .nav-links a:hover {
+      color: var(--brand-500);
+      background: var(--bg-soft);
+    }
+
+    .nav-links a[aria-current="page"] {
+      color: var(--brand-500);
+      background: var(--bg-soft);
+      font-weight: 600;
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 60px 0 40px;
+      background: white;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .hero__inner {
+      display: grid;
+      grid-template-columns: 1fr;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--green);
+      margin-bottom: 12px;
+    }
+
+    .hero h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .hero__lead {
+      font-size: 1.125rem;
+      color: var(--ink-soft);
+      max-width: 700px;
+      margin-bottom: 16px;
+      line-height: 1.7;
+    }
+
+    /* Section */
+    .section {
+      padding: 48px 0;
+    }
+
+    /* Filter Bar */
+    #filter-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
+      align-items: center;
+    }
+
+    #filter-bar > span {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .filter-chip {
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--line-strong);
+      background: transparent;
+      color: var(--ink-soft);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+
+    .filter-chip:hover {
+      background: var(--brand-500);
+      border-color: var(--brand-500);
+      color: #fff;
+    }
+
+    .filter-chip.active {
+      background: var(--brand-500);
+      border-color: var(--brand-500);
+      color: #fff;
+    }
+
+    /* Event Cards Grid */
+    #events-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+    }
+
+    .event-card {
+      border: 1.5px solid var(--line);
+      border-radius: 14px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: var(--bg);
+      transition: box-shadow 0.15s;
+    }
+
+    .event-card:hover {
+      box-shadow: 0 4px 16px rgba(15, 76, 129, 0.10);
+    }
+
+    .event-card__meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .event-card__date {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--brand-600);
+    }
+
+    .event-card__format {
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: var(--bg-soft);
+      color: var(--muted);
+    }
+
+    .event-card__title {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1.35;
+    }
+
+    .event-card__desc {
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+      line-height: 1.5;
+    }
+
+    .event-card__themen {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .thema-pill {
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .event-card__footer {
+      margin-top: auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .event-card__partner {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.83rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+
+    .btn--primary {
+      background: var(--brand-500);
+      color: white;
+    }
+
+    .btn--primary:hover {
+      background: var(--brand-600);
+    }
+
+    /* Footer */
+    .site-footer {
+      background: var(--ink);
+      color: white;
+      padding: 40px 0;
+      margin-top: 60px;
+      border-top: 1px solid var(--line);
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .footer-content a {
+      color: white;
+      font-weight: 600;
+    }
+
+    .footer-content a:hover {
+      text-decoration: underline;
+    }
+
+    /* Loading state */
+    .loading-message {
+      color: var(--muted);
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .error-message {
+      background: #FEE2E2;
+      color: #991B1B;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #FECACA;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header / Nav -->
+  <header class="site-header">
+    <div class="nav-inner">
+      <a href="#" class="logo">eHealth Alliance</a>
+      <nav class="nav-links">
+        <a href="partner.html">Partner</a>
+        <a href="events.html" aria-current="page">Events</a>
+        <a href="https://www.ehealth-sales.de/admin/index.html" target="_blank">Mitglieder-Portal</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main">
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="container hero__inner">
+        <div>
+          <span class="badge">Online-Events & Webinare</span>
+          <h1>Wissen teilen. Netzwerk stärken.</h1>
+          <p class="hero__lead">
+            Unsere Partner gestalten regelmäßige Online-Events zu den Themen der digitalen
+            Gesundheitsversorgung — für Mitglieder der eHealth Alliance.
+          </p>
+          <p style="font-size:0.9rem;color:var(--muted);">
+            Zur Anmeldung ist eine Mitgliedschaft im
+            <a href="https://www.ehealth-sales.de/admin/index.html" style="color:var(--brand-500);">Mitglieder-Portal</a>
+            erforderlich.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Events Section -->
+    <section class="section">
+      <div class="container">
+
+        <!-- Filter -->
+        <div id="filter-bar" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;align-items:center;">
+          <span style="font-size:0.82rem;font-weight:600;color:var(--muted);">Thema:</span>
+          <button class="filter-chip active" data-thema="" onclick="setThemaFilter(this, '')">Alle</button>
+        </div>
+
+        <!-- Event-Cards -->
+        <div id="events-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px;">
+          <p style="color:var(--muted);">Lade Events…</p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-content">
+      <p>&copy; 2026 eHealth Alliance. Alle Rechte vorbehalten. | <a href="https://www.ehealth-sales.de">ehealth Sales GmbH</a></p>
+    </div>
+  </footer>
+
+  <script>
+    const SUPA_URL = 'https://focysklymhmcfwgxdtuk.supabase.co';
+    const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
+    const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+    function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    const FORMAT_LABEL = { webinar:'Webinar', roundtable:'Roundtable', workshop:'Workshop', vortrag:'Vortrag' };
+
+    let allEvents = [];
+    let allThemen = [];
+    let activeThema = '';
+
+    async function init() {
+      const [evRes, thRes] = await Promise.all([
+        sb.from('events')
+          .select('*, event_themen(thema_id), partners(id, firma)')
+          .eq('oeffentlich', true)
+          .eq('status', 'geplant')
+          .gte('datum', new Date().toISOString().slice(0,10))
+          .order('datum', { ascending: true }),
+        sb.from('themengebiete').select('*').eq('aktiv', true).order('sortierung')
+      ]);
+
+      allEvents = evRes.data || [];
+      allThemen  = thRes.data || [];
+
+      buildThemaFilter();
+      renderCards();
+    }
+
+    function buildThemaFilter() {
+      const bar = document.getElementById('filter-bar');
+      // Nur Themen anzeigen die in den geladenen Events vorkommen
+      const usedThemaIds = new Set(allEvents.flatMap(e => (e.event_themen || []).map(et => et.thema_id)));
+      allThemen.filter(t => usedThemaIds.has(t.id)).forEach(t => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-chip';
+        btn.dataset.thema = t.id;
+        btn.style.setProperty('--chip-color', t.farbe);
+        btn.textContent = t.name;
+        btn.onclick = () => setThemaFilter(btn, t.id);
+        bar.appendChild(btn);
+      });
+    }
+
+    function setThemaFilter(el, themaId) {
+      activeThema = themaId;
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      renderCards();
+    }
+
+    function renderCards() {
+      const grid = document.getElementById('events-grid');
+      let events = allEvents;
+      if (activeThema) events = events.filter(e => e.event_themen?.some(et => et.thema_id === activeThema));
+
+      if (!events.length) {
+        grid.innerHTML = `<p style="color:var(--muted);grid-column:1/-1;">
+          Aktuell sind keine Events zu diesem Thema geplant. Schau bald wieder vorbei.
+        </p>`;
+        return;
+      }
+
+      grid.innerHTML = events.map(e => {
+        const datum = e.datum ? new Date(e.datum + 'T' + e.uhrzeit_start).toLocaleDateString('de-DE', { weekday:'short', day:'numeric', month:'long', year:'numeric' }) : '';
+        const uhrzeit = e.uhrzeit_start?.slice(0,5) || '';
+        const themenHtml = (e.event_themen || []).map(et => {
+          const t = allThemen.find(x => x.id === et.thema_id);
+          return t ? `<span class="thema-pill" style="background:${esc(t.farbe)}">${esc(t.name)}</span>` : '';
+        }).join('');
+        const portalUrl = `https://www.ehealth-sales.de/admin/index.html?event=${e.id}`;
+        return `<div class="event-card">
+          <div class="event-card__meta">
+            <span class="event-card__date">${datum}, ${uhrzeit} Uhr</span>
+            <span class="event-card__format">${FORMAT_LABEL[e.format] || e.format}</span>
+            ${e.max_teilnehmer ? `<span style="font-size:0.72rem;color:var(--muted);">max. ${e.max_teilnehmer} TN</span>` : ''}
+          </div>
+          <div class="event-card__title">${esc(e.titel)}</div>
+          <div class="event-card__desc">${esc(e.kurzbeschreibung)}</div>
+          <div class="event-card__themen">${themenHtml}</div>
+          <div class="event-card__footer">
+            <span class="event-card__partner">${esc(e.partners?.firma || '')}</span>
+            <a href="${esc(portalUrl)}" class="btn btn--primary" style="font-size:0.83rem;padding:8px 18px;">
+              Jetzt anmelden →
+            </a>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    init();
+  </script>
+
+</body>
+</html>
