@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>eHS Portal – Events</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #3C4A7C; --navy-dark: #2d3a63; --green: #6DC52D;
+    --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0;
+    --gray-400: #94a3b8; --gray-500: #64748b; --gray-700: #374151; --gray-900: #0f172a;
+    --red: #ef4444; --amber: #f59e0b;
+  }
+  body { font-family: 'Inter','Helvetica Neue',sans-serif; background: var(--gray-50); color: var(--gray-900); }
+
+  .topbar { background: var(--navy); color: white; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
+  .topbar-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1rem; }
+  .topbar-brand img { height: 32px; border-radius: 6px; }
+  .topbar-brand span { opacity: 0.7; font-weight: 400; font-size: 0.78rem; margin-left: 4px; }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .user-chip { background: rgba(255,255,255,0.12); border-radius: 20px; padding: 5px 12px; font-size: 0.78rem; }
+  .btn-logout { background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 8px; padding: 7px 14px; font-size: 0.78rem; cursor: pointer; }
+  .btn-logout:hover { background: rgba(255,255,255,0.2); }
+
+  .layout { display: flex; min-height: calc(100vh - 60px); }
+  .sidebar { width: 220px; flex-shrink: 0; background: white; border-right: 1px solid var(--gray-200); padding: 24px 12px; }
+  .nav-section { font-size: 0.62rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 10px; margin-bottom: 6px; margin-top: 20px; }
+  .nav-section:first-child { margin-top: 0; }
+  .nav-link { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px; color: var(--gray-500); font-size: 0.85rem; font-weight: 500; text-decoration: none; transition: all 0.15s; }
+  .nav-link:hover { background: var(--gray-100); color: var(--navy); }
+  .nav-link.active { background: #eef0f7; color: var(--navy); font-weight: 700; }
+  .nav-group-header { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px; color: var(--gray-500); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s; user-select: none; }
+  .nav-group-header:hover { background: var(--gray-100); color: var(--navy); }
+  .nav-group-header > svg:first-child { width: 16px; height: 16px; flex-shrink: 0; }
+  .nav-group-header > span { flex: 1; }
+  .nav-chevron { width: 14px; height: 14px; flex-shrink: 0; transition: transform 0.2s; }
+  .nav-group.open .nav-chevron { transform: rotate(90deg); }
+  .nav-group-body { display: none; }
+  .nav-group.open .nav-group-body { display: block; }
+  .nav-sub { padding-left: 28px !important; }
+  .nav-subgroup-label { font-size: 0.62rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.1em; padding: 6px 10px 4px 28px; }
+  .nav-sub2 { padding-left: 40px !important; }
+  .nav-link svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  .main { flex: 1; padding: 32px 36px; overflow: auto; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 12px; }
+  h1 { font-family: Montserrat, sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--navy); }
+  .page-sub { color: var(--gray-400); font-size: 0.85rem; margin-bottom: 24px; }
+
+  /* Buttons */
+  .btn { padding: 8px 16px; border-radius: 9px; border: none; font-size: 0.82rem; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-primary { background: var(--navy); color: white; }
+  .btn-primary:hover { background: var(--navy-dark); }
+  .btn-secondary { background: var(--gray-100); color: var(--gray-500); }
+  .btn-secondary:hover { background: var(--gray-200); color: var(--gray-700); }
+  .btn-sm { padding: 5px 11px; font-size: 0.75rem; border-radius: 7px; }
+
+  /* Status Badge */
+  .status-badge { display:inline-block; padding:2px 10px; border-radius:20px; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+  .status-entwurf    { background:#f3f4f6; color:#6b7280; }
+  .status-geplant    { background:#dcfce7; color:#166534; }
+  .status-abgeschlossen { background:#e0f2fe; color:#075985; }
+  .status-abgesagt   { background:#fee2e2; color:#991b1b; }
+
+  .format-badge { display:inline-block; padding:2px 8px; border-radius:6px; font-size:0.72rem; font-weight:600; background:var(--gray-100); color:var(--gray-600); }
+
+  .thema-chip { display:inline-block; padding:2px 9px; border-radius:20px; font-size:0.72rem; font-weight:600; color:#fff; margin:1px 2px; }
+
+  .event-tabs { display:flex; gap:4px; margin-bottom:20px; border-bottom:2px solid var(--gray-200); padding-bottom:0; }
+  .event-tab { padding:8px 16px; border:none; background:none; cursor:pointer; font-size:0.87rem; font-weight:600; color:var(--gray-400); border-bottom:2px solid transparent; margin-bottom:-2px; }
+  .event-tab.active { color:var(--navy); border-bottom-color:var(--navy); }
+
+  .teilnehmer-row { background:var(--gray-50); }
+  .teilnehmer-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
+  .teilnehmer-table td { padding:6px 12px; border-top:1px solid var(--gray-100); }
+
+  /* Table */
+  .table-wrap { overflow-x: auto; border-radius: 12px; border: 1.5px solid var(--gray-200); }
+  .data-table { width: 100%; border-collapse: collapse; background: white; }
+  .data-table th {
+    background: var(--gray-50); padding: 12px 16px; text-align: left; font-size: 0.72rem;
+    font-weight: 700; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.04em;
+    border-bottom: 1.5px solid var(--gray-200);
+  }
+  .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--gray-100); color: var(--gray-700); font-size: 0.85rem; }
+  .data-table tr:hover { background: #f9fafb; }
+  .data-table .empty { text-align: center; color: var(--gray-400); padding: 48px 16px; }
+
+  /* Modal */
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .modal-bg.open { display: flex; }
+  .modal { background: white; border-radius: 20px; width: 100%; max-width: 640px; box-shadow: 0 20px 60px rgba(0,0,0,0.18); overflow: hidden; max-height: 90vh; overflow-y: auto; }
+  .modal h2 { font-family: Montserrat, sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--navy); margin-bottom: 20px; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid.form-full { grid-column: 1 / -1; }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--gray-700); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--gray-200); border-radius: 10px;
+    font-size: 0.875rem; font-family: inherit; color: var(--gray-900); background: white; outline: none;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus { border-color: var(--navy); }
+  .form-group textarea { min-height: 90px; resize: vertical; }
+  .form-full { grid-column: 1 / -1; }
+
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid var(--gray-200); }
+  .msg { display: none; border-radius: 9px; padding: 10px 14px; font-size: 0.82rem; margin-bottom: 14px; }
+  .msg.success { display: block; background: #d1fae5; color: #065f46; }
+  .msg.error   { display: block; background: #fee2e2; color: #991b1b; }
+
+  .empty { text-align: center; color: var(--gray-400); padding: 48px 16px; font-size: 0.875rem; }
+  .role-badge {
+    display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .role-admin    { background: #fef3c7; color: #92400e; }
+  .role-partner  { background: #dbeafe; color: #1e40af; }
+  .role-kunde    { background: #f3f4f6; color: #374151; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-brand">
+    <img src="../ehs-logo.jpg" alt="eHS" onerror="this.style.display='none'">
+    eHS Portal
+    <span>Events</span>
+  </div>
+  <div class="topbar-right">
+    <span class="user-chip" id="user-name">–</span><span id="header-role-badge" class="role-badge" style="display:none"></span>
+    <button class="btn-logout" onclick="sb.auth.signOut().then(()=>location.href='index.html')">Abmelden</button>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="sidebar">
+    <a class="nav-link" href="dashboard.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </a>
+
+    <div class="nav-group" id="nav-group-admin" style="display:none">
+      <div class="nav-group-header" onclick="toggleNavGroup(this)">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        <span>Administration</span>
+        <svg class="nav-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="nav-group-body">
+        <a class="nav-link nav-sub" href="users.html">Nutzer</a>
+        <a class="nav-link nav-sub" href="orders.html">Bestellungen</a>
+        <a class="nav-link nav-sub" href="berufsgruppen.html">Berufsgruppen</a>
+        <a class="nav-link nav-sub" href="themengebiete.html">Themengebiete</a>
+      </div>
+    </div>
+
+    <div class="nav-group" id="nav-group-produkte">
+      <div class="nav-group-header" onclick="toggleNavGroup(this)">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <span>Produkte</span>
+        <svg class="nav-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="nav-group-body">
+        <a class="nav-link nav-sub" id="nav-item-products" href="products.html">Verwaltung</a>
+        <div class="nav-subgroup" id="nav-subgroup-finder">
+          <div class="nav-subgroup-label">Produktfinder</div>
+          <a class="nav-link nav-sub nav-sub2" id="nav-item-kunden" href="partners.html">Kunden</a>
+          <a class="nav-link nav-sub nav-sub2" href="finder-config.html">Finder-Konfiguration</a>
+        </div>
+      </div>
+    </div>
+
+    <a class="nav-link" href="anfragen.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      Anfragecenter
+    </a>
+    <a class="nav-link" href="kunden.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Kunden
+    </a>
+    <a class="nav-link active" href="events.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+      </svg>
+      Events
+    </a>
+    <a class="nav-link" href="shop.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+      Shop
+    </a>
+
+    <a class="nav-link" href="knowledge.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      Community
+    </a>
+
+    <a class="nav-link" href="rechner.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      TI-Rechner
+    </a>
+
+    <div class="nav-group" id="nav-group-account">
+      <div class="nav-group-header" onclick="toggleNavGroup(this)">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        <span>Account</span>
+        <svg class="nav-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="nav-group-body">
+        <a class="nav-link nav-sub" href="profile.html">Mein Konto</a>
+      </div>
+    </div>
+
+    <a class="nav-link" href="../index.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      Zur Website
+    </a>
+  </nav>
+
+  <main class="main">
+    <div class="page-header">
+      <div><h1>Events</h1></div>
+      <button class="btn btn-primary" id="btn-new-event" onclick="openEventModal()">+ Neues Event</button>
+    </div>
+
+    <div class="event-tabs">
+      <button class="event-tab active" onclick="switchTab(0)" id="tab-0">Alle Events</button>
+      <button class="event-tab" onclick="switchTab(1)" id="tab-1">Meine Anmeldungen</button>
+    </div>
+
+    <!-- Tab 0: Event-Liste -->
+    <div id="tab-content-0">
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <select id="filter-status" onchange="renderEventList()" style="padding:7px 11px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:0.82rem;font-family:inherit;">
+          <option value="">Alle Status</option>
+          <option value="entwurf">Entwurf</option>
+          <option value="geplant">Geplant</option>
+          <option value="abgeschlossen">Abgeschlossen</option>
+          <option value="abgesagt">Abgesagt</option>
+        </select>
+        <select id="filter-thema" onchange="renderEventList()" style="padding:7px 11px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:0.82rem;font-family:inherit;">
+          <option value="">Alle Themen</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table class="data-table" id="events-table">
+          <thead><tr>
+            <th>Datum</th><th>Titel</th><th>Format</th><th>Themen</th>
+            <th id="th-partner" style="display:none;">Partner</th>
+            <th>Teilnehmer</th><th>Status</th><th>Öffentlich</th><th style="width:110px;">Aktionen</th>
+          </tr></thead>
+          <tbody id="events-tbody">
+            <tr><td colspan="9" class="empty">Lade Events…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 1: Meine Anmeldungen -->
+    <div id="tab-content-1" style="display:none;">
+      <div id="meine-anmeldungen-list"><p class="empty">Lade Anmeldungen…</p></div>
+    </div>
+  </main>
+</div>
+
+<!-- Event-Modal -->
+<div class="modal-bg" id="event-modal-bg">
+  <div class="modal" style="max-width:640px;">
+    <h2 id="event-modal-title">Neues Event</h2>
+
+    <!-- Modal-Tabs -->
+    <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1.5px solid var(--gray-200);padding-bottom:0;">
+      <button type="button" class="event-tab active" id="mtab-0" onclick="switchModalTab(0)">Grunddaten</button>
+      <button type="button" class="event-tab" id="mtab-1" onclick="switchModalTab(1)">Termin & Format</button>
+      <button type="button" class="event-tab" id="mtab-2" onclick="switchModalTab(2)">Themen & Sichtbarkeit</button>
+    </div>
+
+    <!-- Tab 0: Grunddaten -->
+    <div id="mtab-content-0" class="form-grid">
+      <div class="form-group form-full">
+        <label>Titel *</label>
+        <input type="text" id="ev-titel" placeholder="z.B. ePA-Workshop für Arztpraxen">
+      </div>
+      <div class="form-group form-full">
+        <label>Kurzbeschreibung * <small style="font-weight:400;color:var(--gray-400)">(erscheint auf der Alliance-Site)</small></label>
+        <textarea id="ev-kurz" style="min-height:70px;" placeholder="1–2 Sätze, max. 200 Zeichen…"></textarea>
+      </div>
+      <div class="form-group form-full">
+        <label>Ausführliche Beschreibung</label>
+        <textarea id="ev-beschreibung" style="min-height:100px;" placeholder="Agenda, Zielgruppe, Referenten…"></textarea>
+      </div>
+    </div>
+
+    <!-- Tab 1: Termin & Format -->
+    <div id="mtab-content-1" class="form-grid" style="display:none;">
+      <div class="form-group">
+        <label>Datum *</label>
+        <input type="date" id="ev-datum">
+      </div>
+      <div class="form-group">
+        <label>Uhrzeit (Start) *</label>
+        <input type="time" id="ev-uhrzeit" value="10:00">
+      </div>
+      <div class="form-group">
+        <label>Dauer (Minuten)</label>
+        <input type="number" id="ev-dauer" value="60" min="15" step="15">
+      </div>
+      <div class="form-group">
+        <label>Format</label>
+        <select id="ev-format">
+          <option value="webinar">Webinar</option>
+          <option value="roundtable">Roundtable</option>
+          <option value="workshop">Workshop</option>
+          <option value="vortrag">Vortrag</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Max. Teilnehmer <small style="font-weight:400;color:var(--gray-400)">(leer = unbegrenzt)</small></label>
+        <input type="number" id="ev-max" min="1" placeholder="z.B. 50">
+      </div>
+      <div class="form-group form-full">
+        <label>Teilnahme-Link <small style="font-weight:400;color:var(--gray-400)">(Zoom/Teams — nur für angemeldete Mitglieder)</small></label>
+        <input type="url" id="ev-link" placeholder="https://zoom.us/j/...">
+      </div>
+    </div>
+
+    <!-- Tab 2: Themen & Sichtbarkeit -->
+    <div id="mtab-content-2" class="form-grid" style="display:none;">
+      <div class="form-group form-full">
+        <label>Themengebiete</label>
+        <div id="ev-themen-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 0;"></div>
+      </div>
+      <div class="form-group">
+        <label>Status</label>
+        <select id="ev-status">
+          <option value="entwurf">Entwurf</option>
+          <option value="geplant">Geplant</option>
+          <option value="abgeschlossen">Abgeschlossen</option>
+          <option value="abgesagt">Abgesagt</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Öffentlich auf Alliance-Site</label>
+        <div style="display:flex;align-items:center;gap:10px;padding-top:6px;">
+          <input type="checkbox" id="ev-oeffentlich" style="width:18px;height:18px;accent-color:var(--navy);cursor:pointer;">
+          <label for="ev-oeffentlich" style="cursor:pointer;font-size:0.87rem;">Auf eHealth Alliance Website anzeigen</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="msg" id="event-modal-msg"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeEventModal()">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveEvent()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPA_URL = 'https://focysklymhmcfwgxdtuk.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+let userRole = 'partner';
+let currentUserId = null;
+let currentPartnerId = null;
+let allEvents = [];
+let allThemen = [];
+let allAnmeldungen = [];
+let editEventId = null;
+let evSelectedThemen = [];
+let activeTab = 0;
+
+function toggleNavGroup(h) { h.closest('.nav-group').classList.toggle('open'); }
+
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'index.html'; return; }
+  currentUserId = session.user.id;
+  _setHeaderUser(session.user.id);
+
+  const [roleRes, partnerRes] = await Promise.all([
+    sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle(),
+    sb.from('partners').select('id').eq('user_id', session.user.id).maybeSingle()
+  ]);
+  userRole = roleRes.data?.role || 'partner';
+  currentPartnerId = partnerRes.data?.id || null;
+
+  // Admins sehen Partner-Spalte
+  if (userRole === 'admin') {
+    document.getElementById('th-partner').style.display = '';
+    document.getElementById('nav-group-admin').style.display = '';
+  }
+  // Mitglieder ohne Partner-Zugang: "Neues Event" ausblenden
+  if (userRole !== 'admin' && !currentPartnerId) {
+    document.getElementById('btn-new-event').style.display = 'none';
+  }
+
+  // ?event= Parameter prüfen (Redirect nach Login)
+  const params = new URLSearchParams(window.location.search);
+  const eventParam = params.get('event');
+
+  await Promise.all([loadThemen(), loadEvents(), loadMeineAnmeldungen()]);
+
+  if (eventParam) {
+    // Direkt zur Anmeldungs-Ansicht scrollen / Tab wechseln
+    switchTab(1);
+    scrollToEvent(eventParam);
+  }
+
+  populateThemaFilter();
+}
+
+async function loadThemen() {
+  const { data } = await sb.from('themengebiete').select('*').eq('aktiv', true).order('sortierung');
+  allThemen = data || [];
+}
+
+async function loadEvents() {
+  let query = sb.from('events')
+    .select(`*, event_themen(thema_id), event_anmeldungen(id, status)`)
+    .order('datum', { ascending: false });
+
+  if (userRole !== 'admin' && currentPartnerId) {
+    query = query.eq('partner_id', currentPartnerId);
+  }
+
+  const { data } = await query;
+  allEvents = data || [];
+  renderEventList();
+}
+
+async function loadMeineAnmeldungen() {
+  const { data } = await sb.from('event_anmeldungen')
+    .select(`*, events(id, titel, datum, uhrzeit_start, format, teilnahme_link, status)`)
+    .eq('user_id', currentUserId)
+    .neq('status', 'storniert')
+    .order('angemeldet_am', { ascending: false });
+  allAnmeldungen = data || [];
+  renderMeineAnmeldungen();
+}
+
+function populateThemaFilter() {
+  const sel = document.getElementById('filter-thema');
+  sel.innerHTML = '<option value="">Alle Themen</option>'
+    + allThemen.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
+}
+
+function themaChip(themaId, small = false) {
+  const t = allThemen.find(x => x.id === themaId);
+  if (!t) return '';
+  return `<span class="thema-chip" style="background:${esc(t.farbe)};font-size:${small ? '0.68rem' : '0.72rem'}">${esc(t.name)}</span>`;
+}
+
+const FORMAT_LABEL = { webinar:'Webinar', roundtable:'Roundtable', workshop:'Workshop', vortrag:'Vortrag' };
+const STATUS_LABEL  = { entwurf:'Entwurf', geplant:'Geplant', abgeschlossen:'Abgeschlossen', abgesagt:'Abgesagt' };
+
+function renderEventList() {
+  const statusFilter = document.getElementById('filter-status').value;
+  const themaFilter  = document.getElementById('filter-thema').value;
+
+  let events = allEvents;
+  if (statusFilter) events = events.filter(e => e.status === statusFilter);
+  if (themaFilter)  events = events.filter(e => e.event_themen?.some(et => et.thema_id === themaFilter));
+
+  const tbody = document.getElementById('events-tbody');
+  if (!events.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">Keine Events gefunden.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = events.map(e => {
+    const anmCount = e.event_anmeldungen?.filter(a => a.status === 'angemeldet').length ?? 0;
+    const themenHtml = (e.event_themen || []).map(et => themaChip(et.thema_id, true)).join('');
+    return `<tr>
+      <td style="white-space:nowrap;">${e.datum ? new Date(e.datum).toLocaleDateString('de-DE') : '–'}<br>
+        <small style="color:var(--gray-400);">${e.uhrzeit_start?.slice(0,5) || ''}</small></td>
+      <td><strong>${esc(e.titel)}</strong></td>
+      <td><span class="format-badge">${FORMAT_LABEL[e.format] || e.format}</span></td>
+      <td>${themenHtml || '–'}</td>
+      ${userRole === 'admin' ? `<td><small>${esc(e.partner_id || '–')}</small></td>` : ''}
+      <td>${anmCount}${e.max_teilnehmer ? ' / ' + e.max_teilnehmer : ''}</td>
+      <td><span class="status-badge status-${e.status}">${STATUS_LABEL[e.status] || e.status}</span></td>
+      <td style="text-align:center;">
+        <input type="checkbox" ${e.oeffentlich ? 'checked' : ''} onchange="toggleOeffentlich('${e.id}', this.checked)"
+               style="width:15px;height:15px;accent-color:var(--navy);cursor:pointer;">
+      </td>
+      <td>
+        <button class="btn btn-sm btn-secondary" onclick="openEventEdit('${e.id}')">Bearbeiten</button>
+        <button class="btn btn-sm" style="color:#ef4444;background:none;border:1.5px solid #fca5a5;"
+                onclick="deleteEvent('${e.id}')">Löschen</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderMeineAnmeldungen() {
+  const container = document.getElementById('meine-anmeldungen-list');
+  if (!allAnmeldungen.length) {
+    container.innerHTML = '<p class="empty" style="padding:20px 0;">Du hast dich noch für keine Events angemeldet.</p>';
+    return;
+  }
+  container.innerHTML = allAnmeldungen.map(a => {
+    const e = a.events;
+    const datum = e?.datum ? new Date(e.datum).toLocaleDateString('de-DE') : '–';
+    return `<div style="border:1.5px solid var(--gray-200);border-radius:12px;padding:16px 20px;margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+        <div>
+          <div style="font-weight:700;font-size:0.95rem;color:var(--navy);">${esc(e?.titel || '')}</div>
+          <div style="color:var(--gray-500);font-size:0.82rem;margin-top:4px;">
+            ${datum} · ${e?.uhrzeit_start?.slice(0,5) || ''} · <span class="format-badge">${FORMAT_LABEL[e?.format] || ''}</span>
+          </div>
+          ${a.status === 'angemeldet' && e?.teilnahme_link
+            ? `<a href="${esc(e.teilnahme_link)}" target="_blank" rel="noopener"
+                  style="display:inline-block;margin-top:8px;padding:5px 14px;background:var(--navy);color:#fff;border-radius:8px;font-size:0.82rem;text-decoration:none;">
+                 Zum Event →
+               </a>`
+            : a.status === 'warteliste'
+              ? '<span style="font-size:0.78rem;color:#d97706;font-weight:600;margin-top:6px;display:block;">⏳ Du bist auf der Warteliste</span>'
+              : ''}
+        </div>
+        <button class="btn btn-sm" style="color:#ef4444;background:none;border:1.5px solid #fca5a5;flex-shrink:0;"
+                onclick="storniereAnmeldung('${a.id}', '${esc(e?.titel || '')}')">Stornieren</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function switchTab(idx) {
+  activeTab = idx;
+  [0,1].forEach(i => {
+    document.getElementById(`tab-${i}`).classList.toggle('active', i === idx);
+    document.getElementById(`tab-content-${i}`).style.display = i === idx ? '' : 'none';
+  });
+}
+
+function switchModalTab(idx) {
+  [0,1,2].forEach(i => {
+    document.getElementById(`mtab-${i}`).classList.toggle('active', i === idx);
+    document.getElementById(`mtab-content-${i}`).style.display = i === idx ? '' : 'none';
+  });
+}
+
+function renderEvThemenChips() {
+  const container = document.getElementById('ev-themen-chips');
+  container.innerHTML = allThemen.map(t => {
+    const sel = evSelectedThemen.includes(t.id);
+    return `<button type="button" class="thema-chip" onclick="toggleEvThema('${t.id}')"
+      style="background:${sel ? esc(t.farbe) : 'var(--gray-100)'};color:${sel ? '#fff' : 'var(--gray-600)'};
+             cursor:pointer;border:1.5px solid ${sel ? esc(t.farbe) : 'var(--gray-200)'};padding:4px 12px;border-radius:20px;font-size:0.8rem;font-weight:600;">
+      ${esc(t.name)}
+    </button>`;
+  }).join('');
+}
+
+function toggleEvThema(id) {
+  const idx = evSelectedThemen.indexOf(id);
+  if (idx >= 0) evSelectedThemen.splice(idx, 1); else evSelectedThemen.push(id);
+  renderEvThemenChips();
+}
+
+function openEventModal(partnerId) {
+  editEventId = null;
+  evSelectedThemen = [];
+  document.getElementById('event-modal-title').textContent = 'Neues Event';
+  document.getElementById('ev-titel').value = '';
+  document.getElementById('ev-kurz').value = '';
+  document.getElementById('ev-beschreibung').value = '';
+  document.getElementById('ev-datum').value = '';
+  document.getElementById('ev-uhrzeit').value = '10:00';
+  document.getElementById('ev-dauer').value = '60';
+  document.getElementById('ev-format').value = 'webinar';
+  document.getElementById('ev-max').value = '';
+  document.getElementById('ev-link').value = '';
+  document.getElementById('ev-status').value = 'entwurf';
+  document.getElementById('ev-oeffentlich').checked = false;
+  document.getElementById('event-modal-msg').className = 'msg';
+  switchModalTab(0);
+  renderEvThemenChips();
+  document.getElementById('event-modal-bg').classList.add('open');
+}
+
+function openEventEdit(id) {
+  const e = allEvents.find(x => x.id === id);
+  if (!e) return;
+  editEventId = id;
+  evSelectedThemen = (e.event_themen || []).map(et => et.thema_id);
+  document.getElementById('event-modal-title').textContent = 'Event bearbeiten';
+  document.getElementById('ev-titel').value = e.titel || '';
+  document.getElementById('ev-kurz').value = e.kurzbeschreibung || '';
+  document.getElementById('ev-beschreibung').value = e.beschreibung || '';
+  document.getElementById('ev-datum').value = e.datum || '';
+  document.getElementById('ev-uhrzeit').value = e.uhrzeit_start?.slice(0,5) || '10:00';
+  document.getElementById('ev-dauer').value = e.dauer_min || 60;
+  document.getElementById('ev-format').value = e.format || 'webinar';
+  document.getElementById('ev-max').value = e.max_teilnehmer || '';
+  document.getElementById('ev-link').value = e.teilnahme_link || '';
+  document.getElementById('ev-status').value = e.status || 'entwurf';
+  document.getElementById('ev-oeffentlich').checked = !!e.oeffentlich;
+  document.getElementById('event-modal-msg').className = 'msg';
+  switchModalTab(0);
+  renderEvThemenChips();
+  document.getElementById('event-modal-bg').classList.add('open');
+}
+
+function closeEventModal() { document.getElementById('event-modal-bg').classList.remove('open'); }
+
+async function saveEvent() {
+  const msg = document.getElementById('event-modal-msg');
+  const titel = document.getElementById('ev-titel').value.trim();
+  const kurz  = document.getElementById('ev-kurz').value.trim();
+  const datum  = document.getElementById('ev-datum').value;
+  const uhrzeit = document.getElementById('ev-uhrzeit').value;
+  if (!titel) { msg.textContent = 'Titel ist Pflichtfeld.'; msg.className = 'msg error'; switchModalTab(0); return; }
+  if (!kurz)  { msg.textContent = 'Kurzbeschreibung ist Pflichtfeld.'; msg.className = 'msg error'; switchModalTab(0); return; }
+  if (!datum) { msg.textContent = 'Datum ist Pflichtfeld.'; msg.className = 'msg error'; switchModalTab(1); return; }
+
+  const payload = {
+    titel, kurzbeschreibung: kurz,
+    beschreibung: document.getElementById('ev-beschreibung').value.trim() || null,
+    datum, uhrzeit_start: uhrzeit,
+    dauer_min: parseInt(document.getElementById('ev-dauer').value, 10) || 60,
+    format: document.getElementById('ev-format').value,
+    max_teilnehmer: parseInt(document.getElementById('ev-max').value, 10) || null,
+    teilnahme_link: document.getElementById('ev-link').value.trim() || null,
+    status: document.getElementById('ev-status').value,
+    oeffentlich: document.getElementById('ev-oeffentlich').checked,
+    partner_id: currentPartnerId,
+  };
+
+  let eventId = editEventId;
+  let error;
+
+  if (editEventId) {
+    ({ error } = await sb.from('events').update(payload).eq('id', editEventId));
+  } else {
+    const res = await sb.from('events').insert(payload).select('id').single();
+    error = res.error;
+    eventId = res.data?.id;
+  }
+
+  if (error) { msg.textContent = error.message; msg.className = 'msg error'; return; }
+
+  // Themen-Verknüpfungen aktualisieren
+  await sb.from('event_themen').delete().eq('event_id', eventId);
+  if (evSelectedThemen.length) {
+    await sb.from('event_themen').insert(evSelectedThemen.map(tid => ({ event_id: eventId, thema_id: tid })));
+  }
+
+  closeEventModal();
+  await loadEvents();
+}
+
+async function toggleOeffentlich(id, oeffentlich) {
+  await sb.from('events').update({ oeffentlich }).eq('id', id);
+  const ev = allEvents.find(e => e.id === id);
+  if (ev) ev.oeffentlich = oeffentlich;
+}
+
+async function deleteEvent(id) {
+  const e = allEvents.find(x => x.id === id);
+  if (!confirm(`Event "${e?.titel}" wirklich löschen? Alle Anmeldungen werden ebenfalls gelöscht.`)) return;
+  const { error } = await sb.from('events').delete().eq('id', id);
+  if (error) { alert(error.message); return; }
+  await loadEvents();
+}
+
+async function storniereAnmeldung(anmId, titel) {
+  if (!confirm(`Anmeldung für "${titel}" stornieren?`)) return;
+  await sb.from('event_anmeldungen').update({ status: 'storniert' }).eq('id', anmId);
+  await loadMeineAnmeldungen();
+}
+
+function scrollToEvent(eventId) {
+  // Öffentliche Events-Liste im Tab 1 nach eventId durchsuchen
+  const e = allEvents.find(x => x.id === eventId);
+  if (!e) return;
+  // Zeige Event-Details als kleines Popup / Scroll direkt in "Meine Anmeldungen"
+  // Prüfe ob User schon angemeldet
+  const anm = allAnmeldungen.find(a => a.event_id === eventId || a.events?.id === eventId);
+  if (!anm) {
+    // Zeige Anmelde-Bestätigungs-Dialog
+    if (confirm(`Möchtest du dich für "${e.titel}" anmelden?`)) {
+      anmeldenFuerEvent(eventId, e.titel, e.max_teilnehmer, e.event_anmeldungen?.filter(a => a.status === 'angemeldet').length ?? 0);
+    }
+  }
+}
+
+async function anmeldenFuerEvent(eventId, titel, maxTn, aktuelleAnzahl) {
+  const status = maxTn && aktuelleAnzahl >= maxTn ? 'warteliste' : 'angemeldet';
+  const { error } = await sb.from('event_anmeldungen').insert({
+    event_id: eventId, user_id: currentUserId, status
+  });
+  if (error) { alert(error.message); return; }
+  await Promise.all([loadEvents(), loadMeineAnmeldungen()]);
+  if (status === 'warteliste') {
+    alert(`Du wurdest auf die Warteliste für "${titel}" gesetzt.`);
+  } else {
+    alert(`Erfolgreich für "${titel}" angemeldet!`);
+  }
+}
+
+async function _setHeaderUser(userId) {
+  const [profileRes, roleRes] = await Promise.all([
+    sb.from('user_profiles').select('vorname, nachname').eq('user_id', userId).maybeSingle(),
+    sb.from('user_roles').select('role, partner_tier').eq('user_id', userId).maybeSingle(),
+  ]);
+  const p = profileRes.data;
+  const name = p ? [p.vorname, p.nachname].filter(Boolean).join(' ') : null;
+  const el = document.getElementById('user-name');
+  if (el) el.textContent = name || '–';
+  const role = roleRes.data?.role || 'partner';
+  const tier = roleRes.data?.partner_tier;
+  const badge = document.getElementById('header-role-badge');
+  if (badge) {
+    const roleLabels = { admin: 'Administrator', partner: 'Partner', kunde: 'Kunde' };
+    const tierLabels = { standard: 'Standard', premium: 'Premium', strategisch: 'Strategisch' };
+    let label = roleLabels[role] || role;
+    if (role === 'partner' && tier) label += ' · ' + (tierLabels[tier] || tier);
+    badge.textContent = label;
+    badge.className = 'role-badge role-' + role;
+    badge.style.display = '';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
