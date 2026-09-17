@@ -99,11 +99,16 @@ CREATE POLICY "events_public_read"
   ON events FOR SELECT
   USING (oeffentlich = true AND status = 'geplant' AND datum >= CURRENT_DATE);
 
--- events: eingeloggte User lesen alle öffentlichen (auch vergangene für Meine Anmeldungen)
+-- events: eingeloggte User lesen öffentliche Events (auch vergangene für Meine Anmeldungen)
+--         + eigene Events als Partner + alle Events als Admin
 CREATE POLICY "events_auth_read"
   ON events FOR SELECT
   TO authenticated
-  USING (true);
+  USING (
+    oeffentlich = true
+    OR partner_id IN (SELECT id FROM partners WHERE user_id = auth.uid())
+    OR EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin')
+  );
 
 -- events: Partner verwalten eigene
 CREATE POLICY "events_partner_write"
