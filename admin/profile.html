@@ -308,6 +308,7 @@
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { flowType: 'implicit' } });
 
   let currentUserId = null;
+  let currentProfileId = null; // DB-PK der user_profiles-Zeile
 
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'INITIAL_SESSION') {
@@ -342,13 +343,26 @@
       document.getElementById('f-firma').style.color = 'var(--gray-500)';
     }
 
-    // Profil laden – per user_id (passend zur RLS-Policy)
-    const { data: profile } = await sb.from('user_profiles')
+    // Profil laden – erst per user_id, Fallback per E-Mail
+    let { data: profile } = await sb.from('user_profiles')
       .select('*')
       .eq('user_id', user.id)
       .maybeSingle();
 
+    if (!profile) {
+      // Fallback: Profil per E-Mail suchen und user_id verknüpfen
+      const { data: byEmail } = await sb.from('user_profiles')
+        .select('*')
+        .eq('email', user.email.toLowerCase())
+        .maybeSingle();
+      if (byEmail) {
+        profile = byEmail;
+        await sb.from('user_profiles').update({ user_id: user.id }).eq('id', byEmail.id);
+      }
+    }
+
     if (profile) {
+      currentProfileId = profile.id;
       document.getElementById('f-vorname').value = profile.vorname || '';
       document.getElementById('f-nachname').value = profile.nachname || '';
       document.getElementById('f-email').value    = profile.email || user.email;
@@ -391,9 +405,19 @@
       updated_at: new Date().toISOString(),
     };
 
-    const { error } = await sb.from('user_profiles')
-      .update(payload)
-      .eq('user_id', currentUserId);
+    let error;
+    if (currentProfileId) {
+      ({ error } = await sb.from('user_profiles')
+        .update({ ...payload, user_id: currentUserId })
+        .eq('id', currentProfileId));
+    } else {
+      // Kein Profil vorhanden → neu anlegen
+      const ins = await sb.from('user_profiles')
+        .insert({ ...payload, user_id: currentUserId, email: document.getElementById('f-email').value.trim().toLowerCase() })
+        .select('id').single();
+      error = ins.error;
+      if (ins.data?.id) currentProfileId = ins.data.id;
+    }
 
     if (error) {
       msg.textContent = 'Fehler: ' + error.message;
