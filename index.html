@@ -3692,7 +3692,9 @@
         const itemId = extraKey.split(':')[1];
         const bi = bundleItems.find(i => i.id === itemId);
         if (!bi || !(bi.extra_preis > 0)) return;
-        monthlyItems.push({ name: bi.product_name || '–', preis: bi.extra_preis, qty });
+        const extraItem = { name: bi.product_name || '–', preis: bi.extra_preis, qty };
+        if (bi.extra_preis_einheit === 'einmalig') onetimeItems.push(extraItem);
+        else monthlyItems.push(extraItem);
       });
     });
 
