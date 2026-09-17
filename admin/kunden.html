@@ -411,7 +411,11 @@
       <input type="hidden" id="vc-kunden-id">
       <div class="form-group">
         <label>Produkte *</label>
-        <div class="produkt-checks" id="vc-produkt-checks" style="max-height:130px;overflow-y:auto;border:1.5px solid var(--gray-200);border-radius:10px;padding:8px 10px;"></div>
+        <div id="vc-produkt-list" style="margin-bottom:6px;"></div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="vc-produkt-sel" style="flex:1;padding:7px 11px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:0.82rem;font-family:inherit;outline:none;color:var(--gray-900);"></select>
+          <button class="btn btn-sm btn-primary" onclick="addVcProdukt()">+ Hinzufügen</button>
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -1318,6 +1322,69 @@ function renderVcSection(kundenId) {
 }
 
 // ─── Verkaufschancen CRUD ─────────────────────────────────────────────────────
+let vcSelectedProdukte = [];
+
+function renderVcProduktList() {
+  const container = document.getElementById('vc-produkt-list');
+  if (!container) return;
+  if (!vcSelectedProdukte.length) {
+    container.innerHTML = '<div style="color:var(--gray-400);font-size:0.78rem;padding:4px 0 2px;">Noch keine Produkte hinzugefügt.</div>';
+  } else {
+    container.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1.5px solid var(--gray-200);border-radius:9px;overflow:hidden;">
+      <thead><tr style="background:var(--gray-50);">
+        <th style="padding:5px 10px;text-align:left;font-size:0.62rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;">Produkt</th>
+        <th style="padding:5px 10px;text-align:right;font-size:0.62rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;">VK</th>
+        <th style="padding:5px 10px;text-align:right;font-size:0.62rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;">EK</th>
+        <th style="width:28px;"></th>
+      </tr></thead>
+      <tbody>${vcSelectedProdukte.map((name, i) => {
+        const prod = allProducts.find(p => (p.produkt||'') === name);
+        const vk = vcProdPreis(name);
+        const ek = prod?.einkaufspreis_flat;
+        return `<tr style="border-top:1px solid var(--gray-100);">
+          <td style="padding:7px 10px;font-weight:600;color:var(--navy);">${esc(name)}</td>
+          <td style="padding:7px 10px;text-align:right;color:var(--gray-500);white-space:nowrap;">${vk != null ? vk.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–'}</td>
+          <td style="padding:7px 10px;text-align:right;color:var(--gray-400);font-size:0.75rem;white-space:nowrap;">${ek != null ? ek.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–'}</td>
+          <td style="padding:7px 6px;text-align:center;"><button onclick="removeVcProdukt(${i})" style="background:none;border:none;cursor:pointer;color:#fca5a5;font-size:0.9rem;line-height:1;padding:2px 4px;border-radius:4px;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#fca5a5'">✕</button></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  }
+  populateVcProduktSel();
+}
+
+function populateVcProduktSel() {
+  const sel = document.getElementById('vc-produkt-sel');
+  if (!sel) return;
+  const namen = produktNamen();
+  sel.innerHTML = '<option value="">Produkt hinzufügen…</option>'
+    + namen.filter(n => !vcSelectedProdukte.includes(n))
+           .map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+}
+
+function addVcProdukt() {
+  const sel = document.getElementById('vc-produkt-sel');
+  const name = sel?.value;
+  if (!name) return;
+  vcSelectedProdukte.push(name);
+  renderVcProduktList();
+  autoCalcVcWert();
+}
+
+function removeVcProdukt(i) {
+  vcSelectedProdukte.splice(i, 1);
+  renderVcProduktList();
+  autoCalcVcWert();
+}
+
+function autoCalcVcWert() {
+  const wertInput = document.getElementById('vc-wert');
+  if (!wertInput || wertInput.dataset.manual === '1') return;
+  let sum = 0;
+  vcSelectedProdukte.forEach(name => { const p = vcProdPreis(name); if (p != null) sum += p; });
+  wertInput.value = sum > 0 ? sum : '';
+}
+
 function openVcModal(kundenId, vcId) {
   vcId = vcId || null;
   const vc = vcId ? allVerkaufschancen.find(v => v.id === vcId) : null;
@@ -1326,17 +1393,17 @@ function openVcModal(kundenId, vcId) {
   document.getElementById('vc-kunden-id').value = kundenId;
 
   const vcProdukte = vc?.produkte || vc?.produkt || '';
-  const selectedProdukte = vcProdukte.split(/[,\n]/).map(p=>p.trim()).filter(Boolean);
-  const namen = produktNamen();
-  document.getElementById('vc-produkt-checks').innerHTML = namen.length
-    ? namen.map(p=>`<label class="produkt-check-label"><input type="checkbox" value="${esc(p)}" ${selectedProdukte.includes(p)?'checked':''} onchange="vcCheckboxChange()"> ${esc(p)}</label>`).join('')
-    : '<span style="color:var(--gray-400);font-size:0.82rem;">Keine Produkte gefunden</span>';
+  vcSelectedProdukte = vcProdukte.split(/[,\n]/).map(p => p.trim()).filter(Boolean);
+  renderVcProduktList();
 
   const abrech = vc?.abrechnungsart || 'monatlich';
   document.getElementById('vc-abrechnungsart').value = abrech;
   document.getElementById('vc-laufzeit').value = vc?.laufzeit ?? '';
   document.getElementById('vc-wahrscheinlichkeit').value = vc?.wahrscheinlichkeit ?? 50;
-  document.getElementById('vc-wert').value = vc?.wert != null ? vc.wert : '';
+  const wertEl = document.getElementById('vc-wert');
+  wertEl.value = vc?.wert != null ? vc.wert : '';
+  wertEl.dataset.manual = vc?.wert != null ? '1' : '0';
+  wertEl.oninput = () => { wertEl.dataset.manual = wertEl.value ? '1' : '0'; };
   document.getElementById('vc-status').value = vc?.status || 'offen';
   document.getElementById('vc-notiz').value = vc?.notiz || '';
   document.getElementById('vc-msg').className = 'msg';
@@ -1361,20 +1428,9 @@ function vcProdPreis(name) {
   return null;
 }
 
-function vcCheckboxChange() {
-  const wertInput = document.getElementById('vc-wert');
-  if (wertInput.value) return;
-  const checked = [...document.querySelectorAll('#vc-produkt-checks input:checked')].map(i => i.value);
-  if (!checked.length) return;
-  let sum = 0;
-  checked.forEach(name => { const p = vcProdPreis(name); if (p != null) sum += p; });
-  if (sum > 0) wertInput.value = sum;
-}
-
 async function saveVc() {
-  const checked = [...document.querySelectorAll('#vc-produkt-checks input:checked')].map(i => i.value);
   const msg = document.getElementById('vc-msg');
-  if (!checked.length) { msg.textContent = 'Mindestens ein Produkt auswählen.'; msg.className = 'msg error'; return; }
+  if (!vcSelectedProdukte.length) { msg.textContent = 'Mindestens ein Produkt hinzufügen.'; msg.className = 'msg error'; return; }
 
   const kundenId = document.getElementById('vc-kunden-id').value;
   const vcId = document.getElementById('vc-edit-id').value;
@@ -1387,7 +1443,7 @@ async function saveVc() {
   const wahrscheinlichkeit = wRaw !== '' ? parseInt(wRaw, 10) : 50;
 
   const payload = {
-    produkte: checked.join(', '), wert: isNaN(wert) ? null : wert,
+    produkte: vcSelectedProdukte.join(', '), wert: isNaN(wert) ? null : wert,
     abrechnungsart, laufzeit, wahrscheinlichkeit,
     status: document.getElementById('vc-status').value,
     notiz: document.getElementById('vc-notiz').value.trim() || null,
