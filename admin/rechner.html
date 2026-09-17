@@ -160,6 +160,13 @@
   .no-rechner p { font-size: 0.9rem; line-height: 1.6; }
   .no-rechner a { color: var(--navy); font-weight: 600; text-decoration: none; }
   .no-rechner a:hover { text-decoration: underline; }
+  .role-badge {
+    display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .role-admin    { background: #fef3c7; color: #92400e; }
+  .role-partner  { background: #dbeafe; color: #1e40af; }
+  .role-customer { background: #f3f4f6; color: #374151; }
 </style>
 </head>
 <body>
@@ -171,7 +178,7 @@
     <span>/ TI-Finanzierungsrechner</span>
   </div>
   <div class="topbar-right">
-    <span class="user-chip" id="user-email">–</span>
+    <span class="user-chip" id="user-name">–</span><span id="header-role-badge" class="role-badge" style="display:none"></span>
     <button class="btn-logout" onclick="logout()">Abmelden</button>
   </div>
 </div>
@@ -448,7 +455,7 @@ const BP_RED  = 96.83;
 async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { location.href = 'login.html'; return; }
-  document.getElementById('user-email').textContent = session.user.email;
+  _setHeaderUser(session.user.id);
 
   const { data: ur } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
   const role = ur?.role || 'customer';

@@ -85,6 +85,13 @@
     .features-list { grid-template-columns: 1fr; }
     .cta-section { flex-direction: column; text-align: center; }
   }
+  .role-badge {
+    display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .role-admin    { background: #fef3c7; color: #92400e; }
+  .role-partner  { background: #dbeafe; color: #1e40af; }
+  .role-customer { background: #f3f4f6; color: #374151; }
 </style>
 </head>
 <body>
@@ -96,7 +103,7 @@
     <span id="topbar-sub">/ Lösungsseite</span>
   </div>
   <div class="topbar-right">
-    <span class="user-chip" id="user-email">–</span>
+    <span class="user-chip" id="user-name">–</span><span id="header-role-badge" class="role-badge" style="display:none"></span>
     <button class="btn-logout" onclick="logout()">Abmelden</button>
   </div>
 </div>
@@ -131,7 +138,7 @@
   async function init() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) { window.location.href = 'index.html'; return; }
-    document.getElementById('user-email').textContent = session.user.email;
+    _setHeaderUser(session.user.id);
 
     const params = new URLSearchParams(window.location.search);
     const productId = params.get('id');

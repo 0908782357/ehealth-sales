@@ -233,6 +233,13 @@
   .item-type-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
   .item-type-card { display:flex;align-items:flex-start;gap:10px;border:2px solid var(--gray-200);border-radius:10px;padding:11px 14px;cursor:pointer;background:white;transition:border-color 0.15s,background 0.15s; }
   .item-type-card.selected { border-color:var(--navy);background:#eef0f7; }
+  .role-badge {
+    display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 0.68rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .role-admin    { background: #fef3c7; color: #92400e; }
+  .role-partner  { background: #dbeafe; color: #1e40af; }
+  .role-customer { background: #f3f4f6; color: #374151; }
 </style>
 </head>
 <body>
@@ -249,7 +256,7 @@
       Warenkorb
       <span class="cart-badge" id="cart-count">0</span>
     </button>
-    <span class="user-chip" id="user-email">–</span>
+    <span class="user-chip" id="user-name">–</span><span id="header-role-badge" class="role-badge" style="display:none"></span>
     <button class="btn-logout" onclick="logout()">Abmelden</button>
   </div>
 </div>
@@ -563,7 +570,7 @@
   async function init() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) { window.location.href = 'index.html'; return; }
-    document.getElementById('user-email').textContent = session.user.email;
+    _setHeaderUser(session.user.id);
 
     const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
     userRole = roleRow?.role || 'partner';
