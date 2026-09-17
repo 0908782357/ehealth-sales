@@ -634,7 +634,6 @@ async function saveEvent() {
     teilnahme_link: document.getElementById('ev-link').value.trim() || null,
     status: document.getElementById('ev-status').value,
     oeffentlich: document.getElementById('ev-oeffentlich').checked,
-    partner_id: currentPartnerId,
   };
 
   let eventId = editEventId;
@@ -643,7 +642,7 @@ async function saveEvent() {
   if (editEventId) {
     ({ error } = await sb.from('events').update(payload).eq('id', editEventId));
   } else {
-    const res = await sb.from('events').insert(payload).select('id').single();
+    const res = await sb.from('events').insert({ ...payload, partner_id: currentPartnerId }).select('id').single();
     error = res.error;
     eventId = res.data?.id;
   }
