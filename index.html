@@ -3500,9 +3500,6 @@
       verfuegbar.length + ' sofort verfügbar' + (bald.length ? ' · ' + bald.length + ' bald verfügbar' : '');
 
     // Bundle-Header
-    wizBundleSelected = {};
-    wizBundleExtras = {};
-    wizProductQty = {};
     const bundleHeader = document.getElementById('wiz-bundle-header');
     const relevantBundles = BUNDLES.filter(b => {
       if (!b.preise || b.preise[colStr] == null) return false;
@@ -3521,9 +3518,13 @@
 
     if (relevantBundles.length) {
       bundleHeader.style.display = '';
+      const chkSvg = '<svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
       bundleHeader.innerHTML = relevantBundles.map(b => {
         const preis = b.preise[colStr];
         const items = BUNDLE_ITEMS[b.id] || [];
+        const btnId = 'b_' + b.id;
+        const hdrId = 'hdr_' + b.id;
+        const isSelected = !!wizBundleSelected[btnId];
         const includedItems = items.filter(i => i.typ === 'included');
         const bookableItems = items.filter(i => i.typ === 'addon' || (i.typ === 'included' && i.extendable));
 
@@ -3553,7 +3554,7 @@
                    <span class="bundle-extra-price">${preisLabel}</span>
                    <div class="bundle-extra-qty-ctrl">
                      <button class="bundle-extra-qty-btn" onclick="changeBundleExtra('${extraKey}',-1,${col})">−</button>
-                     <span class="bundle-extra-qty-val" id="bex-${safeKey}">0</span>
+                     <span class="bundle-extra-qty-val" id="bex-${safeKey}">${wizBundleExtras[extraKey] || 0}</span>
                      <button class="bundle-extra-qty-btn" onclick="changeBundleExtra('${extraKey}',+1,${col})">+</button>
                    </div>
                  </div>`;
@@ -3561,7 +3562,7 @@
              </div>`
           : '';
 
-        return `<div class="offer-bundle-header" id="hdr_${b.id}" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+        return `<div class="offer-bundle-header${isSelected ? ' bundle-selected' : ''}" id="${hdrId}" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
           <div style="flex:1;min-width:0;">
             <div class="offer-bundle-label">Empfohlenes Paket</div>
             <div class="offer-bundle-name">${b.name}</div>
@@ -3571,7 +3572,7 @@
           </div>
           <div style="flex-shrink:0;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:12px;">
             <div class="offer-bundle-price">${preisHtml}</div>
-            <button class="offer-bundle-select-btn" id="b_${b.id}" onclick="toggleBundle('b_${b.id}','hdr_${b.id}',${preis||0},${col})">Auswählen</button>
+            <button class="offer-bundle-select-btn${isSelected ? ' selected' : ''}" id="${btnId}" onclick="toggleBundle('${btnId}','${hdrId}',${preis||0},${col})">${isSelected ? chkSvg + ' Ausgewählt' : 'Auswählen'}</button>
           </div>
         </div>`;
       }).join('');
@@ -3613,7 +3614,7 @@
       const qtyCtrl = p.status === 'verfuegbar'
         ? `<div class="offer-qty-ctrl">
              <button class="offer-qty-btn" onclick="changeQty(${p.nr},-1,${col})">−</button>
-             <span class="offer-qty-val" id="qty_${p.nr}">0</span>
+             <span class="offer-qty-val" id="qty_${p.nr}">${wizProductQty[p.nr] || 0}</span>
              <button class="offer-qty-btn" onclick="changeQty(${p.nr},+1,${col})">+</button>
            </div>`
         : baldBadge;
@@ -3632,6 +3633,8 @@
     // Anfrage-Formular zurücksetzen
     document.getElementById('wiz2-form-content').style.display = '';
     document.getElementById('wiz2-success').style.display = 'none';
+
+    updateOfferTotal(col);
   }
 
   function toggleBundle(btnId, hdrId, preis, col) {
@@ -4446,6 +4449,9 @@
       products = products.filter(p => wizFilterPraeferenz.some(pref => p[pref]));
     }
 
+    wizBundleSelected = {};
+    wizBundleExtras = {};
+    wizProductQty = {};
     renderResults(wizBGCol, wizBGName, products);
     const gesetzeEl2 = document.getElementById('wiz2-gesetze');
     if (wizShowGesetze) {
