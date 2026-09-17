@@ -164,7 +164,7 @@
   .btn-rm-feat { background: #fef2f2; color: var(--red); border: none; border-radius: 6px; padding: 7px 10px; cursor: pointer; font-size: 0.78rem; font-weight: 700; }
 
   /* Bundle items editor */
-  .bi-grid { display: grid; grid-template-columns: 1fr 120px 66px 108px 82px 108px 30px; gap: 7px; align-items: center; padding: 9px 14px; }
+  .bi-grid { display: grid; grid-template-columns: 1fr 120px 66px 108px 82px 108px 110px 30px; gap: 7px; align-items: center; padding: 9px 14px; }
   .bi-grid-header { font-size: 0.65rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.07em; background: var(--gray-50); border-bottom: 1px solid var(--gray-200); }
   .bi-grid-row { border-bottom: 1px solid var(--gray-100); transition: background 0.1s; }
   .bi-grid-row:last-child { border-bottom: none; }
@@ -395,6 +395,7 @@
           <div id="b-preis-fields" style="border:1.5px solid var(--gray-200);border-radius:10px;padding:6px 4px;background:#fafafa;max-height:260px;overflow-y:auto;"></div>
         </div>
       </div>
+      <div id="bi-ek-ref" style="display:none;margin-top:10px;padding:9px 14px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;font-size:0.82rem;color:#166534;"></div>
     </div>
 
     <!-- Tab 2: Bundle-Inhalt -->
@@ -412,11 +413,12 @@
         <div class="bi-grid bi-grid-header">
           <span>Produkt</span><span>Typ</span><span style="text-align:center;">Menge</span>
           <span style="text-align:center;">Erweiterbar</span><span style="text-align:right;">Extra-Preis</span>
-          <span>Einheit</span><span></span>
+          <span>Einheit</span><span style="text-align:right;">EK (intern)</span><span></span>
         </div>
         <div id="bi-rows">
           <div style="padding:24px;text-align:center;color:var(--gray-400);font-size:0.82rem;">Noch keine Produkte hinzugefügt.</div>
         </div>
+        <div id="bi-ek-total" style="display:none;padding:10px 14px;background:#f0fdf4;border-top:1px solid #86efac;font-size:0.82rem;font-weight:600;color:#166534;text-align:right;"></div>
       </div>
       <p style="font-size:0.72rem;color:var(--gray-400);margin-top:8px;">
         <strong>Enthalten</strong>: im Pauschalpreis &nbsp;·&nbsp; <strong>Optional</strong>: separat buchbar &nbsp;·&nbsp; <em>Erweiterbar</em>: weitere Menge zusätzlich bestellbar
@@ -671,16 +673,29 @@
       </div>
 
       <!-- Einkaufspreis (intern) -->
-      <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px 18px;margin-bottom:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
         <div>
-          <div style="font-size:0.72rem;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;">Einkaufspreis — intern</div>
-          <div style="font-size:0.78rem;color:#16a34a;">Interner EK-Preis für die Margenkalkulation. Nicht öffentlich sichtbar.</div>
+          <div style="font-size:0.72rem;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;">Einkaufspreis — intern (Pauschale)</div>
+          <div style="font-size:0.78rem;color:#16a34a;">Pauschal-EK für die Margenkalkulation. Wird von Staffelpreisen überschrieben.</div>
         </div>
         <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
           <input type="number" id="einkaufspreis-flat" min="0" step="0.01" placeholder="0,00"
             style="max-width:120px;padding:7px 10px;border:1.5px solid #86efac;border-radius:8px;font-size:0.875rem;font-family:inherit;color:var(--gray-900);background:white;">
           <span style="font-size:0.82rem;color:#4ade80;">€ (netto)</span>
         </div>
+      </div>
+
+      <!-- EK Staffelpreise -->
+      <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px 18px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-size:0.72rem;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;">EK Staffelpreise — intern</div>
+            <div style="font-size:0.78rem;color:#16a34a;">Mengenabhängige EK-Preise (überschreiben den Pauschal-EK im Bundle-Editor).</div>
+          </div>
+          <button type="button" onclick="addStaffelRow()"
+            style="background:#dcfce7;color:#166534;border:1.5px solid #86efac;border-radius:7px;padding:5px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">+ Staffel</button>
+        </div>
+        <div id="ek-staffel-rows"></div>
       </div>
 
       <p style="font-size:0.82rem;color:var(--gray-500);margin:0 0 16px 0;">
@@ -759,6 +774,11 @@
   let pendingImageFile = null;
   let currentPreise = {};
   let currentAbrechnungsart = 'monatlich';
+  let currentEkStaffel = [];
+
+  function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 
   async function init() {
     const { data: { session } } = await sb.auth.getSession();
@@ -956,6 +976,54 @@
     document.querySelectorAll('[id^="preis-"]').forEach(input => {
       if (input.id !== 'preis-einheit') input.value = val;
     });
+  }
+
+  // ---- EK Staffelpreise ----
+  function renderStaffelRows() {
+    const container = document.getElementById('ek-staffel-rows');
+    if (!container) return;
+    if (!currentEkStaffel.length) {
+      container.innerHTML = '<div style="font-size:0.78rem;color:#4ade80;padding:2px 0;">Keine Staffelpreise — Pauschal-EK wird im Bundle-Editor verwendet.</div>';
+      return;
+    }
+    container.innerHTML = currentEkStaffel.map((tier, i) => `
+      <div style="display:grid;grid-template-columns:75px 1fr 105px 28px;gap:6px;align-items:end;margin-bottom:7px;">
+        <div>
+          <div style="font-size:0.65rem;color:#166534;font-weight:700;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em;">Ab Einheit</div>
+          <input type="number" min="1" step="1" value="${tier.ab || 1}"
+            style="padding:5px 8px;border:1.5px solid #86efac;border-radius:7px;font-size:0.82rem;font-family:inherit;width:100%;background:white;color:var(--gray-900);"
+            onchange="updateStaffelRow(${i},'ab',parseInt(this.value)||1)">
+        </div>
+        <div>
+          <div style="font-size:0.65rem;color:#166534;font-weight:700;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em;">Bezeichnung</div>
+          <input type="text" value="${esc(tier.label || '')}" placeholder="z.B. 1–4 Instanzen"
+            style="padding:5px 8px;border:1.5px solid #86efac;border-radius:7px;font-size:0.82rem;font-family:inherit;width:100%;background:white;color:var(--gray-900);"
+            oninput="updateStaffelRow(${i},'label',this.value)">
+        </div>
+        <div>
+          <div style="font-size:0.65rem;color:#166534;font-weight:700;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em;">EK (€ netto)</div>
+          <input type="number" min="0" step="0.01" value="${tier.ek != null ? tier.ek : ''}" placeholder="0,00"
+            style="padding:5px 8px;border:1.5px solid #86efac;border-radius:7px;font-size:0.82rem;font-family:inherit;width:100%;background:white;color:var(--gray-900);text-align:right;"
+            onchange="updateStaffelRow(${i},'ek',parseFloat(this.value)||0)">
+        </div>
+        <button type="button" onclick="removeStaffelRow(${i})"
+          style="height:30px;width:28px;border:none;background:#fee2e2;color:#dc2626;border-radius:6px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function addStaffelRow() {
+    currentEkStaffel.push({ ab: 1, label: '', ek: 0 });
+    renderStaffelRows();
+  }
+
+  function removeStaffelRow(i) {
+    currentEkStaffel.splice(i, 1);
+    renderStaffelRows();
+  }
+
+  function updateStaffelRow(i, field, value) {
+    if (currentEkStaffel[i]) currentEkStaffel[i][field] = value;
   }
 
   // ---- Image Upload ----
@@ -1185,6 +1253,8 @@
       setAbrechnungsart(p.abrechnungsart || 'monatlich');
       document.getElementById('preis-flat').value = p.preis_flat != null ? p.preis_flat : '';
       document.getElementById('einkaufspreis-flat').value = p.einkaufspreis_flat != null ? p.einkaufspreis_flat : '';
+      currentEkStaffel = Array.isArray(p.einkaufspreis_staffel) ? JSON.parse(JSON.stringify(p.einkaufspreis_staffel)) : [];
+      renderStaffelRows();
 
       // Page 2: lösungsseite
       if (p.loesung_aktiv) {
@@ -1223,6 +1293,8 @@
       setAbrechnungsart('monatlich');
       document.getElementById('preis-flat').value = '';
       document.getElementById('einkaufspreis-flat').value = '';
+      currentEkStaffel = [];
+      renderStaffelRows();
     }
 
     document.getElementById('modal-bg').classList.add('open');
@@ -1332,8 +1404,9 @@
     const preise = getPreise();
     const preisFlat = parseFloat(document.getElementById('preis-flat').value) || null;
     const einkaufspreisFlat = parseFloat(document.getElementById('einkaufspreis-flat').value) || null;
+    const ekStaffelData = currentEkStaffel.length ? currentEkStaffel : null;
     const { error: preisErr } = await sb.from('products')
-      .update({ preise, abrechnungsart: currentAbrechnungsart, preis_flat: preisFlat, einkaufspreis_flat: einkaufspreisFlat })
+      .update({ preise, abrechnungsart: currentAbrechnungsart, preis_flat: preisFlat, einkaufspreis_flat: einkaufspreisFlat, einkaufspreis_staffel: ekStaffelData })
       .eq('id', savedId);
     if (preisErr) {
       console.warn('Preise nicht gespeichert – SQL-Migration erforderlich:', preisErr.message);
@@ -1460,6 +1533,7 @@
       document.getElementById(`bundle-tab-ind-${i}`).classList.toggle('active', i === n);
     });
     if (n === 2) renderBundleItemRows();
+    else updateEkTotal();
   }
 
   // ---- Product picker for Tab 2 ----
@@ -1498,11 +1572,16 @@
   }
 
   function addBundleItem(productId, productName) {
+    const prod = allProducts.find(p => p.id === productId);
+    const ekStaffel = prod?.einkaufspreis_staffel || null;
+    const ekFlat = prod?.einkaufspreis_flat ?? null;
+    const ekPreis = (ekStaffel && ekStaffel.length) ? null : ekFlat;
     bundleItemsData.push({
       id: null, product_id: productId, product_name: productName,
       typ: 'included', extendable: false, included_quantity: 1,
       extra_preis: null, extra_preis_einheit: 'pro Monat',
-      sort_order: bundleItemsData.length
+      sort_order: bundleItemsData.length,
+      ek_preis: ekPreis, ek_staffel: ekStaffel, ek_staffel_idx: null
     });
     document.getElementById('bi-picker-input').value = '';
     document.getElementById('bi-picker-dropdown').style.display = 'none';
@@ -1521,6 +1600,36 @@
     if (field === 'typ' || field === 'extendable') renderBundleItemRows();
   }
 
+  function updateBundleItemEk(idx, staffelIdxStr) {
+    if (!bundleItemsData[idx]) return;
+    if (staffelIdxStr === '') {
+      bundleItemsData[idx].ek_staffel_idx = null;
+      bundleItemsData[idx].ek_preis = null;
+    } else {
+      const ti = parseInt(staffelIdxStr);
+      bundleItemsData[idx].ek_staffel_idx = ti;
+      const tier = bundleItemsData[idx].ek_staffel?.[ti];
+      bundleItemsData[idx].ek_preis = tier?.ek ?? null;
+    }
+    updateEkTotal();
+  }
+
+  function updateEkTotal() {
+    const elGrid = document.getElementById('bi-ek-total');
+    const elRef  = document.getElementById('bi-ek-ref');
+    const total  = bundleItemsData.reduce((sum, item) => sum + (item.ek_preis || 0), 0);
+    const hasAny = bundleItemsData.some(item => item.ek_preis != null);
+    const fmtEur = v => v.toLocaleString('de-DE', {style:'currency', currency:'EUR'});
+    if (hasAny) {
+      const html = `Gesamter EK: <strong style="font-variant-numeric:tabular-nums;">${fmtEur(total)}</strong> netto`;
+      if (elGrid) { elGrid.style.display = ''; elGrid.innerHTML = html; }
+      if (elRef)  { elRef.style.display  = ''; elRef.innerHTML  = `📦 ${html} — prüfe VK-Preise in Tab Preise`; }
+    } else {
+      if (elGrid) elGrid.style.display = 'none';
+      if (elRef)  elRef.style.display  = 'none';
+    }
+  }
+
   function renderBundleItemRows() {
     const container  = document.getElementById('bi-rows');
     const countLabel = document.getElementById('bi-count-label');
@@ -1533,8 +1642,22 @@
     container.innerHTML = bundleItemsData.map((item, idx) => {
       const isIncluded = item.typ === 'included';
       const hasExtra   = item.extendable || !isIncluded;
+      const ekStaffel  = item.ek_staffel;
+      let ekCell;
+      if (ekStaffel && ekStaffel.length > 0) {
+        const selIdx = item.ek_staffel_idx;
+        ekCell = `<select class="bi-input" style="text-align:right;" onchange="updateBundleItemEk(${idx},this.value)">
+          <option value=""${selIdx === null ? ' selected' : ''}>Staffel …</option>
+          ${ekStaffel.map((t, ti) => `<option value="${ti}"${selIdx === ti ? ' selected' : ''}>${esc(t.label || (t.ab + '+ Inst.'))} — ${(t.ek||0).toLocaleString('de-DE',{minimumFractionDigits:2})} €</option>`).join('')}
+        </select>`;
+      } else {
+        ekCell = `<input type="number" class="bi-input" min="0" step="0.01" placeholder="–"
+          value="${item.ek_preis != null ? item.ek_preis : ''}"
+          style="text-align:right;"
+          onchange="updateBundleItem(${idx},'ek_preis',this.value===''?null:parseFloat(this.value));updateEkTotal()">`;
+      }
       return `<div class="bi-grid bi-grid-row">
-        <span style="font-size:0.82rem;font-weight:600;color:var(--gray-800);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.product_name}</span>
+        <span style="font-size:0.82rem;font-weight:600;color:var(--gray-800);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.product_name)}</span>
         <select class="bi-input" onchange="updateBundleItem(${idx},'typ',this.value)">
           <option value="included"${isIncluded ? ' selected' : ''}>Enthalten</option>
           <option value="addon"${!isIncluded ? ' selected' : ''}>Optional</option>
@@ -1558,9 +1681,11 @@
           <option value="einmalig"${item.extra_preis_einheit==='einmalig'?' selected':''}>einmalig</option>
           <option value="pro Stück"${item.extra_preis_einheit==='pro Stück'?' selected':''}>/ Stück</option>
         </select>
+        ${ekCell}
         <button class="bi-rm" onclick="removeBundleItem(${idx})" title="Entfernen">✕</button>
       </div>`;
     }).join('');
+    updateEkTotal();
   }
 
   // ---- Berufsgruppen Tab 3 ----
@@ -1606,17 +1731,30 @@
         sb.from('bundle_items').select('*, products(id, produkt)').eq('bundle_id', id).order('sort_order'),
         sb.from('bundle_berufsgruppen').select('berufsgruppe_nr').eq('bundle_id', id)
       ]);
-      bundleItemsData = (items || []).map(item => ({
-        id:                  item.id,
-        product_id:          item.product_id,
-        product_name:        item.products?.produkt || item.product_id,
-        typ:                 item.typ,
-        extendable:          item.extendable,
-        included_quantity:   item.included_quantity,
-        extra_preis:         item.extra_preis,
-        extra_preis_einheit: item.extra_preis_einheit || 'pro Monat',
-        sort_order:          item.sort_order
-      }));
+      bundleItemsData = (items || []).map(item => {
+        const prod = allProducts.find(p => p.id === item.product_id);
+        const ekStaffel = prod?.einkaufspreis_staffel || null;
+        const storedEk = item.ek_preis ?? null;
+        let ekStaffelIdx = null;
+        if (ekStaffel && storedEk !== null) {
+          const found = ekStaffel.findIndex(t => t.ek === storedEk);
+          if (found >= 0) ekStaffelIdx = found;
+        }
+        return {
+          id:                  item.id,
+          product_id:          item.product_id,
+          product_name:        item.products?.produkt || item.product_id,
+          typ:                 item.typ,
+          extendable:          item.extendable,
+          included_quantity:   item.included_quantity,
+          extra_preis:         item.extra_preis,
+          extra_preis_einheit: item.extra_preis_einheit || 'pro Monat',
+          sort_order:          item.sort_order,
+          ek_preis:            storedEk,
+          ek_staffel:          ekStaffel,
+          ek_staffel_idx:      ekStaffelIdx
+        };
+      });
       bundleBGsData = (bgs || []).map(r => r.berufsgruppe_nr);
     } else {
       document.getElementById('b-name').value         = '';
@@ -1724,6 +1862,7 @@
             included_quantity:   item.included_quantity || 1,
             extra_preis:         item.extra_preis ?? null,
             extra_preis_einheit: item.extra_preis_einheit || 'pro Monat',
+            ek_preis:            item.ek_preis ?? null,
             sort_order:          idx
           }))
         );
