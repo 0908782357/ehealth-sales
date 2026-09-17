@@ -517,7 +517,7 @@ async function init() {
 
   const [kundenRes, prodRes, vcRes, bgRes] = await Promise.all([
     sb.from('kunden').select('*, anfragen(id, produkte, created_at, status)').order('created_at', { ascending: false }),
-    sb.from('products').select('produkt, preis_flat, abrechnungsart, preise'),
+    sb.from('products').select('produkt, preis_flat, abrechnungsart, preise, einkaufspreis_flat'),
     sb.from('verkaufschancen').select('*').order('created_at', { ascending: false }),
     sb.from('berufsgruppen').select('id, name').order('nr', { ascending: true }),
   ]);
@@ -1238,6 +1238,20 @@ function calcPipeline(v) {
   const w = v.wahrscheinlichkeit != null ? v.wahrscheinlichkeit : 50;
   return wert * laufzeit * (w / 100);
 }
+function calcVcEk(v) {
+  const names = (v.produkte || v.produkt || '').split(/[,\n]/).map(p => p.trim()).filter(Boolean);
+  let total = 0, found = false;
+  names.forEach(name => {
+    const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === name.toLowerCase().trim());
+    if (prod?.einkaufspreis_flat != null) { total += prod.einkaufspreis_flat; found = true; }
+  });
+  return found ? total : null;
+}
+function margePctColor(pct) {
+  if (pct >= 40) return '#059669';
+  if (pct >= 20) return '#b45309';
+  return '#dc2626';
+}
 
 function renderVcSection(kundenId) {
   const vcList = allVerkaufschancen.filter(v => v.kunden_id === kundenId);
@@ -1249,12 +1263,24 @@ function renderVcSection(kundenId) {
     const produkte = v.produkte || v.produkt || '–';
     const laufzeitLabel = v.abrechnungsart === 'monatlich' && v.laufzeit ? v.laufzeit + ' M' : '–';
     const wkeit = v.wahrscheinlichkeit != null ? v.wahrscheinlichkeit : 50;
+    const ek = calcVcEk(v);
+    const marge = (ek !== null && v.wert != null) ? v.wert - ek : null;
+    const margePct = (marge !== null && v.wert > 0) ? (marge / v.wert) * 100 : null;
+    const ekCell = ek !== null
+      ? ek.toLocaleString('de-DE', {style:'currency', currency:'EUR'})
+      : '<span style="color:var(--gray-400);">–</span>';
+    const margeCell = marge !== null
+      ? `<span style="font-weight:700;color:${margePctColor(margePct)};">${marge.toLocaleString('de-DE',{style:'currency',currency:'EUR'})}</span>
+         <span style="font-size:0.7rem;color:${margePctColor(margePct)};margin-left:3px;">(${margePct.toFixed(0)} %)</span>`
+      : '<span style="color:var(--gray-400);">–</span>';
     return `<tr>
-      <td style="font-weight:600;color:var(--navy);max-width:160px;" title="${esc(produkte)}">${esc(produkte.length > 40 ? produkte.substring(0,40)+'…' : produkte)}</td>
-      <td>${v.wert != null ? v.wert.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–'}</td>
-      <td>${laufzeitLabel}</td>
-      <td>${wkeit} %</td>
-      <td style="font-weight:700;color:#059669;">${pipeline > 0 ? pipeline.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–'}</td>
+      <td style="font-weight:600;color:var(--navy);max-width:140px;" title="${esc(produkte)}">${esc(produkte.length > 36 ? produkte.substring(0,36)+'…' : produkte)}</td>
+      <td style="text-align:right;">${v.wert != null ? v.wert.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–'}</td>
+      <td style="text-align:right;color:var(--gray-500);">${laufzeitLabel}</td>
+      <td style="text-align:right;color:var(--gray-500);">${wkeit} %</td>
+      <td style="text-align:right;">${ekCell}</td>
+      <td style="text-align:right;">${margeCell}</td>
+      <td style="text-align:right;font-weight:700;color:#059669;">${pipeline > 0 ? pipeline.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–'}</td>
       <td>
         <select class="vc-status-sel ${vcStatusCls(v.status)}" onchange="changeVcStatus('${v.id}',this.value,'${kundenId}');this.className='vc-status-sel '+vcStatusCls(this.value)">
           ${['offen','in_gespraech','angebot','gewonnen','verloren'].map(s=>`<option value="${s}" ${v.status===s?'selected':''}>${vcStatusLabel(s)}</option>`).join('')}
@@ -1265,7 +1291,7 @@ function renderVcSection(kundenId) {
       </td>
       <td><button class="vc-del-btn" onclick="deleteVc('${v.id}','${kundenId}')">✕</button></td>
     </tr>`;
-  }).join('') : `<tr><td colspan="8" style="color:var(--gray-400);font-size:0.82rem;padding:10px 8px;">Noch keine Verkaufschancen</td></tr>`;
+  }).join('') : `<tr><td colspan="10" style="color:var(--gray-400);font-size:0.82rem;padding:10px 8px;">Noch keine Verkaufschancen</td></tr>`;
 
   return `
     <div class="pipeline-header">
@@ -1278,9 +1304,11 @@ function renderVcSection(kundenId) {
     <table class="pipeline-table">
       <thead><tr>
         <th>Produkte</th>
-        <th style="text-align:right;">Wert</th>
+        <th style="text-align:right;">VK</th>
         <th style="text-align:right;">Laufzeit</th>
         <th style="text-align:right;">W'keit</th>
+        <th style="text-align:right;">EK</th>
+        <th style="text-align:right;">Marge</th>
         <th style="text-align:right;">Pipeline</th>
         <th>Status</th>
         <th></th><th></th>
