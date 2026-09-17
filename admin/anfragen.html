@@ -400,10 +400,21 @@ function fmt(isoStr) {
 }
 
 function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function prodBaseName(label) {
+  return String(label || '')
+    .replace(/^-\s+/, '')
+    .replace(/\s*\[[^\]]+\]/g, '')
+    .replace(/\s*×\s*\d+(\s*\([^)]*\))?/i, '')
+    .replace(/\s*\([^)]+\)\s*$/, '')
+    .trim();
+}
 
 function produktTags(produkte) {
   if (!produkte) return '–';
-  return produkte.split(',').map(p => `<span class="produkt-tag">${esc(p.trim())}</span>`).join('');
+  return produkte.split(/\n|,/).map(p => {
+    const clean = prodBaseName(p.trim());
+    return clean ? `<span class="produkt-tag">${esc(clean)}</span>` : '';
+  }).filter(Boolean).join('');
 }
 
 function partnerLabel(p) {
@@ -618,14 +629,6 @@ function openDetailModal(anfrageId) {
   // Produkte mit Preisen zusammenführen
   // Format-agnostisch: Komma- und Zeilenumbruch-Trenner; "- ", [Artikelnr.], × Menge, (Suffix) entfernen
   const produktNamen = (a.produkte || '').split(/\n|,/).map(p => p.trim()).filter(Boolean);
-  function prodBaseName(label) {
-    return label
-      .replace(/^-\s+/, '')              // "- Produktname" → "Produktname"
-      .replace(/\s*\[[^\]]+\]/g, '')     // "[ART-01]" entfernen
-      .replace(/\s*×\s*\d+(\s*\([^)]*\))?/i, '') // "× 2 (Extra)" entfernen
-      .replace(/\s*\([^)]+\)\s*$/, '')   // abschließendes "(Paket)" / "(Hersteller)" entfernen
-      .trim();
-  }
   // Besten verfügbaren Preis ermitteln: preis_flat → BG-Preise (Minimum) → shop_items
   function getPreis(prod) {
     if (!prod) return null;
@@ -662,7 +665,7 @@ function openDetailModal(anfrageId) {
       const abrech = preisInfo?.abrech || '';
       if (preis) gesamtpreis += preis;
       return `<tr>
-        <td>${esc(name)}</td>
+        <td>${esc(prodBaseName(name))}</td>
         <td>${preis != null ? `${preis.toLocaleString('de-DE', {style:'currency',currency:'EUR'})}${abrech ? ' / ' + esc(abrech) : ''}` : '–'}</td>
       </tr>`;
     }).join('');
