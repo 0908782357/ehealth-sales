@@ -396,6 +396,27 @@
         </div>
       </div>
       <div id="bi-ek-ref" style="display:none;margin-top:10px;padding:9px 14px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;font-size:0.82rem;color:#166534;"></div>
+
+      <!-- Bundle EK (intern) -->
+      <div style="margin-top:18px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px 18px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+          <div>
+            <div style="font-size:0.72rem;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px;">Bundle-Einkaufspreis — intern</div>
+            <div style="font-size:0.78rem;color:#16a34a;">Optionaler EK auf Bundle-Ebene (z.B. ausgehandelter Gesamtpreis). Nicht öffentlich sichtbar.</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input type="number" id="b-einkaufspreis-flat" min="0" step="0.01" placeholder="0,00"
+              style="max-width:110px;padding:7px 10px;border:1.5px solid #86efac;border-radius:8px;font-size:0.875rem;font-family:inherit;color:var(--gray-900);background:white;">
+            <span style="font-size:0.82rem;color:#4ade80;white-space:nowrap;">€ (netto)</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+          <div style="font-size:0.72rem;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.06em;">EK Staffelpreise</div>
+          <button type="button" onclick="addBundleStaffelRow()"
+            style="background:#dcfce7;color:#166534;border:1.5px solid #86efac;border-radius:7px;padding:4px 12px;font-size:0.76rem;font-weight:700;cursor:pointer;white-space:nowrap;">+ Staffel</button>
+        </div>
+        <div id="b-ek-staffel-rows"></div>
+      </div>
     </div>
 
     <!-- Tab 2: Bundle-Inhalt -->
@@ -1026,6 +1047,54 @@
     if (currentEkStaffel[i]) currentEkStaffel[i][field] = value;
   }
 
+  // ---- Bundle EK Staffelpreise ----
+  function renderBundleStaffelRows() {
+    const container = document.getElementById('b-ek-staffel-rows');
+    if (!container) return;
+    if (!currentBundleEkStaffel.length) {
+      container.innerHTML = '<div style="font-size:0.78rem;color:#4ade80;padding:2px 0;">Keine Staffelpreise — Pauschal-EK wird verwendet.</div>';
+      return;
+    }
+    container.innerHTML = currentBundleEkStaffel.map((tier, i) => `
+      <div style="display:grid;grid-template-columns:75px 1fr 105px 28px;gap:6px;align-items:end;margin-bottom:7px;">
+        <div>
+          <div style="font-size:0.65rem;color:#166534;font-weight:700;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em;">Ab Einheit</div>
+          <input type="number" min="1" step="1" value="${tier.ab || 1}"
+            style="padding:5px 8px;border:1.5px solid #86efac;border-radius:7px;font-size:0.82rem;font-family:inherit;width:100%;background:white;color:var(--gray-900);"
+            onchange="updateBundleStaffelRow(${i},'ab',parseInt(this.value)||1)">
+        </div>
+        <div>
+          <div style="font-size:0.65rem;color:#166534;font-weight:700;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em;">Bezeichnung</div>
+          <input type="text" value="${esc(tier.label || '')}" placeholder="z.B. 1–4 Standorte"
+            style="padding:5px 8px;border:1.5px solid #86efac;border-radius:7px;font-size:0.82rem;font-family:inherit;width:100%;background:white;color:var(--gray-900);"
+            oninput="updateBundleStaffelRow(${i},'label',this.value)">
+        </div>
+        <div>
+          <div style="font-size:0.65rem;color:#166534;font-weight:700;margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em;">EK (€ netto)</div>
+          <input type="number" min="0" step="0.01" value="${tier.ek != null ? tier.ek : ''}" placeholder="0,00"
+            style="padding:5px 8px;border:1.5px solid #86efac;border-radius:7px;font-size:0.82rem;font-family:inherit;width:100%;background:white;color:var(--gray-900);text-align:right;"
+            onchange="updateBundleStaffelRow(${i},'ek',parseFloat(this.value)||0)">
+        </div>
+        <button type="button" onclick="removeBundleStaffelRow(${i})"
+          style="height:30px;width:28px;border:none;background:#fee2e2;color:#dc2626;border-radius:6px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;justify-content:center;">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function addBundleStaffelRow() {
+    currentBundleEkStaffel.push({ ab: 1, label: '', ek: 0 });
+    renderBundleStaffelRows();
+  }
+
+  function removeBundleStaffelRow(i) {
+    currentBundleEkStaffel.splice(i, 1);
+    renderBundleStaffelRows();
+  }
+
+  function updateBundleStaffelRow(i, field, value) {
+    if (currentBundleEkStaffel[i]) currentBundleEkStaffel[i][field] = value;
+  }
+
   // ---- Image Upload ----
   async function resizeToSquare(file, size = 800) {
     return new Promise(resolve => {
@@ -1469,6 +1538,7 @@
   let currentBundleId = null;
   let currentBundlePreise = {};
   let bundleItemsData = [];
+  let currentBundleEkStaffel = [];
   let bundleBGsData   = [];
 
   async function loadBundles() {
@@ -1726,6 +1796,8 @@
         cb.checked = (b.themen || []).includes(cb.value);
       });
       currentBundlePreise = b.preise || {};
+      document.getElementById('b-einkaufspreis-flat').value = b.einkaufspreis_flat != null ? b.einkaufspreis_flat : '';
+      currentBundleEkStaffel = Array.isArray(b.einkaufspreis_staffel) ? JSON.parse(JSON.stringify(b.einkaufspreis_staffel)) : [];
 
       const [{ data: items }, { data: bgs }] = await Promise.all([
         sb.from('bundle_items').select('*, products(id, produkt)').eq('bundle_id', id).order('sort_order'),
@@ -1761,9 +1833,12 @@
       document.getElementById('b-beschreibung').value = '';
       document.getElementById('b-aktiv').checked      = true;
       document.querySelectorAll('[name="b-thema"]').forEach(cb => cb.checked = false);
+      document.getElementById('b-einkaufspreis-flat').value = '';
+      currentBundleEkStaffel = [];
     }
 
     buildBundlePreisFields();
+    renderBundleStaffelRows();
     document.getElementById('bundle-modal-bg').classList.add('open');
   }
 
@@ -1828,14 +1903,18 @@
       bundleItemsData.map(i => allProducts.find(x => x.id === i.product_id)?.nr).filter(Boolean)
     )];
 
+    const bundleEkFlat   = parseFloat(document.getElementById('b-einkaufspreis-flat').value) || null;
+    const bundleEkStaffel = currentBundleEkStaffel.length ? currentBundleEkStaffel : null;
     const payload = {
       name,
-      beschreibung: document.getElementById('b-beschreibung').value.trim() || null,
-      aktiv:        document.getElementById('b-aktiv').checked,
-      themen:       [...document.querySelectorAll('[name="b-thema"]:checked')].map(cb => cb.value),
+      beschreibung:          document.getElementById('b-beschreibung').value.trim() || null,
+      aktiv:                 document.getElementById('b-aktiv').checked,
+      themen:                [...document.querySelectorAll('[name="b-thema"]:checked')].map(cb => cb.value),
       produkt_nrs,
-      preise:       getBundlePreise(),
-      updated_at:   new Date().toISOString(),
+      preise:                getBundlePreise(),
+      einkaufspreis_flat:    bundleEkFlat,
+      einkaufspreis_staffel: bundleEkStaffel,
+      updated_at:            new Date().toISOString(),
     };
 
     let bundleId = currentBundleId;
