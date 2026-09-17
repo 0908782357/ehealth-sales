@@ -315,7 +315,11 @@ async function init() {
 }
 
 async function loadThemen() {
-  const { data } = await sb.from('themengebiete').select('*').order('sortierung').order('name');
+  const { data, error } = await sb.from('themengebiete').select('*').order('sortierung').order('name');
+  if (error) {
+    document.getElementById('tg-tbody').innerHTML = `<tr><td colspan="6" class="empty" style="color:#ef4444;">Fehler beim Laden: ${esc(error.message)}</td></tr>`;
+    return;
+  }
   allThemen = data || [];
   renderTable();
 }
@@ -401,7 +405,14 @@ async function saveThema() {
   if (!name) { msg.textContent = 'Name ist Pflichtfeld.'; msg.className = 'msg error'; return; }
   if (!slug) { msg.textContent = 'Slug ist Pflichtfeld.'; msg.className = 'msg error'; return; }
 
-  const payload = { name, slug, farbe, sortierung, beschreibung };
+  if (farbe && !/^#[0-9a-fA-F]{6}$/.test(farbe)) {
+    msg.textContent = 'Ungültige Farbe. Bitte Hex-Wert eingeben (z.B. #1C74B8).';
+    msg.className = 'msg error';
+    return;
+  }
+  const farbenWert = farbe || document.getElementById('f-farbe').value;
+
+  const payload = { name, slug, farbe: farbenWert, sortierung, beschreibung };
   let error;
   if (editId) {
     ({ error } = await sb.from('themengebiete').update(payload).eq('id', editId));
@@ -418,7 +429,11 @@ async function saveThema() {
 }
 
 async function toggleAktiv(id, aktiv) {
-  await sb.from('themengebiete').update({ aktiv }).eq('id', id);
+  const { error } = await sb.from('themengebiete').update({ aktiv }).eq('id', id);
+  if (error) {
+    alert('Fehler beim Speichern: ' + error.message);
+    await loadThemen(); // Checkbox-State zurücksetzen
+  }
 }
 
 async function deleteThema(id) {
