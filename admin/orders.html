@@ -101,6 +101,15 @@
   .order-msg   { font-size: 0.78rem; color: var(--gray-500); font-style: italic; max-width: 260px; }
   .order-date  { font-size: 0.75rem; color: var(--gray-400); }
 
+  .filter-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .filter-bar input {
+    padding: 8px 14px; border: 1.5px solid var(--gray-200); border-radius: 9px;
+    font-size: 0.85rem; font-family: inherit; color: var(--gray-900); background: white;
+    outline: none; transition: border-color 0.15s; min-width: 260px;
+  }
+  .filter-bar input:focus { border-color: var(--navy); }
+  .result-count { font-size: 0.78rem; color: var(--gray-400); }
+
   /* Bundle-Extras */
   .bundle-chevron { background: none; border: none; cursor: pointer; color: var(--gray-400); padding: 2px 5px; border-radius: 5px; font-size: 0.75rem; transition: transform 0.2s, color 0.15s; display: inline-flex; align-items: center; vertical-align: middle; margin-left: 6px; }
   .bundle-chevron:hover { color: var(--navy); background: var(--gray-100); }
@@ -222,6 +231,11 @@
     </div>
     <p class="page-sub">Eingehende Bestellungen aus dem Shop – freischalten oder ablehnen.</p>
 
+    <div class="filter-bar">
+      <input type="text" id="order-search" placeholder="Name, E-Mail oder Firma suchen…" oninput="applyOrderSearch()">
+      <span class="result-count" id="order-result-count"></span>
+    </div>
+
     <div class="tabs">
       <button class="tab-btn active" onclick="showTab('pending')">Offen</button>
       <button class="tab-btn" onclick="showTab('approved')">Freigeschaltet</button>
@@ -256,6 +270,7 @@
 
   let allOrders = [];
   let currentTab = 'pending';
+  let currentSearch = '';
   let generatedTokens = {}; // orderId → token string (just generated this session)
   let dbTokens = {};         // orderId → token string (loaded from DB)
 
@@ -321,16 +336,32 @@
     renderTable(currentTab);
   }
 
+  function applyOrderSearch() {
+    currentSearch = document.getElementById('order-search').value.toLowerCase().trim();
+    renderTable(currentTab);
+  }
+
   function showTab(tab) {
     currentTab = tab;
-    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+    document.querySelectorAll('.tab-btn').forEach(b => {
       b.classList.toggle('active', b.textContent.toLowerCase().includes(tab) || (tab === 'all' && b.textContent === 'Alle'));
     });
     renderTable(tab);
   }
 
   function renderTable(tab) {
-    const filtered = tab === 'all' ? allOrders : allOrders.filter(o => o.status === tab);
+    let filtered = tab === 'all' ? allOrders : allOrders.filter(o => o.status === tab);
+    if (currentSearch) {
+      filtered = filtered.filter(o => {
+        const p = o._profile;
+        const name  = [p?.vorname, p?.nachname].filter(Boolean).join(' ').toLowerCase();
+        const email = (o.email || p?.email || '').toLowerCase();
+        const firma = (p?.firma || '').toLowerCase();
+        return name.includes(currentSearch) || email.includes(currentSearch) || firma.includes(currentSearch);
+      });
+    }
+    const countEl = document.getElementById('order-result-count');
+    if (countEl) countEl.textContent = filtered.length ? `${filtered.length} Ergebnis${filtered.length !== 1 ? 'se' : ''}` : '';
     const tbody = document.getElementById('orders-tbody');
     if (!filtered.length) {
       tbody.innerHTML = `<tr><td colspan="6" class="empty">Keine Bestellungen.</td></tr>`;
