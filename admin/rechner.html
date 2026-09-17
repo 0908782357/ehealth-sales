@@ -166,7 +166,7 @@
   }
   .role-admin    { background: #fef3c7; color: #92400e; }
   .role-partner  { background: #dbeafe; color: #1e40af; }
-  .role-customer { background: #f3f4f6; color: #374151; }
+  .role-kunde    { background: #f3f4f6; color: #374151; }
 </style>
 </head>
 <body>
@@ -458,7 +458,7 @@ async function init() {
   _setHeaderUser(session.user.id);
 
   const { data: ur } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
-  const role = ur?.role || 'customer';
+  const role = ur?.role || 'kunde';
 
   if (role === 'admin') document.getElementById('nav-group-admin').style.display = '';
 

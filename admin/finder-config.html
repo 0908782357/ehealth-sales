@@ -124,7 +124,7 @@
   }
   .role-admin    { background: #fef3c7; color: #92400e; }
   .role-partner  { background: #dbeafe; color: #1e40af; }
-  .role-customer { background: #f3f4f6; color: #374151; }
+  .role-kunde    { background: #f3f4f6; color: #374151; }
 </style>
 </head>
 <body>
@@ -333,7 +333,7 @@
 
     const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
     userRole = roleRow?.role || 'partner';
-    if (userRole === 'customer') { window.location.href = 'dashboard.html'; return; }
+    if (userRole === 'kunde') { window.location.href = 'dashboard.html'; return; }
 
     buildTopicGrid();
 
