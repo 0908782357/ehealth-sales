@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Impressum | eHealth Alliance</title>
+  <meta name="description" content="Impressum der eHealth Alliance.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+
+  <style>
+    /* Base styles */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    :root {
+      --brand-500: #3C4A7C;
+      --brand-600: #2A3460;
+      --green: #6DC52D;
+      --green-dark: #59A322;
+      --line: #E5E7EB;
+      --line-strong: #D1D5DB;
+      --bg: #FFFFFF;
+      --bg-soft: #F3F4F6;
+      --ink: #111827;
+      --ink-soft: #6B7280;
+      --muted: #9CA3AF;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #F9FAFB;
+      color: var(--ink);
+      line-height: 1.6;
+    }
+
+    a { text-decoration: none; color: inherit; }
+    img { max-width: 100%; }
+
+    /* Header & Nav */
+    .site-header {
+      background: white;
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+
+    .logo {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--brand-500);
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      margin-left: 40px;
+    }
+
+    .nav-links a {
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--ink-soft);
+      transition: all 0.15s;
+    }
+
+    .nav-links a:hover {
+      color: var(--brand-500);
+      background: var(--bg-soft);
+    }
+
+    .nav-links a[aria-current="page"] {
+      color: var(--brand-500);
+      background: var(--bg-soft);
+      font-weight: 600;
+    }
+
+    /* Footer */
+    .site-footer {
+      background: var(--ink);
+      color: white;
+      padding: 40px 0;
+      margin-top: 60px;
+      border-top: 1px solid var(--line);
+    }
+
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .footer-content a {
+      color: white;
+      font-weight: 600;
+    }
+
+    .footer-content a:hover {
+      text-decoration: underline;
+    }
+
+    /* Main Content */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .section {
+      padding: 60px 0;
+    }
+
+    h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--brand-500);
+      margin-bottom: 24px;
+    }
+
+    p {
+      font-size: 1rem;
+      color: var(--ink-soft);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header / Nav -->
+  <header class="site-header">
+    <div class="nav-inner">
+      <a href="#" class="logo">eHealth Alliance</a>
+      <nav class="nav-links">
+        <a href="partner.html">Partner</a>
+        <a href="events.html">Events</a>
+        <a href="https://www.ehealth-sales.de/admin/index.html" target="_blank">Mitglieder-Portal</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main">
+    <section class="section">
+      <div class="container">
+        <h1>Impressum</h1>
+        <p>Impressum der eHealth Alliance.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-content">
+      <p>&copy; 2026 eHealth Alliance. Alle Rechte vorbehalten. | <a href="https://www.ehealth-sales.de">ehealth Sales GmbH</a></p>
+    </div>
+  </footer>
+
+</body>
+</html>
