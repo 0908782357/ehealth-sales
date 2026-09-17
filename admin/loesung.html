@@ -242,6 +242,29 @@
 
   async function logout() { await sb.auth.signOut(); window.location.href = 'index.html'; }
   init();
+
+  async function _setHeaderUser(userId) {
+    const [profileRes, roleRes] = await Promise.all([
+      sb.from('user_profiles').select('vorname, nachname').eq('user_id', userId).maybeSingle(),
+      sb.from('user_roles').select('role, partner_tier').eq('user_id', userId).maybeSingle(),
+    ]);
+    const p = profileRes.data;
+    const name = p ? [p.vorname, p.nachname].filter(Boolean).join(' ') : null;
+    const el = document.getElementById('user-name');
+    if (el) el.textContent = name || '–';
+    const role = roleRes.data?.role || 'partner';
+    const tier = roleRes.data?.partner_tier;
+    const badge = document.getElementById('header-role-badge');
+    if (badge) {
+      const roleLabels = { admin: 'Administrator', partner: 'Partner', kunde: 'Kunde' };
+      const tierLabels = { standard: 'Standard', premium: 'Premium', strategisch: 'Strategisch' };
+      let label = roleLabels[role] || role;
+      if (role === 'partner' && tier) label += ' · ' + (tierLabels[tier] || tier);
+      badge.textContent = label;
+      badge.className = 'role-badge role-' + role;
+      badge.style.display = '';
+    }
+  }
 </script>
 </body>
 </html>
