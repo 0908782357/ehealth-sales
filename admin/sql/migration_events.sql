@@ -81,11 +81,18 @@ ALTER TABLE event_anmeldungen ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "themengebiete_read_all"
   ON themengebiete FOR SELECT USING (true);
 
-CREATE POLICY "themengebiete_admin_write"
-  ON themengebiete FOR ALL
-  USING (
-    EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin')
-  );
+CREATE POLICY "themengebiete_admin_insert"
+  ON themengebiete FOR INSERT
+  WITH CHECK (EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+
+CREATE POLICY "themengebiete_admin_update"
+  ON themengebiete FOR UPDATE
+  USING (EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin'))
+  WITH CHECK (EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+
+CREATE POLICY "themengebiete_admin_delete"
+  ON themengebiete FOR DELETE
+  USING (EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin'));
 
 -- events: anon liest nur öffentliche+geplante+zukünftige
 CREATE POLICY "events_public_read"
@@ -141,7 +148,18 @@ CREATE POLICY "event_anm_user_read"
     OR EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin')
   );
 
-CREATE POLICY "event_anm_user_write"
-  ON event_anmeldungen FOR ALL
+CREATE POLICY "event_anm_user_insert"
+  ON event_anmeldungen FOR INSERT
+  TO authenticated
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "event_anm_user_update"
+  ON event_anmeldungen FOR UPDATE
+  TO authenticated
+  USING (user_id = auth.uid())
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "event_anm_user_delete"
+  ON event_anmeldungen FOR DELETE
   TO authenticated
   USING (user_id = auth.uid());
