@@ -176,7 +176,7 @@
     <label style="margin-top:12px;">Passwort bestätigen</label>
     <input type="password" id="new-pw-confirm" placeholder="Passwort wiederholen" autocomplete="new-password">
     <button class="btn btn-primary" onclick="setInitialPassword()" style="margin-top:20px;">Passwort speichern</button>
-    <button class="btn btn-secondary" onclick="window.location.href='dashboard.html'" style="margin-top:8px;">Überspringen</button>
+    <button class="btn btn-secondary" onclick="redirectAfterLogin()" style="margin-top:8px;">Überspringen</button>
   </div>
 </div>
 
@@ -243,6 +243,12 @@
 
   const PORTAL_URL = 'https://ehealth-sales.de/admin/index.html';
 
+  function redirectAfterLogin() {
+    const params = new URLSearchParams(window.location.search);
+    const eventId = params.get('event');
+    window.location.href = eventId ? `events.html?event=${eventId}` : 'dashboard.html';
+  }
+
   function showLogin() {
     document.getElementById('auth-loading').style.display = 'none';
     document.getElementById('login-card').style.display = '';
@@ -262,12 +268,12 @@
       if (fromMagicLink && !passwordSet) {
         showPwStep();
       } else {
-        window.location.href = 'dashboard.html';
+        redirectAfterLogin();
       }
     } else if (event === 'INITIAL_SESSION') {
       if (session) {
         // Bereits eingeloggt → direkt zum Dashboard
-        window.location.href = 'dashboard.html';
+        redirectAfterLogin();
       } else {
         // Kein Token, kein Login → Login-Formular zeigen
         showLogin();
@@ -302,7 +308,7 @@
     }
     msg.textContent = 'Passwort gespeichert! Weiterleitung…';
     msg.className = 'msg success';
-    setTimeout(() => window.location.href = 'dashboard.html', 900);
+    setTimeout(() => redirectAfterLogin(), 900);
   }
 
   function showMsg(text, type) {
@@ -344,7 +350,7 @@
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) return showMsg(error.message, 'error');
     await claimProfile(data.session);
-    window.location.href = 'dashboard.html';
+    redirectAfterLogin();
   }
 
   let otpEmail = '';
@@ -368,7 +374,7 @@
     const { data, error } = await sb.auth.verifyOtp({ email: otpEmail, token, type: 'email' });
     if (error) return showMsg('Code ungültig oder abgelaufen.', 'error');
     await claimProfile(data.session);
-    window.location.href = 'dashboard.html';
+    redirectAfterLogin();
   }
 
   function resetOtp() {
