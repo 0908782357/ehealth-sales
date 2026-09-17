@@ -450,7 +450,7 @@ async function init() {
 async function loadPartners() {
   const [partnerRes, productRes, shopRes] = await Promise.all([
     sb.from('user_profiles').select('id, vorname, nachname, firma, email').eq('rolle', 'partner').order('firma'),
-    sb.from('products').select('produkt, preis_flat, abrechnungsart, preise'),
+    sb.from('products').select('produkt, preis_flat, einkaufspreis_flat, abrechnungsart, preise'),
     sb.from('shop_items').select('titel, preis, preis_einheit'),
   ]);
   partners = partnerRes.data || [];
@@ -640,7 +640,10 @@ function openDetailModal(anfrageId) {
     return null;
   }
 
+  const isAdmin = userRole === 'admin';
+  const fmt2 = v => v.toLocaleString('de-DE', {style:'currency', currency:'EUR'});
   let gesamtpreis = 0;
+  let gesamtek    = 0;
   let produktZeilen = '';
   if (produktNamen.length) {
     produktZeilen = produktNamen.map(name => {
@@ -653,7 +656,7 @@ function openDetailModal(anfrageId) {
         const si = allShopItems.find(s => (s.titel || '').toLowerCase().trim() === bn);
         if (si) prod = { preis_flat: si.preis, abrechnungsart: si.preis_einheit || '' };
       }
-      // 3. Prefix-Fallback: "TI Gateway" ⊂ "TI Gateway Paket"
+      // 3. Prefix-Fallback
       if (!prod) {
         prod = allProducts.find(p => {
           const pn = (p.produkt || '').toLowerCase().trim();
@@ -661,18 +664,49 @@ function openDetailModal(anfrageId) {
         });
       }
       const preisInfo = getPreis(prod);
-      const preis = preisInfo?.wert ?? null;
+      const preis  = preisInfo?.wert ?? null;
       const abrech = preisInfo?.abrech || '';
+      const ek     = isAdmin ? (prod?.einkaufspreis_flat ?? null) : null;
       if (preis) gesamtpreis += preis;
+      if (ek)    gesamtek    += ek;
+      const vkCell = preis != null
+        ? `${fmt2(preis)}${abrech ? '<span style="font-size:0.75rem;color:var(--gray-400);"> / ' + esc(abrech) + '</span>' : ''}`
+        : '–';
+      if (isAdmin) {
+        const ekCell    = ek != null ? fmt2(ek) : '–';
+        const marge     = preis != null && ek != null ? preis - ek : null;
+        const margePct  = preis != null && ek != null && preis > 0 ? (marge / preis * 100) : null;
+        const margeColor = marge != null ? (marge >= 0 ? 'var(--green,#16a34a)' : '#dc2626') : 'var(--gray-400)';
+        const margeCell = marge != null
+          ? `<span style="color:${margeColor};font-weight:700;">${fmt2(marge)}</span>`
+            + (margePct != null ? `<span style="font-size:0.75rem;color:${margeColor};"> (${margePct.toFixed(1)} %)</span>` : '')
+          : '–';
+        return `<tr>
+          <td>${esc(prodBaseName(name))}</td>
+          <td style="text-align:right">${ekCell}</td>
+          <td style="text-align:right">${vkCell}</td>
+          <td style="text-align:right">${margeCell}</td>
+        </tr>`;
+      }
       return `<tr>
         <td>${esc(prodBaseName(name))}</td>
-        <td>${preis != null ? `${preis.toLocaleString('de-DE', {style:'currency',currency:'EUR'})}${abrech ? ' / ' + esc(abrech) : ''}` : '–'}</td>
+        <td>${vkCell}</td>
       </tr>`;
     }).join('');
-    if (gesamtpreis > 0) {
+    if (isAdmin && (gesamtpreis > 0 || gesamtek > 0)) {
+      const gesamtmarge = gesamtpreis - gesamtek;
+      const gesamtmargePct = gesamtpreis > 0 ? (gesamtmarge / gesamtpreis * 100) : null;
+      const mc = gesamtmarge >= 0 ? 'var(--green,#16a34a)' : '#dc2626';
+      produktZeilen += `<tr class="detail-total-row">
+        <td>Gesamt</td>
+        <td style="text-align:right">${gesamtek > 0 ? fmt2(gesamtek) : '–'}</td>
+        <td style="text-align:right">${gesamtpreis > 0 ? fmt2(gesamtpreis) : '–'}</td>
+        <td style="text-align:right;color:${mc}">${fmt2(gesamtmarge)}${gesamtmargePct != null ? ' (' + gesamtmargePct.toFixed(1) + ' %)' : ''}</td>
+      </tr>`;
+    } else if (!isAdmin && gesamtpreis > 0) {
       produktZeilen += `<tr class="detail-total-row">
         <td>Geschätzter Gesamtpreis</td>
-        <td>${gesamtpreis.toLocaleString('de-DE', {style:'currency',currency:'EUR'})}</td>
+        <td>${fmt2(gesamtpreis)}</td>
       </tr>`;
     }
   }
@@ -720,10 +754,13 @@ function openDetailModal(anfrageId) {
 
     ${produktNamen.length ? `
     <div class="detail-section">
-      <div class="detail-section-title">Angefragte Produkte & Preise</div>
+      <div class="detail-section-title">Angefragte Produkte & Kalkulation</div>
       <div style="overflow-x:auto;">
         <table class="detail-produkt-table">
-          <thead><tr><th>Produkt</th><th>Preis</th></tr></thead>
+          <thead><tr>
+            <th>Produkt</th>
+            ${isAdmin ? '<th style="text-align:right">EK</th><th style="text-align:right">VK</th><th style="text-align:right">Marge</th>' : '<th>Preis</th>'}
+          </tr></thead>
           <tbody>${produktZeilen}</tbody>
         </table>
       </div>
