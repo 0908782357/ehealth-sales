@@ -151,22 +151,13 @@
   const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
   const sb = supabase.createClient(SB_URL, SB_ANON);
 
-  const THEMEN = {
-    ti:               { label: 'Telematik Infrastruktur', color: '#3C4A7C' },
-    security:         { label: 'Cybersecurity',           color: '#E53E3E' },
-    telemedizin:      { label: 'Telemedizin',             color: '#38B2AC' },
-    it_infrastruktur: { label: 'IT Infrastruktur',        color: '#4299E1' },
-    modern_work:      { label: 'Modern Work',             color: '#6DC52D' },
-    prozess_digital:  { label: 'Prozess Digitalisierung', color: '#ED8936' },
-  };
-
   async function init() {
     const params = new URLSearchParams(window.location.search);
     const productId = params.get('id');
     if (!productId) { showError('Kein Produkt angegeben. <a href="index.html">Zurück zur Startseite</a>'); return; }
 
     const { data: product, error } = await sb.from('products')
-      .select('*')
+      .select('*, product_themen(thema_id, themengebiete(name, farbe))')
       .eq('id', productId)
       .eq('published', true)
       .single();
@@ -190,9 +181,9 @@
 
   function renderPage(p) {
     const inhalt = p.loesung_inhalt || {};
-    const themenTags = Object.entries(THEMEN)
-      .filter(([k]) => p[k])
-      .map(([, t]) => `<span class="hero-tag" style="background:${t.color}18;color:${t.color};border:1px solid ${t.color}33">${t.label}</span>`)
+    const themenTags = (p.product_themen || [])
+      .filter(pt => pt.themengebiete)
+      .map(pt => `<span class="hero-tag" style="background:${pt.themengebiete.farbe}18;color:${pt.themengebiete.farbe};border:1px solid ${pt.themengebiete.farbe}33">${esc(pt.themengebiete.name)}</span>`)
       .join('');
 
     const vorteile = (inhalt.vorteile || []).filter(Boolean);
