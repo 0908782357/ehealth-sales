@@ -3495,9 +3495,9 @@
 
     // Bundle-Header
     const bundleHeader = document.getElementById('wiz-bundle-header');
+    const selectedIds = new Set([...wizSelectedTopics].map(slug => themaSlugToId[slug]).filter(Boolean));
     const relevantBundles = BUNDLES.filter(b => {
       if (!b.preise || b.preise[colStr] == null) return false;
-      const selectedIds = new Set([...wizSelectedTopics].map(slug => themaSlugToId[slug]).filter(Boolean));
       if (selectedIds.size > 0 && !(b.thema_ids || []).some(id => selectedIds.has(id))) return false;
       const bgSet = BUNDLE_BGS[b.id];
       return !bgSet || bgSet.size === 0 || bgSet.has(col);
