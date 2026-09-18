@@ -376,15 +376,8 @@
           </label>
         </div>
         <div class="form-group form-full">
-          <label>Themenbereiche</label>
-          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
-            <label class="bg-check"><input type="checkbox" name="b-thema" value="security"> Cybersecurity</label>
-            <label class="bg-check"><input type="checkbox" name="b-thema" value="ti"> Telematik Infrastruktur</label>
-            <label class="bg-check"><input type="checkbox" name="b-thema" value="it"> IT Infrastruktur</label>
-            <label class="bg-check"><input type="checkbox" name="b-thema" value="modernwork"> Modern Work</label>
-            <label class="bg-check"><input type="checkbox" name="b-thema" value="prozess"> Prozess Digitalisierung</label>
-            <label class="bg-check"><input type="checkbox" name="b-thema" value="telemedizin"> Telemedizin</label>
-          </div>
+          <label>Themengebiete</label>
+          <div id="bundle-themen-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding:6px 0;min-height:32px;"></div>
         </div>
         <div class="form-group form-full">
           <label>Beschreibung</label>
@@ -539,21 +532,8 @@
               <input type="checkbox" id="f-global"> 🌐 Globale Freigabe
             </label>
           </div>
-          <div style="margin-top:6px;font-size:0.72rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;">Themen-Zuordnung</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;padding:4px 0;">
-            <label class="toggle-row" style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;">
-              <input type="checkbox" id="f-ti"> Telematik Infrastruktur</label>
-            <label class="toggle-row" style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;">
-              <input type="checkbox" id="f-security"> Cybersecurity</label>
-            <label class="toggle-row" style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;">
-              <input type="checkbox" id="f-telemedizin"> Telemedizin</label>
-            <label class="toggle-row" style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;">
-              <input type="checkbox" id="f-it-infra"> IT Infrastruktur</label>
-            <label class="toggle-row" style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;">
-              <input type="checkbox" id="f-modern-work"> Modern Work</label>
-            <label class="toggle-row" style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:8px;padding:8px 10px;">
-              <input type="checkbox" id="f-prozess"> Prozess Digitalisierung</label>
-          </div>
+          <div style="margin-top:6px;font-size:0.72rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">Themengebiete</div>
+          <div id="prod-themen-chips" style="display:flex;flex-wrap:wrap;gap:6px;padding:4px 0;min-height:32px;"></div>
         </div>
 
         <div class="form-group form-full">
@@ -793,6 +773,9 @@
   }
 
   let allProducts = [];
+  let allThemen = [];
+  let prodSelectedThemen = [];
+  let bundleSelectedThemen = [];
   let filterSearch = '';
   let filterTopicVal = '';
   let currentId = null;
@@ -842,6 +825,11 @@
     setupNavRole(userRole).catch(console.warn);
     await loadBerufsgruppen();
     buildBgGrids();
+    const { data: themenData } = await sb.from('themengebiete')
+      .select('id, name, slug, farbe, finder_pref_column')
+      .eq('aktiv', true)
+      .order('sortierung');
+    allThemen = themenData || [];
     await loadProducts();
   }
 
@@ -858,7 +846,7 @@
   }
 
   async function loadProducts() {
-    let q = sb.from('products').select('*').order('nr', { ascending: true });
+    let q = sb.from('products').select('*, product_themen(thema_id, themengebiete(name, farbe))').order('nr', { ascending: true });
     if (userRole !== 'admin') {
       if (myPartnerId) q = q.eq('partner_id', myPartnerId);
       else { allProducts = []; renderTable([]); return; }
@@ -889,7 +877,7 @@
         </td>
         <td>${p.hersteller}</td>
         <td>
-          ${[['ti','#3C4A7C','TI'],['security','#E53E3E','Cyber'],['telemedizin','#38B2AC','Telemedizin'],['it_infrastruktur','#4299E1','IT Infra'],['modern_work','#6DC52D','Modern Work'],['prozess_digital','#ED8936','Prozess']].filter(([k]) => p[k]).map(([,c,l]) => `<span style="display:inline-block;background:${c}22;color:${c};font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:20px;margin:1px;">${l}</span>`).join('') || '–'}
+          ${(p.product_themen || []).map(pt => `<span style="display:inline-block;background:${pt.themengebiete.farbe}22;color:${pt.themengebiete.farbe};font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:20px;margin:1px;">${esc(pt.themengebiete.name)}</span>`).join('') || '<span style="color:#cbd5e1;">–</span>'}
         </td>
         <td><span class="badge badge-navy">${p.typ === 'hardware' ? 'Hardware' : p.typ === 'software' ? 'Software' : p.typ === 'dienstleistung' ? 'Dienstleistung' : p.typ || '–'}</span></td>
         <td>
@@ -1254,7 +1242,7 @@
   }
 
   // ---- Modal ----
-  function openModal(id) {
+  async function openModal(id) {
     currentId = id || null;
     pendingImageFile = null;
     loesungAktiv = false;
@@ -1307,12 +1295,6 @@
       document.getElementById('f-stationaer').checked   = !!p.stationaer;
       document.getElementById('f-mobil').checked        = !!p.mobil;
       document.getElementById('f-global').checked       = !!p.global;
-      document.getElementById('f-ti').checked           = !!p.ti;
-      document.getElementById('f-security').checked     = !!p.security;
-      document.getElementById('f-telemedizin').checked  = !!p.telemedizin;
-      document.getElementById('f-it-infra').checked     = !!p.it_infrastruktur;
-      document.getElementById('f-modern-work').checked  = !!p.modern_work;
-      document.getElementById('f-prozess').checked      = !!p.prozess_digital;
       document.getElementById('f-published').checked    = !!p.published;
       ['verfuegbar', 'bald'].forEach(grid => {
         document.querySelectorAll(`[data-grid="${grid}"]`).forEach(cb => {
@@ -1333,6 +1315,12 @@
       document.getElementById('einkaufspreis-flat').value = p.einkaufspreis_flat != null ? p.einkaufspreis_flat : '';
       currentEkStaffel = Array.isArray(p.einkaufspreis_staffel) ? JSON.parse(JSON.stringify(p.einkaufspreis_staffel)) : [];
       renderStaffelRows();
+
+      // Themen laden
+      const { data: ptRows } = await sb.from('product_themen')
+        .select('thema_id').eq('product_id', id);
+      prodSelectedThemen = (ptRows || []).map(r => r.thema_id);
+      renderProdThemenChips();
 
       // Page 2: lösungsseite
       if (p.loesung_aktiv) {
@@ -1359,13 +1347,9 @@
       document.getElementById('f-typ').value = '';
       document.getElementById('f-stationaer').checked  = true;
       document.getElementById('f-mobil').checked       = true;
-      document.getElementById('f-ti').checked          = false;
-      document.getElementById('f-security').checked    = false;
-      document.getElementById('f-telemedizin').checked = false;
-      document.getElementById('f-it-infra').checked    = false;
-      document.getElementById('f-modern-work').checked = false;
-      document.getElementById('f-prozess').checked     = false;
       document.getElementById('f-published').checked   = userRole === 'admin';
+      prodSelectedThemen = [];
+      renderProdThemenChips();
       document.querySelectorAll('[data-grid]').forEach(cb => cb.checked = false);
       currentPreise = {};
       setAbrechnungsart('monatlich');
@@ -1418,12 +1402,6 @@
       stationaer:       document.getElementById('f-stationaer').checked,
       mobil:            document.getElementById('f-mobil').checked,
       global:           document.getElementById('f-global').checked,
-      ti:               document.getElementById('f-ti').checked,
-      security:         document.getElementById('f-security').checked,
-      telemedizin:      document.getElementById('f-telemedizin').checked,
-      it_infrastruktur: document.getElementById('f-it-infra').checked,
-      modern_work:      document.getElementById('f-modern-work').checked,
-      prozess_digital:  document.getElementById('f-prozess').checked,
       published:        document.getElementById('f-published').checked,
       verfuegbar, bald,
       updated_at: new Date().toISOString(),
@@ -1443,6 +1421,24 @@
     } else {
       const { error } = await sb.from('products').update(corePayload).eq('id', currentId);
       if (error) { showModalMsg(error.message, 'error'); return; }
+    }
+
+    // product_themen: delete-all + re-insert
+    await sb.from('product_themen').delete().eq('product_id', savedId);
+    if (prodSelectedThemen.length) {
+      await sb.from('product_themen').insert(
+        prodSelectedThemen.map(tid => ({ product_id: savedId, thema_id: tid }))
+      );
+    }
+    // Boolean-Spalten aktuell halten (Rückwärtskompatibilität für Produktfinder)
+    const boolUpdate = {};
+    allThemen.forEach(t => {
+      if (t.finder_pref_column) {
+        boolUpdate[t.finder_pref_column] = prodSelectedThemen.includes(t.id);
+      }
+    });
+    if (Object.keys(boolUpdate).length) {
+      await sb.from('products').update(boolUpdate).eq('id', savedId);
     }
 
     // Extended: loesung fields (require SQL migration — saved separately so core always works)
@@ -1551,9 +1547,12 @@
   let bundleBGsData   = [];
 
   async function loadBundles() {
-    const { data, error } = await sb.from('bundles').select('*').order('created_at', { ascending: false });
+    const { data, error } = await sb.from('bundles').select('*, bundle_themen(thema_id)').order('created_at', { ascending: false });
     if (error) { console.error(error); return; }
-    allBundles = data || [];
+    allBundles = (data || []).map(b => ({
+      ...b,
+      thema_ids: (b.bundle_themen || []).map(bt => bt.thema_id)
+    }));
     renderBundleTable(allBundles);
   }
 
@@ -1562,14 +1561,6 @@
     renderBundleTable(allBundles.filter(b => b.name.toLowerCase().includes(lower)));
   }
 
-  const BUNDLE_THEMEN_CFG = [
-    { id: 'security',    label: 'Cybersecurity',           color: '#E53E3E' },
-    { id: 'ti',          label: 'Telematik Infrastruktur', color: '#3C4A7C' },
-    { id: 'it',          label: 'IT Infrastruktur',        color: '#4299E1' },
-    { id: 'modernwork',  label: 'Modern Work',             color: '#6DC52D' },
-    { id: 'prozess',     label: 'Prozess Digital.',        color: '#ED8936' },
-    { id: 'telemedizin', label: 'Telemedizin',             color: '#38B2AC' }
-  ];
 
   function renderBundleTable(rows) {
     const tbody = document.getElementById('bundle-tbody');
@@ -1578,9 +1569,9 @@
       return;
     }
     tbody.innerHTML = rows.map(b => {
-      const themenTags = BUNDLE_THEMEN_CFG
-        .filter(t => (b.themen || []).includes(t.id))
-        .map(t => `<span style="display:inline-block;background:${t.color}22;color:${t.color};font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:20px;margin:1px;">${t.label}</span>`)
+      const themenTags = allThemen
+        .filter(t => (b.thema_ids || []).includes(t.id))
+        .map(t => `<span style="display:inline-block;background:${t.farbe}22;color:${t.farbe};font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:20px;margin:1px;">${esc(t.name)}</span>`)
         .join('');
       const prodNames = (b.produkt_nrs || []).map(nr => {
         const p = allProducts.find(x => x.nr === nr);
@@ -1801,9 +1792,7 @@
       document.getElementById('b-name').value          = b.name || '';
       document.getElementById('b-beschreibung').value  = b.beschreibung || '';
       document.getElementById('b-aktiv').checked       = !!b.aktiv;
-      document.querySelectorAll('[name="b-thema"]').forEach(cb => {
-        cb.checked = (b.themen || []).includes(cb.value);
-      });
+      // Themen handled below
       currentBundlePreise = b.preise || {};
       document.getElementById('b-einkaufspreis-flat').value = b.einkaufspreis_flat != null ? b.einkaufspreis_flat : '';
       currentBundleEkStaffel = Array.isArray(b.einkaufspreis_staffel) ? JSON.parse(JSON.stringify(b.einkaufspreis_staffel)) : [];
@@ -1841,10 +1830,19 @@
       document.getElementById('b-name').value         = '';
       document.getElementById('b-beschreibung').value = '';
       document.getElementById('b-aktiv').checked      = true;
-      document.querySelectorAll('[name="b-thema"]').forEach(cb => cb.checked = false);
       document.getElementById('b-einkaufspreis-flat').value = '';
       currentBundleEkStaffel = [];
     }
+
+    // Themen: DB-Laden bei Edit, Reset bei Neu
+    if (id) {
+      const { data: btRows } = await sb.from('bundle_themen')
+        .select('thema_id').eq('bundle_id', id);
+      bundleSelectedThemen = (btRows || []).map(r => r.thema_id);
+    } else {
+      bundleSelectedThemen = [];
+    }
+    renderBundleThemenChips();
 
     buildBundlePreisFields();
     renderBundleStaffelRows();
@@ -1918,7 +1916,6 @@
       name,
       beschreibung:          document.getElementById('b-beschreibung').value.trim() || null,
       aktiv:                 document.getElementById('b-aktiv').checked,
-      themen:                [...document.querySelectorAll('[name="b-thema"]:checked')].map(cb => cb.value),
       produkt_nrs,
       preise:                getBundlePreise(),
       einkaufspreis_flat:    bundleEkFlat,
@@ -1956,6 +1953,13 @@
         );
         if (itemErr) { showModalMsg('Bundle-Inhalt: ' + itemErr.message, 'error'); return; }
       }
+      // bundle_themen: delete-all + re-insert
+      await sb.from('bundle_themen').delete().eq('bundle_id', bundleId);
+      if (bundleSelectedThemen.length) {
+        await sb.from('bundle_themen').insert(
+          bundleSelectedThemen.map(tid => ({ bundle_id: bundleId, thema_id: tid }))
+        );
+      }
       // bundle_berufsgruppen: delete + re-insert
       await sb.from('bundle_berufsgruppen').delete().eq('bundle_id', bundleId);
       // Derive visible BGs from the price checkboxes (checked = has price = visible)
@@ -1970,6 +1974,44 @@
 
     showModalMsg('Bundle gespeichert!', 'success');
     setTimeout(() => { closeBundleModal(); loadBundles(); }, 800);
+  }
+
+  function renderProdThemenChips() {
+    const wrap = document.getElementById('prod-themen-chips');
+    if (!wrap) return;
+    wrap.innerHTML = allThemen.map(t => {
+      const active = prodSelectedThemen.includes(t.id);
+      return `<button type="button" onclick="toggleProdThema('${t.id}')"
+        style="padding:4px 12px;border-radius:20px;border:1.5px solid ${active ? t.farbe : '#e2e8f0'};
+               background:${active ? t.farbe + '22' : 'white'};color:${active ? t.farbe : '#64748b'};
+               font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .15s;">${esc(t.name)}</button>`;
+    }).join('');
+  }
+
+  function toggleProdThema(id) {
+    prodSelectedThemen = prodSelectedThemen.includes(id)
+      ? prodSelectedThemen.filter(x => x !== id)
+      : [...prodSelectedThemen, id];
+    renderProdThemenChips();
+  }
+
+  function renderBundleThemenChips() {
+    const wrap = document.getElementById('bundle-themen-chips');
+    if (!wrap) return;
+    wrap.innerHTML = allThemen.map(t => {
+      const active = bundleSelectedThemen.includes(t.id);
+      return `<button type="button" onclick="toggleBundleThema('${t.id}')"
+        style="padding:4px 12px;border-radius:20px;border:1.5px solid ${active ? t.farbe : '#e2e8f0'};
+               background:${active ? t.farbe + '22' : 'white'};color:${active ? t.farbe : '#64748b'};
+               font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .15s;">${esc(t.name)}</button>`;
+    }).join('');
+  }
+
+  function toggleBundleThema(id) {
+    bundleSelectedThemen = bundleSelectedThemen.includes(id)
+      ? bundleSelectedThemen.filter(x => x !== id)
+      : [...bundleSelectedThemen, id];
+    renderBundleThemenChips();
   }
 
   async function deleteBundle(id, name) {
