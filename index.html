@@ -3225,7 +3225,12 @@
       html += '<circle cx="' + fmt(p[0]) + '" cy="' + fmt(p[1]) + '" r="5.5" fill="' + ASSESSMENT_TOPICS[i].color + '" stroke="white" stroke-width="2"/>';
     });
     const anchors = ['middle','start','start','middle','end','end'];
-    const lines = [['Cybersecurity'],['Telematik','Infra.'],['IT','Infra.'],['Modern','Work'],['Prozess-','Digital.'],['Telemedizin']];
+    const lines = ASSESSMENT_TOPICS.map(t => {
+      const words = t.label.split(/\s+/);
+      if (words.length <= 1) return words;
+      const mid = Math.ceil(words.length / 2);
+      return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
+    });
     for (let i = 0; i < n; i++) {
       const [lx, ly] = pt(i, labelR);
       const ls = lines[i];
