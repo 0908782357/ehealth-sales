@@ -52,7 +52,7 @@ CREATE INDEX IF NOT EXISTS idx_kunden_interessen_kunden  ON kunden_interessen(ku
 INSERT INTO bundle_themen (bundle_id, thema_id)
 SELECT b.id, t.id
 FROM bundles b
-CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(b.themen, '[]'::jsonb)) AS slug_raw
+CROSS JOIN LATERAL UNNEST(COALESCE(b.themen, ARRAY[]::text[])) AS slug_raw
 JOIN (VALUES
   ('ti',               'ti'),
   ('security',         'security'),
