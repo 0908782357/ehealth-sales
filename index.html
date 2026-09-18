@@ -3100,6 +3100,8 @@
 
   let ASSESSMENT_TOPICS = []; // wird dynamisch aus themengebiete geladen
   let themaSlugToId = {};     // slug → UUID (für Bundle-Filter)
+  let partnerThemenFilter = null; // gesetzt von loadPartnerConfig, angewendet in loadFromSupabase
+  const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   const ASSESSMENT_QUESTIONS = [
     { ti: 0, q: 'Wie wichtig ist Ihnen IT-Sicherheit für Ihre Einrichtung?' },
@@ -4132,9 +4134,9 @@
     if (wizStep0TopicId) {
       const t = ASSESSMENT_TOPICS.find(x => x.id === wizStep0TopicId);
       if (t) rows.push(`<div class="wiz-sum-item">
-        <span class="wiz-sum-dot" style="background:${t.color}"></span>
+        <span class="wiz-sum-dot" style="background:${esc(t.color)}"></span>
         <div><div class="wiz-sum-label">Schwerpunkt</div>
-        <div class="wiz-sum-value">${t.label}</div></div></div>`);
+        <div class="wiz-sum-value">${esc(t.label)}</div></div></div>`);
     }
 
     // Berufsgruppe
@@ -4153,10 +4155,10 @@
       const pills = ASSESSMENT_TOPICS.map(t => {
         const active = wizSelectedTopics.has(t.id);
         return `<button class="topic-filter-pill${active ? ' active' : ''}"
-          onclick="toggleResultTopic('${t.id}','${stripId}');renderWizSummary();"
-          style="${active ? `background:${t.color};border-color:${t.color};` : ''}">
-          <span style="width:7px;height:7px;border-radius:50%;background:${active ? 'rgba(255,255,255,0.75)' : t.color};display:inline-block;flex-shrink:0;"></span>
-          ${t.label}</button>`;
+          onclick="toggleResultTopic('${esc(t.id)}','${stripId}');renderWizSummary();"
+          style="${active ? `background:${esc(t.color)};border-color:${esc(t.color)};` : ''}">
+          <span style="width:7px;height:7px;border-radius:50%;background:${active ? 'rgba(255,255,255,0.75)' : esc(t.color)};display:inline-block;flex-shrink:0;"></span>
+          ${esc(t.label)}</button>`;
       }).join('');
       rows.push(`<div class="wiz-sum-item" style="flex-direction:column;align-items:flex-start;gap:6px;">
         <div class="wiz-sum-label">Themen</div>
@@ -4164,7 +4166,7 @@
     } else if (wizSelectedTopics.size > 0 && wizBGName) {
       const tags = ASSESSMENT_TOPICS
         .filter(t => wizSelectedTopics.has(t.id))
-        .map(t => `<span class="wiz-sum-tag" style="background:${t.color}">${t.label}</span>`)
+        .map(t => `<span class="wiz-sum-tag" style="background:${esc(t.color)}">${esc(t.label)}</span>`)
         .join('');
       rows.push(`<div class="wiz-sum-item">
         <span class="wiz-sum-dot" style="background:var(--gray-300)"></span>
@@ -4200,10 +4202,10 @@
       + ASSESSMENT_TOPICS.map(t => {
         const active = wizSelectedTopics.has(t.id);
         return `<button class="topic-filter-pill${active ? ' active' : ''}"
-          onclick="toggleResultTopic('${t.id}','${containerId}')"
-          style="${active ? `background:${t.color};` : ''}">
-          <span style="width:8px;height:8px;border-radius:50%;background:${active ? 'rgba(255,255,255,0.7)' : t.color};display:inline-block;flex-shrink:0;"></span>
-          ${t.label}</button>`;
+          onclick="toggleResultTopic('${esc(t.id)}','${containerId}')"
+          style="${active ? `background:${esc(t.color)};` : ''}">
+          <span style="width:8px;height:8px;border-radius:50%;background:${active ? 'rgba(255,255,255,0.7)' : esc(t.color)};display:inline-block;flex-shrink:0;"></span>
+          ${esc(t.label)}</button>`;
       }).join('');
   }
 
@@ -4248,13 +4250,13 @@
     const chkSvg = `<svg fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="3" style="width:11px;height:11px;display:block;"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
     grid.innerHTML = ASSESSMENT_TOPICS.map(t => {
       const sel = wizSelectedTopics.has(t.id);
-      return `<button class="topic-select-box${sel ? ' active' : ''}" onclick="toggleTopicSelect('${t.id}')"
-        style="${sel ? `border-color:${t.color};` : ''}">
+      return `<button class="topic-select-box${sel ? ' active' : ''}" onclick="toggleTopicSelect('${esc(t.id)}')"
+        style="${sel ? `border-color:${esc(t.color)};` : ''}">
         <span style="display:flex;align-items:center;gap:8px;">
-          <span style="width:10px;height:10px;border-radius:50%;background:${t.color};flex-shrink:0;display:inline-block;"></span>
-          ${t.label}
+          <span style="width:10px;height:10px;border-radius:50%;background:${esc(t.color)};flex-shrink:0;display:inline-block;"></span>
+          ${esc(t.label)}
         </span>
-        <span class="topic-select-check" style="${sel ? `border-color:${t.color};background:${t.color};` : ''}">${sel ? chkSvg : ''}</span>
+        <span class="topic-select-check" style="${sel ? `border-color:${esc(t.color)};background:${esc(t.color)};` : ''}">${sel ? chkSvg : ''}</span>
       </button>`;
     }).join('');
   }
@@ -4767,8 +4769,9 @@
     }
 
     // Themen filtern (Partner-Whitelabel: auf konfigurierte Themen beschränken)
+    // Filter wird in loadFromSupabase angewendet, nachdem ASSESSMENT_TOPICS befüllt ist
     if (config?.themen?.length) {
-      ASSESSMENT_TOPICS = ASSESSMENT_TOPICS.filter(t => config.themen.includes(t.pref));
+      partnerThemenFilter = config.themen;
     }
 
     // Gesetzliche Hinweise überschreiben falls konfiguriert
@@ -4802,6 +4805,24 @@
 
   async function loadFromSupabase() {
     try {
+      // Themengebiete laden und ASSESSMENT_TOPICS befüllen (unabhängig vom Produkt-Load)
+      const { data: themenData } = await _sb.from('themengebiete')
+        .select('id, name, slug, farbe, finder_pref_column')
+        .eq('aktiv', true)
+        .order('sortierung');
+      ASSESSMENT_TOPICS = (themenData || [])
+        .filter(t => t.finder_pref_column)
+        .map(t => ({
+          id:    t.slug,
+          label: t.name,
+          color: t.farbe,
+          pref:  t.finder_pref_column
+        }));
+      if (partnerThemenFilter) {
+        ASSESSMENT_TOPICS = ASSESSMENT_TOPICS.filter(t => partnerThemenFilter.includes(t.pref));
+      }
+      themaSlugToId = Object.fromEntries((themenData || []).map(t => [t.slug, t.id]));
+
       let q = _sb.from('products').select('*').eq('published', true).order('nr', { ascending: true });
       if (currentPartner?.id) q = q.or(`partner_id.eq.${currentPartner.id},global.eq.true`);
       else q = q.or('partner_id.is.null,global.eq.true');
@@ -4851,21 +4872,6 @@
           preise:           p.preise || {},
           abrechnungsart:   p.abrechnungsart || 'monatlich'
         }));
-
-      // Themengebiete laden und ASSESSMENT_TOPICS befüllen
-      const { data: themenData } = await _sb.from('themengebiete')
-        .select('id, name, slug, farbe, finder_pref_column')
-        .eq('aktiv', true)
-        .order('sortierung');
-      ASSESSMENT_TOPICS = (themenData || [])
-        .filter(t => t.finder_pref_column)
-        .map(t => ({
-          id:    t.slug,
-          label: t.name,
-          color: t.farbe,
-          pref:  t.finder_pref_column
-        }));
-      themaSlugToId = Object.fromEntries((themenData || []).map(t => [t.slug, t.id]));
 
       // Bundles laden
       const { data: bundleData } = await _sb.from('bundles')

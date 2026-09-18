@@ -841,13 +841,6 @@ function renderKarteTab0() {
           </div>
           ${renderAnsprechpartnerTable()}
         </div>
-
-        <!-- Interessen -->
-        <div style="margin-top:20px;">
-          <div style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;
-                      letter-spacing:.06em;margin-bottom:8px;">Interessen</div>
-          <div id="kunde-interessen-chips" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;"></div>
-        </div>
       </div>
 
       <!-- Right column: pipeline + aktivitäten -->
@@ -872,7 +865,6 @@ function renderKarteTab0() {
       </div>
     </div>
   `;
-  renderKundeInteressenChips();
 }
 
 function renderKarteTab0Edit(k, fromAnfrageId) {
@@ -939,7 +931,12 @@ function renderKarteTab0Edit(k, fromAnfrageId) {
         <div class="produkt-checks" id="k-produkt-checks">${produktChecksHtml}</div>
       </div>
     </div>
+    <div style="margin-top:20px;">
+      <div style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Interessen</div>
+      <div id="kunde-interessen-chips" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;"></div>
+    </div>
   `;
+  renderKundeInteressenChips();
 }
 
 function enterEditMode() {

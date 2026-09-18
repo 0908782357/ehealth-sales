@@ -64,7 +64,21 @@ JOIN (VALUES
 JOIN themengebiete t ON t.slug = mapping.new_slug
 ON CONFLICT DO NOTHING;
 
--- ─── 6. RLS ──────────────────────────────────────────────────────────────────
+-- ─── 6. Produkt-Daten migrieren (boolean-Spalten → Junction-Tabelle) ─────────
+INSERT INTO product_themen (product_id, thema_id)
+SELECT p.id, t.id
+FROM products p
+JOIN themengebiete t ON t.finder_pref_column IS NOT NULL
+WHERE
+  (t.finder_pref_column = 'ti'              AND p.ti = true)
+  OR (t.finder_pref_column = 'security'        AND p.security = true)
+  OR (t.finder_pref_column = 'telemedizin'     AND p.telemedizin = true)
+  OR (t.finder_pref_column = 'it_infrastruktur' AND p.it_infrastruktur = true)
+  OR (t.finder_pref_column = 'modern_work'     AND p.modern_work = true)
+  OR (t.finder_pref_column = 'prozess_digital'  AND p.prozess_digital = true)
+ON CONFLICT DO NOTHING;
+
+-- ─── 7. RLS ──────────────────────────────────────────────────────────────────
 ALTER TABLE product_themen    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bundle_themen     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kunden_interessen ENABLE ROW LEVEL SECURITY;
@@ -101,3 +115,13 @@ CREATE POLICY "kunden_interessen_read"
 CREATE POLICY "kunden_interessen_write"
   ON kunden_interessen FOR ALL TO authenticated
   USING (EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+
+-- ─── 8. Sortierung für ASSESSMENT_QUESTIONS-Reihenfolge fixieren ──────────────
+-- ASSESSMENT_QUESTIONS in index.html erwartet: 0=security, 1=ti, 2=it, 3=modernwork, 4=prozess, 5=telemedizin
+UPDATE themengebiete SET sortierung = 10 WHERE slug = 'security';
+UPDATE themengebiete SET sortierung = 20 WHERE slug = 'ti';
+UPDATE themengebiete SET sortierung = 30 WHERE slug = 'it';
+UPDATE themengebiete SET sortierung = 40 WHERE slug = 'modernwork';
+UPDATE themengebiete SET sortierung = 50 WHERE slug = 'prozess';
+UPDATE themengebiete SET sortierung = 60 WHERE slug = 'telemedizin';
+-- Übrige Themengebiete (epa, ki, abrechnung, regulatory etc.) erhalten hohe Werte
