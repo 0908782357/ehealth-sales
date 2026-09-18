@@ -91,7 +91,7 @@
   /* Modal */
   .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
   .modal-bg.open { display: flex; }
-  .modal { background: white; border-radius: 20px; width: 100%; max-width: 640px; box-shadow: 0 20px 60px rgba(0,0,0,0.18); overflow: hidden; max-height: 90vh; overflow-y: auto; }
+  .modal { background: white; border-radius: 20px; width: 100%; max-width: 800px; padding: 32px 36px; box-shadow: 0 20px 60px rgba(0,0,0,0.18); overflow: hidden; max-height: 92vh; overflow-y: auto; }
   .modal h2 { font-family: Montserrat, sans-serif; font-size: 1.1rem; font-weight: 800; color: var(--navy); margin-bottom: 20px; }
 
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -272,7 +272,7 @@
 
 <!-- Event-Modal -->
 <div class="modal-bg" id="event-modal-bg">
-  <div class="modal" style="max-width:640px;">
+  <div class="modal">
     <h2 id="event-modal-title">Neues Event</h2>
 
     <!-- Modal-Tabs -->
