@@ -3098,14 +3098,8 @@
   let assessmentCurrentQ = 0;
   let assessmentScores = null;
 
-  let ASSESSMENT_TOPICS = [
-    { id: 'security',     label: 'Cybersecurity',            color: '#E53E3E', pref: 'security'         },
-    { id: 'ti',           label: 'Telematik Infrastruktur',  color: '#3C4A7C', pref: 'ti'               },
-    { id: 'it',           label: 'IT Infrastruktur',         color: '#4299E1', pref: 'it_infrastruktur'  },
-    { id: 'modernwork',   label: 'Modern Work',              color: '#6DC52D', pref: 'modern_work'       },
-    { id: 'prozess',      label: 'Prozess Digitalisierung',  color: '#ED8936', pref: 'prozess_digital'   },
-    { id: 'telemedizin',  label: 'Telemedizin',              color: '#38B2AC', pref: 'telemedizin'       }
-  ];
+  let ASSESSMENT_TOPICS = []; // wird dynamisch aus themengebiete geladen
+  let themaSlugToId = {};     // slug → UUID (für Bundle-Filter)
 
   const ASSESSMENT_QUESTIONS = [
     { ti: 0, q: 'Wie wichtig ist Ihnen IT-Sicherheit für Ihre Einrichtung?' },
@@ -3503,7 +3497,8 @@
     const bundleHeader = document.getElementById('wiz-bundle-header');
     const relevantBundles = BUNDLES.filter(b => {
       if (!b.preise || b.preise[colStr] == null) return false;
-      if (!(b.themen || []).some(t => wizSelectedTopics.has(t))) return false;
+      const selectedIds = new Set([...wizSelectedTopics].map(slug => themaSlugToId[slug]).filter(Boolean));
+      if (selectedIds.size > 0 && !(b.thema_ids || []).some(id => selectedIds.has(id))) return false;
       const bgSet = BUNDLE_BGS[b.id];
       return !bgSet || bgSet.size === 0 || bgSet.has(col);
     });
@@ -4771,17 +4766,9 @@
       document.documentElement.style.setProperty('--navy-dark', partner.primary_color + 'cc');
     }
 
-    // Themen filtern
+    // Themen filtern (Partner-Whitelabel: auf konfigurierte Themen beschränken)
     if (config?.themen?.length) {
-      const ALL_TOPICS = [
-        { id:'security',    label:'Cybersecurity',           color:'#E53E3E', pref:'security'        },
-        { id:'ti',          label:'Telematik Infrastruktur', color:'#3C4A7C', pref:'ti'              },
-        { id:'it',          label:'IT Infrastruktur',        color:'#4299E1', pref:'it_infrastruktur' },
-        { id:'modernwork',  label:'Modern Work',             color:'#6DC52D', pref:'modern_work'      },
-        { id:'prozess',     label:'Prozess Digitalisierung', color:'#ED8936', pref:'prozess_digital'  },
-        { id:'telemedizin', label:'Telemedizin',             color:'#38B2AC', pref:'telemedizin'      }
-      ];
-      ASSESSMENT_TOPICS = ALL_TOPICS.filter(t => config.themen.includes(t.pref));
+      ASSESSMENT_TOPICS = ASSESSMENT_TOPICS.filter(t => config.themen.includes(t.pref));
     }
 
     // Gesetzliche Hinweise überschreiben falls konfiguriert
@@ -4865,9 +4852,29 @@
           abrechnungsart:   p.abrechnungsart || 'monatlich'
         }));
 
+      // Themengebiete laden und ASSESSMENT_TOPICS befüllen
+      const { data: themenData } = await _sb.from('themengebiete')
+        .select('id, name, slug, farbe, finder_pref_column')
+        .eq('aktiv', true)
+        .order('sortierung');
+      ASSESSMENT_TOPICS = (themenData || [])
+        .filter(t => t.finder_pref_column)
+        .map(t => ({
+          id:    t.slug,
+          label: t.name,
+          color: t.farbe,
+          pref:  t.finder_pref_column
+        }));
+      themaSlugToId = Object.fromEntries((themenData || []).map(t => [t.slug, t.id]));
+
       // Bundles laden
-      const { data: bundleData } = await _sb.from('bundles').select('*').eq('aktiv', true);
-      BUNDLES = bundleData || [];
+      const { data: bundleData } = await _sb.from('bundles')
+        .select('*, bundle_themen(thema_id)')
+        .eq('aktiv', true);
+      BUNDLES = (bundleData || []).map(b => ({
+        ...b,
+        thema_ids: (b.bundle_themen || []).map(bt => bt.thema_id)
+      }));
 
       // Bundle-Items + BG-Sichtbarkeit laden
       if (BUNDLES.length) {
