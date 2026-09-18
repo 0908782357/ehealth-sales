@@ -483,6 +483,9 @@ let allKunden = [];
 let allProducts = [];
 let allVerkaufschancen = [];
 let allBerufsgruppen = [];
+let allThemen = [];
+let kundeSelectedThemen = [];
+let prodThemenMap = {}; // produktname → [{id, name, farbe}]
 let currentKundeId = null;
 let isEditMode = false;
 let isCreateMode = false;
@@ -538,6 +541,18 @@ async function init() {
   allProducts = (prodRes.data || []).filter(p => p.produkt);
   allVerkaufschancen = vcRes.data || [];
   allBerufsgruppen = bgRes.data || [];
+
+  const [{ data: themenData }, { data: allProds }] = await Promise.all([
+    sb.from('themengebiete').select('id, name, farbe').eq('aktiv', true).order('sortierung'),
+    sb.from('products').select('produkt, product_themen(thema_id, themengebiete(id, name, farbe))')
+  ]);
+  allThemen = themenData || [];
+  prodThemenMap = Object.fromEntries(
+    (allProds || []).map(p => [
+      p.produkt,
+      (p.product_themen || []).map(pt => pt.themengebiete).filter(Boolean)
+    ])
+  );
 
   document.getElementById('spinner').style.display = 'none';
   applyFilter();
@@ -617,6 +632,13 @@ async function openKundenkarte(id) {
   aktivitaeten = aktivRes.data || [];
 
   renderKarteTab0();
+
+  // Interessen laden
+  const { data: intRows } = await sb.from('kunden_interessen')
+    .select('thema_id').eq('kunden_id', currentKundeId);
+  kundeSelectedThemen = (intRows || []).map(r => r.thema_id);
+  renderKundeInteressenChips();
+
   renderKarteTab1();
 }
 
@@ -627,10 +649,12 @@ function openKundeCreate(prefill, fromAnfrageId) {
   currentKarteTab = 0;
   ansprechpartner = [];
   aktivitaeten = [];
+  kundeSelectedThemen = [];
   showKarteView();
   renderKarteHeader(prefill, fromAnfrageId);
   renderKarteTabs();
   renderKarteTab0Edit(prefill, fromAnfrageId);
+  renderKundeInteressenChips();
   // Store prefill for save
   window._prefill = prefill || null;
   window._fromAnfrageId = fromAnfrageId || null;
@@ -698,6 +722,38 @@ function switchKarteTab(tab) {
   currentKarteTab = tab;
   renderKarteTabs();
   if (tab === 1 && currentKundeId) renderKarteTab1();
+}
+
+// ─── Kunden-Interessen Chips ──────────────────────────────────────────────────
+function renderKundeInteressenChips() {
+  const wrap = document.getElementById('kunde-interessen-chips');
+  if (!wrap) return;
+  wrap.innerHTML = allThemen.map(t => {
+    const active = kundeSelectedThemen.includes(t.id);
+    return `<button type="button" onclick="toggleKundeThema('${t.id}')"
+      style="padding:4px 12px;border-radius:20px;border:1.5px solid ${active ? t.farbe : '#e2e8f0'};
+             background:${active ? t.farbe + '22' : 'white'};color:${active ? t.farbe : '#64748b'};
+             font-size:0.78rem;font-weight:700;cursor:pointer;transition:all .15s;">${esc(t.name)}</button>`;
+  }).join('');
+}
+
+function toggleKundeThema(id) {
+  kundeSelectedThemen = kundeSelectedThemen.includes(id)
+    ? kundeSelectedThemen.filter(x => x !== id)
+    : [...kundeSelectedThemen, id];
+  renderKundeInteressenChips();
+}
+
+// ─── VC-Themen-Badges ─────────────────────────────────────────────────────────
+function vcThemenBadges(vc) {
+  const namen = (vc.produkte || '').split(/[,\n]/).map(s => s.trim()).filter(Boolean);
+  const seen = new Set();
+  const badges = namen
+    .flatMap(n => prodThemenMap[n] || [])
+    .filter(t => t && !seen.has(t.id) && seen.add(t.id))
+    .map(t => `<span style="display:inline-block;background:${t.farbe}22;color:${t.farbe};font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:20px;margin:1px;">${esc(t.name)}</span>`)
+    .join('');
+  return badges || '<span style="color:#cbd5e1;">–</span>';
 }
 
 // ─── Tab 0: Übersicht ─────────────────────────────────────────────────────────
@@ -785,6 +841,13 @@ function renderKarteTab0() {
           </div>
           ${renderAnsprechpartnerTable()}
         </div>
+
+        <!-- Interessen -->
+        <div style="margin-top:20px;">
+          <div style="font-size:0.72rem;font-weight:700;color:#64748b;text-transform:uppercase;
+                      letter-spacing:.06em;margin-bottom:8px;">Interessen</div>
+          <div id="kunde-interessen-chips" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;"></div>
+        </div>
       </div>
 
       <!-- Right column: pipeline + aktivitäten -->
@@ -809,6 +872,7 @@ function renderKarteTab0() {
       </div>
     </div>
   `;
+  renderKundeInteressenChips();
 }
 
 function renderKarteTab0Edit(k, fromAnfrageId) {
@@ -963,6 +1027,22 @@ async function saveKunde() {
     }
     history.replaceState({}, '', 'kunden.html');
     window._fromAnfrageId = null;
+  }
+
+  // kunden_interessen: delete-all + re-insert
+  const { error: intDelErr } = await sb.from('kunden_interessen').delete().eq('kunden_id', kundeId);
+  if (intDelErr) {
+    if (msgEl) { msgEl.textContent = intDelErr.message; msgEl.className = 'msg error'; }
+    return;
+  }
+  if (kundeSelectedThemen.length) {
+    const { error: intInsErr } = await sb.from('kunden_interessen').insert(
+      kundeSelectedThemen.map(tid => ({ kunden_id: kundeId, thema_id: tid }))
+    );
+    if (intInsErr) {
+      if (msgEl) { msgEl.textContent = intInsErr.message; msgEl.className = 'msg error'; }
+      return;
+    }
   }
 
   const { data: fresh } = await sb.from('kunden').select('*, anfragen(id, produkte, created_at, status)').eq('id', kundeId).single();
@@ -1299,12 +1379,13 @@ function renderVcSection(kundenId) {
           ${['offen','in_gespraech','angebot','gewonnen','verloren'].map(s=>`<option value="${s}" ${v.status===s?'selected':''}>${vcStatusLabel(s)}</option>`).join('')}
         </select>
       </td>
+      <td>${vcThemenBadges(v)}</td>
       <td>
         <button class="vc-notiz-btn" onclick="openVcModal('${kundenId}','${v.id}')" title="${v.notiz ? esc(v.notiz) : 'Bearbeiten'}">${v.notiz ? '📝' : '✏️'}</button>
       </td>
       <td><button class="vc-del-btn" onclick="deleteVc('${v.id}','${kundenId}')">✕</button></td>
     </tr>`;
-  }).join('') : `<tr><td colspan="10" style="color:var(--gray-400);font-size:0.82rem;padding:10px 8px;">Noch keine Verkaufschancen</td></tr>`;
+  }).join('') : `<tr><td colspan="11" style="color:var(--gray-400);font-size:0.82rem;padding:10px 8px;">Noch keine Verkaufschancen</td></tr>`;
 
   return `
     <div class="pipeline-header">
@@ -1324,6 +1405,7 @@ function renderVcSection(kundenId) {
         <th style="text-align:right;">Marge</th>
         <th style="text-align:right;">Pipeline</th>
         <th>Status</th>
+        <th>Themen</th>
         <th></th><th></th>
       </tr></thead>
       <tbody>${tableRows}</tbody>
