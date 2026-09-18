@@ -417,7 +417,7 @@ async function saveThema() {
   if (editId) {
     ({ error } = await sb.from('themengebiete').update(payload).eq('id', editId));
   } else {
-    ({ error } = await sb.from('themengebiete').insert(payload));
+    ({ error } = await sb.from('themengebiete').insert({ ...payload, aktiv: true }));
   }
 
   if (error) {
