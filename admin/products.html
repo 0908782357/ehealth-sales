@@ -877,7 +877,7 @@
         </td>
         <td>${p.hersteller}</td>
         <td>
-          ${(p.product_themen || []).map(pt => `<span style="display:inline-block;background:${pt.themengebiete.farbe}22;color:${pt.themengebiete.farbe};font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:20px;margin:1px;">${esc(pt.themengebiete.name)}</span>`).join('') || '<span style="color:#cbd5e1;">–</span>'}
+          ${(p.product_themen || []).filter(pt => pt.themengebiete).map(pt => `<span style="display:inline-block;background:${pt.themengebiete.farbe}22;color:${pt.themengebiete.farbe};font-size:0.68rem;font-weight:700;padding:2px 7px;border-radius:20px;margin:1px;">${esc(pt.themengebiete.name)}</span>`).join('') || '<span style="color:#cbd5e1;">–</span>'}
         </td>
         <td><span class="badge badge-navy">${p.typ === 'hardware' ? 'Hardware' : p.typ === 'software' ? 'Software' : p.typ === 'dienstleistung' ? 'Dienstleistung' : p.typ || '–'}</span></td>
         <td>
@@ -1424,11 +1424,13 @@
     }
 
     // product_themen: delete-all + re-insert
-    await sb.from('product_themen').delete().eq('product_id', savedId);
+    const { error: ptDelErr } = await sb.from('product_themen').delete().eq('product_id', savedId);
+    if (ptDelErr) { showModalMsg('Themen konnten nicht gespeichert werden: ' + ptDelErr.message, 'error'); return; }
     if (prodSelectedThemen.length) {
-      await sb.from('product_themen').insert(
+      const { error: ptInsErr } = await sb.from('product_themen').insert(
         prodSelectedThemen.map(tid => ({ product_id: savedId, thema_id: tid }))
       );
+      if (ptInsErr) { showModalMsg('Themen konnten nicht gespeichert werden: ' + ptInsErr.message, 'error'); return; }
     }
     // Boolean-Spalten aktuell halten (Rückwärtskompatibilität für Produktfinder)
     const boolUpdate = {};
@@ -1954,11 +1956,13 @@
         if (itemErr) { showModalMsg('Bundle-Inhalt: ' + itemErr.message, 'error'); return; }
       }
       // bundle_themen: delete-all + re-insert
-      await sb.from('bundle_themen').delete().eq('bundle_id', bundleId);
+      const { error: btDelErr } = await sb.from('bundle_themen').delete().eq('bundle_id', bundleId);
+      if (btDelErr) { showModalMsg('Bundle-Themen: ' + btDelErr.message, 'error'); return; }
       if (bundleSelectedThemen.length) {
-        await sb.from('bundle_themen').insert(
+        const { error: btInsErr } = await sb.from('bundle_themen').insert(
           bundleSelectedThemen.map(tid => ({ bundle_id: bundleId, thema_id: tid }))
         );
+        if (btInsErr) { showModalMsg('Bundle-Themen: ' + btInsErr.message, 'error'); return; }
       }
       // bundle_berufsgruppen: delete + re-insert
       await sb.from('bundle_berufsgruppen').delete().eq('bundle_id', bundleId);
