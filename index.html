@@ -4784,6 +4784,7 @@
         pref:  t.finder_pref_column,
         icon:  t.icon_svg || null
       }));
+      ALL_THEMEN.forEach(t => { if (t.pref) KATEGORIE_LABELS[t.pref] = t.label; });
       renderTopicGrid();
       renderLoesungenFilterBar();
 
