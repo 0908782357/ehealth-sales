@@ -310,6 +310,21 @@
           <option value="gesperrt">Gesperrt (Finder deaktiviert)</option>
         </select>
       </div>
+      <div class="form-group">
+        <label>Alliance-Status</label>
+        <select id="f-alliance">
+          <option value="">Kein Alliance-Mitglied</option>
+          <option value="basis">Basis</option>
+          <option value="partner">Partner</option>
+          <option value="premium">Premium</option>
+        </select>
+        <div class="form-hint">Erscheint auf der eHealth Alliance Partnerseite.</div>
+      </div>
+      <div class="form-group">
+        <label>Ort / Region</label>
+        <input type="text" id="f-ort" placeholder="z.B. München">
+        <div class="form-hint">Wird auf der Alliance-Partnerseite angezeigt.</div>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn btn-edit" onclick="closeModal()">Abbrechen</button>
@@ -467,7 +482,9 @@
     document.getElementById('f-color').value   = p?.primary_color || '';
     document.getElementById('f-website').value = p?.website || '';
     document.getElementById('f-logo').value    = p?.logo_url || '';
-    document.getElementById('f-status').value  = p?.abo_status || 'test';
+    document.getElementById('f-status').value   = p?.abo_status || 'test';
+    document.getElementById('f-alliance').value = p?.alliance_partner || '';
+    document.getElementById('f-ort').value       = p?.ort || '';
     document.getElementById('modal-bg').classList.add('open');
   }
 
@@ -489,8 +506,10 @@
       primary_color: document.getElementById('f-color').value.trim() || null,
       website:       document.getElementById('f-website').value.trim() || null,
       logo_url:      document.getElementById('f-logo').value.trim() || null,
-      abo_status:    document.getElementById('f-status').value,
-      updated_at:    new Date().toISOString()
+      abo_status:      document.getElementById('f-status').value,
+      alliance_partner: document.getElementById('f-alliance').value || null,
+      ort:              document.getElementById('f-ort').value.trim() || null,
+      updated_at:      new Date().toISOString()
     };
 
     let error;
