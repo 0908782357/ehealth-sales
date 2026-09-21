@@ -4787,6 +4787,9 @@
         pref:  t.finder_pref_column,
         icon:  t.icon_svg || null
       }));
+      if (partnerThemenFilter) {
+        ALL_THEMEN = ALL_THEMEN.filter(t => !t.pref || partnerThemenFilter.includes(t.pref));
+      }
       ALL_THEMEN.forEach(t => { if (t.pref) KATEGORIE_LABELS[t.pref] = t.label; });
       renderTopicGrid();
       renderLoesungenFilterBar();
