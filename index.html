@@ -2368,14 +2368,8 @@
 
   <div class="loesungen-filter-section">
     <div class="container">
-      <div class="loesungen-filter">
+      <div class="loesungen-filter" id="loesungen-filter-bar">
         <button class="filter-btn active" onclick="filterLoesungen('alle', this)">Alle</button>
-        <button class="filter-btn" onclick="filterLoesungen('ti', this)">Telematik Infrastruktur</button>
-        <button class="filter-btn" onclick="filterLoesungen('security', this)">Cybersecurity</button>
-        <button class="filter-btn" onclick="filterLoesungen('telemedizin', this)">Telemedizin</button>
-        <button class="filter-btn" onclick="filterLoesungen('it_infrastruktur', this)">IT Infrastruktur</button>
-        <button class="filter-btn" onclick="filterLoesungen('modern_work', this)">Modern Work</button>
-        <button class="filter-btn" onclick="filterLoesungen('prozess_digital', this)">Prozess Digitalisierung</button>
       </div>
     </div>
   </div>
@@ -3054,6 +3048,16 @@
 
   function defaultTopicIcon() {
     return '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z"/></svg>';
+  }
+
+  function renderLoesungenFilterBar() {
+    const bar = document.getElementById('loesungen-filter-bar');
+    if (!bar || !ALL_THEMEN.length) return;
+    const extra = ALL_THEMEN
+      .filter(t => t.pref)
+      .map(t => `<button class="filter-btn" onclick="filterLoesungen('${t.pref}', this)">${esc(t.label)}</button>`)
+      .join('');
+    bar.innerHTML = `<button class="filter-btn active" onclick="filterLoesungen('alle', this)">Alle</button>${extra}`;
   }
 
   function renderTopicGrid() {
@@ -4781,6 +4785,7 @@
         icon:  t.icon_svg || null
       }));
       renderTopicGrid();
+      renderLoesungenFilterBar();
 
       // ASSESSMENT_TOPICS: alle aktiven Themen mit mindestens einer Frage
       const themenMitFragen = new Set((fragenData || []).map(f => f.themengebiete?.slug).filter(Boolean));
