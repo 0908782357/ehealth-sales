@@ -2833,7 +2833,7 @@
         <div class="container">
           <div style="display:flex;align-items:center;gap:20px;margin-bottom:24px;flex-wrap:wrap;">
             <div style="background:white;border-radius:10px;padding:10px 18px;display:inline-flex;align-items:center;">${logoInner}</div>
-            ${['ti','security','telemedizin','it_infrastruktur','modern_work','prozess_digital'].filter(k=>d[k]).map(k=>`<span class="loesung-kategorie-badge kat-${k}">${KATEGORIE_LABELS[k]}</span>`).join('') || ''}
+            ${(d.themen && d.themen.length ? d.themen.map(t=>`<span class="loesung-kategorie-badge" style="background:${t.color}22;color:${t.color};">${esc(t.label)}</span>`).join('') : ['ti','security','telemedizin','it_infrastruktur','modern_work','prozess_digital'].filter(k=>d[k]).map(k=>`<span class="loesung-kategorie-badge kat-${k}">${KATEGORIE_LABELS[k]}</span>`).join('')) || ''}
           </div>
           <h1 style="color:white;font-size:2.6rem;margin-bottom:16px;">${d.produkt}</h1>
           <p style="color:rgba(255,255,255,0.8);font-size:1.1rem;max-width:620px;line-height:1.7;">${d.heroText}</p>
@@ -2923,11 +2923,14 @@
     const container = document.getElementById('loesungen-cards');
     if (!container) return;
     const TOPIC_KEYS = ['ti','security','telemedizin','it_infrastruktur','modern_work','prozess_digital'];
-    const items = filter === 'alle' ? LOESUNGEN_DATA : LOESUNGEN_DATA.filter(p => !!p[filter]);
+    const items = filter === 'alle' ? LOESUNGEN_DATA : LOESUNGEN_DATA.filter(p => {
+      if (p.themen && p.themen.length) return p.themen.some(t => t.pref === filter || t.slug === filter);
+      return !!p[filter];
+    });
     container.innerHTML = items.length ? items.map(p => {
-      const badges = TOPIC_KEYS.filter(k => p[k])
-        .map(k => `<span class="loesung-kategorie-badge kat-${k}">${KATEGORIE_LABELS[k]}</span>`)
-        .join('');
+      const badges = (p.themen && p.themen.length)
+        ? p.themen.map(t => `<span class="loesung-kategorie-badge" style="background:${t.color}22;color:${t.color};">${esc(t.label)}</span>`).join('')
+        : TOPIC_KEYS.filter(k => p[k]).map(k => `<span class="loesung-kategorie-badge kat-${k}">${KATEGORIE_LABELS[k]}</span>`).join('');
       const gruppen = p.verfuegbar.length >= 20
         ? '<span class="loesung-gruppe-tag">Alle Leistungserbringer</span>'
         : p.verfuegbar.slice(0, 5).map(c => `<span class="loesung-gruppe-tag">${BERUFSGRUPPEN_NAMES[c] || c}</span>`).join('') +
@@ -4809,7 +4812,7 @@
           .map(f => ({ slug: topic.id, q: f.frage }))
       );
 
-      let q = _sb.from('products').select('*').eq('published', true).order('nr', { ascending: true });
+      let q = _sb.from('products').select('*, product_themen(thema_id, themengebiete(slug, name, farbe, finder_pref_column))').eq('published', true).order('nr', { ascending: true });
       if (currentPartner?.id) q = q.or(`partner_id.eq.${currentPartner.id},global.eq.true`);
       else q = q.or('partner_id.is.null,global.eq.true');
       const { data, error } = await q;
@@ -4827,6 +4830,12 @@
           detailPage:      p.detail_page,
           loesungAktiv:    !!p.loesung_aktiv,
           imageUrl:        p.image_url || null,
+          themen:          (p.product_themen || []).filter(pt => pt.themengebiete).map(pt => ({
+            slug:  pt.themengebiete.slug,
+            label: pt.themengebiete.name,
+            color: pt.themengebiete.farbe || '#1C74B8',
+            pref:  pt.themengebiete.finder_pref_column
+          })),
           ti:              !!p.ti,
           security:        !!p.security,
           telemedizin:     !!p.telemedizin,
