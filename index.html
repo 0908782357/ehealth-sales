@@ -3191,10 +3191,9 @@
   }
 
   function spiderAnchor(i, n) {
-    const angle = ((i * 360 / n - 90) % 360 + 360) % 360;
-    if (angle < 20 || angle > 340) return 'middle';
-    if (angle > 160 && angle < 200) return 'middle';
-    return angle < 180 ? 'start' : 'end';
+    const cosA = Math.cos((i * 360 / n - 90) * Math.PI / 180);
+    if (Math.abs(cosA) < 0.3) return 'middle';
+    return cosA > 0 ? 'start' : 'end';
   }
 
   function renderSpiderDiagram(scores) {
