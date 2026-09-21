@@ -4116,7 +4116,7 @@
     if (onResults) {
       // Alle 6 Topics als Toggle-Pills in der Sidebar
       const stripId = 'topic-filter-step2';
-      const pills = ASSESSMENT_TOPICS.map(t => {
+      const pills = ALL_THEMEN.map(t => {
         const active = wizSelectedTopics.has(t.id);
         return `<button class="topic-filter-pill${active ? ' active' : ''}"
           onclick="toggleResultTopic('${esc(t.id)}','${stripId}');renderWizSummary();"
@@ -4128,7 +4128,7 @@
         <div class="wiz-sum-label">Themen</div>
         <div style="display:flex;flex-wrap:wrap;gap:5px;">${pills}</div></div>`);
     } else if (wizSelectedTopics.size > 0 && wizBGName) {
-      const tags = ASSESSMENT_TOPICS
+      const tags = ALL_THEMEN
         .filter(t => wizSelectedTopics.has(t.id))
         .map(t => `<span class="wiz-sum-tag" style="background:${esc(t.color)}">${esc(t.label)}</span>`)
         .join('');
@@ -4174,7 +4174,7 @@
   }
 
   function toggleResultTopic(topicId, stripId) {
-    const topic = ASSESSMENT_TOPICS.find(t => t.id === topicId);
+    const topic = ALL_THEMEN.find(t => t.id === topicId);
     if (!topic) return;
     if (wizSelectedTopics.has(topicId)) {
       wizSelectedTopics.delete(topicId);
@@ -4212,7 +4212,7 @@
     const grid = document.getElementById('topic-select-grid');
     if (!grid) return;
     const chkSvg = `<svg fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="3" style="width:11px;height:11px;display:block;"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>`;
-    grid.innerHTML = ASSESSMENT_TOPICS.map(t => {
+    grid.innerHTML = ALL_THEMEN.map(t => {
       const sel = wizSelectedTopics.has(t.id);
       return `<button class="topic-select-box${sel ? ' active' : ''}" onclick="toggleTopicSelect('${esc(t.id)}')"
         style="${sel ? `border-color:${esc(t.color)};` : ''}">
@@ -4226,7 +4226,7 @@
   }
 
   function toggleTopicSelect(topicId) {
-    const topic = ASSESSMENT_TOPICS.find(t => t.id === topicId);
+    const topic = ALL_THEMEN.find(t => t.id === topicId);
     if (!topic) return;
     if (wizSelectedTopics.has(topicId)) {
       wizSelectedTopics.delete(topicId);
