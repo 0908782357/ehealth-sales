@@ -352,6 +352,14 @@
           <option value="strategisch">Strategisch</option>
         </select>
       </div>
+      <div class="form-group form-full" id="partner-logo-group">
+        <label>Logo-URL</label>
+        <input type="url" id="f-logo-url" placeholder="https://partner.de/logo.png">
+      </div>
+      <div class="form-group form-full" id="partner-website-group">
+        <label>Website</label>
+        <input type="url" id="f-website" placeholder="https://partner.de">
+      </div>
       <div class="form-group form-full">
         <label>Interne Notizen</label>
         <textarea id="f-notizen" placeholder="Anmerkungen, Gesprächsnotizen …"></textarea>
@@ -404,8 +412,10 @@
   const TIER_LABELS  = { standard: 'Standard', premium: 'Premium', strategisch: 'Strategisch' };
 
   function toggleTierGroup() {
-    const rolle = document.getElementById('f-rolle').value;
-    document.getElementById('tier-group').style.display = rolle === 'partner' ? '' : 'none';
+    const show = document.getElementById('f-rolle').value === 'partner';
+    ['tier-group', 'partner-logo-group', 'partner-website-group'].forEach(id => {
+      document.getElementById(id).style.display = show ? '' : 'none';
+    });
   }
 
   function initials(row) {
@@ -477,11 +487,13 @@
       document.getElementById('f-strasse').value  = u.strasse  || '';
       document.getElementById('f-plz').value      = u.plz      || '';
       document.getElementById('f-ort').value      = u.ort      || '';
-      document.getElementById('f-rolle').value = u.rolle || 'partner';
-      document.getElementById('f-tier').value  = u.partner_tier || 'standard';
-      document.getElementById('f-notizen').value = u.notizen || '';
+      document.getElementById('f-rolle').value    = u.rolle || 'partner';
+      document.getElementById('f-tier').value     = u.partner_tier || 'standard';
+      document.getElementById('f-logo-url').value = u.logo_url || '';
+      document.getElementById('f-website').value  = u.website  || '';
+      document.getElementById('f-notizen').value  = u.notizen || '';
     } else {
-      ['f-vorname','f-nachname','f-email','f-firma','f-telefon','f-strasse','f-plz','f-ort','f-notizen'].forEach(id => {
+      ['f-vorname','f-nachname','f-email','f-firma','f-telefon','f-strasse','f-plz','f-ort','f-logo-url','f-website','f-notizen'].forEach(id => {
         document.getElementById(id).value = '';
       });
       document.getElementById('f-rolle').value = 'partner';
@@ -513,6 +525,8 @@
       ort:      document.getElementById('f-ort').value.trim() || null,
       rolle,
       partner_tier,
+      logo_url: rolle === 'partner' ? (document.getElementById('f-logo-url').value.trim() || null) : null,
+      website:  rolle === 'partner' ? (document.getElementById('f-website').value.trim() || null) : null,
       notizen:  document.getElementById('f-notizen').value.trim() || null,
       updated_at: new Date().toISOString()
     };
