@@ -86,7 +86,17 @@
   .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: none; align-items: flex-start; justify-content: center; padding: 24px; overflow-y: auto; }
   .modal-bg.open { display: flex; }
   .modal { background: white; border-radius: 18px; width: 100%; max-width: 600px; padding: 34px 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); margin: auto; }
-  .modal h2 { font-family: Montserrat, sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--navy); margin-bottom: 24px; }
+  .modal h2 { font-family: Montserrat, sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--navy); margin-bottom: 16px; }
+  .modal-tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--gray-100); margin-bottom: 20px; }
+  .modal-tab { padding: 7px 16px; font-size: 0.82rem; font-weight: 700; border: none; background: none; cursor: pointer; color: var(--gray-400); border-bottom: 2px solid transparent; margin-bottom: -2px; border-radius: 0; transition: color .15s; }
+  .modal-tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+  .modal-tab:disabled { opacity: 0.35; cursor: default; }
+  .frage-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--gray-100); }
+  .frage-row:last-child { border-bottom: none; }
+  .frage-text { flex: 1; font-size: 0.88rem; color: var(--gray-700); }
+  .frage-sort { width: 50px; text-align: center; font-size: 0.78rem; color: var(--gray-400); }
+  .btn-del-frage { background: none; border: none; cursor: pointer; color: var(--gray-300); font-size: 1rem; padding: 2px 6px; border-radius: 6px; transition: color .15s; }
+  .btn-del-frage:hover { color: #ef4444; }
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .form-full { grid-column: 1 / -1; }
   .form-group { display: flex; flex-direction: column; gap: 5px; }
@@ -236,40 +246,64 @@
 <div class="modal-bg" id="modal-bg">
   <div class="modal">
     <h2 id="modal-title">Themengebiet anlegen</h2>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Name *</label>
-        <input type="text" id="f-name" placeholder="z.B. Telematikinfrastruktur"
-               oninput="autoSlug()">
-      </div>
-      <div class="form-group">
-        <label>Slug * <small style="font-weight:400;color:var(--gray-400)">(URL-safe, eindeutig)</small></label>
-        <input type="text" id="f-slug" placeholder="z.B. ti">
-      </div>
-      <div class="form-group">
-        <label>Farbe (Badge)</label>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <input type="color" id="f-farbe" value="#1C74B8"
-                 style="width:44px;height:36px;border:1.5px solid var(--gray-200);border-radius:8px;cursor:pointer;padding:2px;">
-          <input type="text" id="f-farbe-hex" value="#1C74B8"
-                 style="flex:1;" placeholder="#1C74B8"
-                 oninput="syncColorFromHex()">
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tab-grunddaten" onclick="switchTab('grunddaten')">Grunddaten</button>
+      <button class="modal-tab" id="tab-fragen" onclick="switchTab('fragen')" disabled>Assessment-Fragen</button>
+    </div>
+
+    <div id="tab-content-grunddaten">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Name *</label>
+          <input type="text" id="f-name" placeholder="z.B. Telematikinfrastruktur"
+                 oninput="autoSlug()">
+        </div>
+        <div class="form-group">
+          <label>Slug * <small style="font-weight:400;color:var(--gray-400)">(URL-safe, eindeutig)</small></label>
+          <input type="text" id="f-slug" placeholder="z.B. ti">
+        </div>
+        <div class="form-group">
+          <label>Farbe (Badge)</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input type="color" id="f-farbe" value="#1C74B8"
+                   style="width:44px;height:36px;border:1.5px solid var(--gray-200);border-radius:8px;cursor:pointer;padding:2px;">
+            <input type="text" id="f-farbe-hex" value="#1C74B8"
+                   style="flex:1;" placeholder="#1C74B8"
+                   oninput="syncColorFromHex()">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Sortierung</label>
+          <input type="number" id="f-sort" value="0" min="0" step="10">
+        </div>
+        <div class="form-group form-full">
+          <label>Beschreibung</label>
+          <textarea id="f-beschreibung" placeholder="Optionaler Tooltip-Text…"
+                    style="min-height:70px;"></textarea>
         </div>
       </div>
-      <div class="form-group">
-        <label>Sortierung</label>
-        <input type="number" id="f-sort" value="0" min="0" step="10">
-      </div>
-      <div class="form-group form-full">
-        <label>Beschreibung</label>
-        <textarea id="f-beschreibung" placeholder="Optionaler Tooltip-Text…"
-                  style="min-height:70px;"></textarea>
+      <div class="msg" id="modal-msg"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
+        <button class="btn btn-primary" onclick="saveThema()">Speichern</button>
       </div>
     </div>
-    <div class="msg" id="modal-msg"></div>
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeModal()">Abbrechen</button>
-      <button class="btn btn-primary" onclick="saveThema()">Speichern</button>
+
+    <div id="tab-content-fragen" hidden>
+      <div id="fragen-list" style="margin-bottom:14px;min-height:40px;"></div>
+      <div style="display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;">
+        <textarea id="f-neue-frage" placeholder="Neue Frage eingeben…"
+                  style="flex:1;min-height:64px;"></textarea>
+        <div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">
+          <input type="number" id="f-frage-sort" value="10" min="1" step="10"
+                 style="width:72px;" title="Sortierung">
+          <button class="btn btn-primary btn-sm" onclick="addFrage()">+ Hinzufügen</button>
+        </div>
+      </div>
+      <div class="msg" id="fragen-msg"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal()">Schließen</button>
+      </div>
     </div>
   </div>
 </div>
@@ -299,6 +333,7 @@ function syncColorFromHex() {
 
 let allThemen = [];
 let editId = null;
+let allFragen = [];
 
 async function init() {
   const { data: { session } } = await sb.auth.getSession();
@@ -349,6 +384,14 @@ function renderTable() {
     </tr>`).join('');
 }
 
+function switchTab(name) {
+  document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('tab-content-grunddaten').hidden = (name !== 'grunddaten');
+  document.getElementById('tab-content-fragen').hidden = (name !== 'fragen');
+  if (name === 'fragen') loadFragen();
+}
+
 function openModal() {
   editId = null;
   document.getElementById('modal-title').textContent = 'Themengebiet anlegen';
@@ -360,6 +403,8 @@ function openModal() {
   document.getElementById('f-sort').value = allThemen.length ? (Math.max(0, ...allThemen.map(t => t.sortierung)) + 10) : 10;
   document.getElementById('f-beschreibung').value = '';
   document.getElementById('modal-msg').className = 'msg';
+  document.getElementById('tab-fragen').disabled = true;
+  switchTab('grunddaten');
   document.getElementById('modal-bg').classList.add('open');
 }
 
@@ -377,10 +422,60 @@ function openEdit(id) {
   document.getElementById('f-sort').value = t.sortierung;
   document.getElementById('f-beschreibung').value = t.beschreibung || '';
   document.getElementById('modal-msg').className = 'msg';
+  document.getElementById('tab-fragen').disabled = false;
+  switchTab('grunddaten');
   document.getElementById('modal-bg').classList.add('open');
 }
 
 function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+
+async function loadFragen() {
+  if (!editId) return;
+  const { data, error } = await sb.from('assessment_questions')
+    .select('id, frage, sortierung').eq('thema_id', editId).order('sortierung').order('created_at');
+  if (error) {
+    document.getElementById('fragen-msg').textContent = 'Fehler: ' + error.message;
+    document.getElementById('fragen-msg').className = 'msg error';
+    return;
+  }
+  allFragen = data || [];
+  renderFragenList();
+}
+
+function renderFragenList() {
+  const el = document.getElementById('fragen-list');
+  if (!allFragen.length) {
+    el.innerHTML = '<p style="color:var(--gray-400);font-size:0.85rem;padding:4px 0;">Noch keine Fragen hinterlegt.</p>';
+    return;
+  }
+  el.innerHTML = allFragen.map(f => `
+    <div class="frage-row">
+      <span class="frage-sort">${f.sortierung}</span>
+      <span class="frage-text">${esc(f.frage)}</span>
+      <button class="btn-del-frage" title="Löschen" onclick="deleteFrage('${f.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+async function addFrage() {
+  const msg = document.getElementById('fragen-msg');
+  const frage = document.getElementById('f-neue-frage').value.trim();
+  const sortierung = parseInt(document.getElementById('f-frage-sort').value, 10) || 10;
+  if (!frage) { msg.textContent = 'Bitte Frage eingeben.'; msg.className = 'msg error'; return; }
+  const { error } = await sb.from('assessment_questions')
+    .insert({ thema_id: editId, frage, sortierung, aktiv: true });
+  if (error) { msg.textContent = error.message; msg.className = 'msg error'; return; }
+  document.getElementById('f-neue-frage').value = '';
+  document.getElementById('fragen-msg').className = 'msg';
+  await loadFragen();
+}
+
+async function deleteFrage(id) {
+  if (!confirm('Frage wirklich löschen?')) return;
+  const { error } = await sb.from('assessment_questions').delete().eq('id', id);
+  if (error) { alert(error.message); return; }
+  await loadFragen();
+}
 
 document.getElementById('f-slug').addEventListener('input', () => {
   document.getElementById('f-slug').dataset.manual = '1';

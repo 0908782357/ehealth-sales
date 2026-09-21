@@ -3103,20 +3103,7 @@
   let partnerThemenFilter = null; // gesetzt von loadPartnerConfig, angewendet in loadFromSupabase
   const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-  const ASSESSMENT_QUESTIONS = [
-    { ti: 0, q: 'Wie wichtig ist Ihnen IT-Sicherheit für Ihre Einrichtung?' },
-    { ti: 0, q: 'Haben Sie Bedenken bezüglich Cyberangriffen oder Datenschutzverletzungen?' },
-    { ti: 1, q: 'Stehen TI-Anwendungen wie ePA, eRezept oder TI-Messenger auf Ihrer Agenda?' },
-    { ti: 1, q: 'Haben Sie Unterstützungsbedarf bei der TI-Anbindung oder Ausstattung?' },
-    { ti: 2, q: 'Benötigen Sie Unterstützung bei Ihren IT-Systemen oder der Hardware?' },
-    { ti: 2, q: 'Planen Sie Investitionen in Ihre IT-Infrastruktur in den nächsten 12 Monaten?' },
-    { ti: 3, q: 'Interessieren Sie sich für flexible, ortsunabhängige Arbeitslösungen?' },
-    { ti: 3, q: 'Planen Sie den Einsatz digitaler Kommunikations- oder Kollaborationstools?' },
-    { ti: 4, q: 'Möchten Sie Verwaltungsprozesse in Ihrer Einrichtung digitalisieren?' },
-    { ti: 4, q: 'Ist die Reduzierung von Papierprozessen ein wichtiges Ziel für Sie?' },
-    { ti: 5, q: 'Interessieren Sie sich für Videosprechstunden oder Remote-Behandlung?' },
-    { ti: 5, q: 'Sind digitale Monitoring-Lösungen für Ihre Patienten relevant?' }
-  ];
+  let ASSESSMENT_QUESTIONS = []; // wird dynamisch aus assessment_questions geladen
 
   function selectTopic(topicId) {
     const topic = ASSESSMENT_TOPICS.find(t => t.id === topicId);
@@ -3155,7 +3142,7 @@
 
   function renderAssessmentQuestion() {
     const entry = ASSESSMENT_QUESTIONS[assessmentCurrentQ];
-    const topic = ASSESSMENT_TOPICS[entry.ti];
+    const topic = ASSESSMENT_TOPICS.find(t => t.id === entry.slug);
     const total = ASSESSMENT_QUESTIONS.length;
     const pct = Math.round(assessmentCurrentQ / total * 100);
     document.getElementById('assessment-q-num').textContent = 'Frage ' + (assessmentCurrentQ + 1) + ' von ' + total;
@@ -3178,9 +3165,9 @@
   }
 
   function showAssessmentResult() {
-    const scores = ASSESSMENT_TOPICS.map((_, ti) => {
+    const scores = ASSESSMENT_TOPICS.map(topic => {
       const vals = ASSESSMENT_QUESTIONS.reduce((acc, q, qi) => {
-        if (q.ti === ti) acc.push(assessmentAnswers[qi]);
+        if (q.slug === topic.id) acc.push(assessmentAnswers[qi]);
         return acc;
       }, []);
       const raw = vals.reduce((a, b) => a + b, 0);
@@ -4827,6 +4814,17 @@
         ASSESSMENT_TOPICS = ASSESSMENT_TOPICS.filter(t => partnerThemenFilter.includes(t.pref));
       }
       themaSlugToId = Object.fromEntries((themenData || []).map(t => [t.slug, t.id]));
+
+      // Assessment-Fragen aus DB laden
+      const { data: fragenData } = await _sb.from('assessment_questions')
+        .select('thema_id, frage, sortierung, themengebiete(slug)')
+        .eq('aktiv', true).order('sortierung');
+      ASSESSMENT_QUESTIONS = ASSESSMENT_TOPICS.flatMap(topic =>
+        (fragenData || [])
+          .filter(f => f.themengebiete?.slug === topic.id)
+          .sort((a, b) => (a.sortierung || 0) - (b.sortierung || 0))
+          .map(f => ({ slug: topic.id, q: f.frage }))
+      );
 
       let q = _sb.from('products').select('*').eq('published', true).order('nr', { ascending: true });
       if (currentPartner?.id) q = q.or(`partner_id.eq.${currentPartner.id},global.eq.true`);
