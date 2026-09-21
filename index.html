@@ -3190,11 +3190,18 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  function spiderAnchor(i, n) {
+    const angle = ((i * 360 / n - 90) % 360 + 360) % 360;
+    if (angle < 20 || angle > 340) return 'middle';
+    if (angle > 160 && angle < 200) return 'middle';
+    return angle < 180 ? 'start' : 'end';
+  }
+
   function renderSpiderDiagram(scores) {
     const svg = document.getElementById('assessment-spider-svg');
     const cx = 230, cy = 230, maxR = 110, labelR = 170;
-    const n = 6;
-    function rad(i) { return (i * 60 - 90) * Math.PI / 180; }
+    const n = ASSESSMENT_TOPICS.length;
+    function rad(i) { return (i * 360 / n - 90) * Math.PI / 180; }
     function pt(i, r) { return [cx + r * Math.cos(rad(i)), cy + r * Math.sin(rad(i))]; }
     function fmt(v) { return v.toFixed(1); }
     let html = '';
@@ -3211,7 +3218,6 @@
     scorePts.forEach((p, i) => {
       html += '<circle cx="' + fmt(p[0]) + '" cy="' + fmt(p[1]) + '" r="5.5" fill="' + ASSESSMENT_TOPICS[i].color + '" stroke="white" stroke-width="2"/>';
     });
-    const anchors = ['middle','start','start','middle','end','end'];
     const lines = ASSESSMENT_TOPICS.map(t => {
       const words = t.label.split(/\s+/);
       if (words.length <= 1) return words;
@@ -3222,7 +3228,7 @@
       const [lx, ly] = pt(i, labelR);
       const ls = lines[i];
       const y0 = ly - (ls.length - 1) * 7;
-      html += '<text x="' + fmt(lx) + '" y="' + fmt(y0) + '" text-anchor="' + anchors[i] + '" font-size="11.5" font-weight="700" fill="' + ASSESSMENT_TOPICS[i].color + '" font-family="Inter,sans-serif">';
+      html += '<text x="' + fmt(lx) + '" y="' + fmt(y0) + '" text-anchor="' + spiderAnchor(i, n) + '" font-size="11.5" font-weight="700" fill="' + ASSESSMENT_TOPICS[i].color + '" font-family="Inter,sans-serif">';
       ls.forEach((l, j) => { html += '<tspan x="' + fmt(lx) + '"' + (j ? ' dy="14"' : '') + '>' + l + '</tspan>'; });
       html += '</text>';
     }
@@ -3237,8 +3243,8 @@
     const onResults = wizBGName && document.getElementById('wiz-step2').classList.contains('active');
     if (!assessmentScores || !onResults) { wrap.style.display = 'none'; return; }
     wrap.style.display = 'block';
-    const cx = 150, cy = 150, maxR = 90, n = 6;
-    function rad(i) { return (i * 60 - 90) * Math.PI / 180; }
+    const cx = 150, cy = 150, maxR = 90, n = ASSESSMENT_TOPICS.length;
+    function rad(i) { return (i * 360 / n - 90) * Math.PI / 180; }
     function pt(i, r) { return [cx + r * Math.cos(rad(i)), cy + r * Math.sin(rad(i))]; }
     function fmt(v) { return v.toFixed(1); }
     let html = '';
@@ -4797,13 +4803,18 @@
 
   async function loadFromSupabase() {
     try {
-      // Themengebiete laden und ASSESSMENT_TOPICS befüllen (unabhängig vom Produkt-Load)
-      const { data: themenData } = await _sb.from('themengebiete')
-        .select('id, name, slug, farbe, finder_pref_column')
-        .eq('aktiv', true)
-        .order('sortierung');
+      // Themengebiete + Assessment-Fragen parallel laden
+      const [{ data: themenData }, { data: fragenData }] = await Promise.all([
+        _sb.from('themengebiete').select('id, name, slug, farbe, finder_pref_column').eq('aktiv', true).order('sortierung'),
+        _sb.from('assessment_questions').select('thema_id, frage, sortierung, themengebiete(slug)').eq('aktiv', true).order('sortierung')
+      ]);
+
+      themaSlugToId = Object.fromEntries((themenData || []).map(t => [t.slug, t.id]));
+
+      // ASSESSMENT_TOPICS: alle aktiven Themen mit mindestens einer Frage
+      const themenMitFragen = new Set((fragenData || []).map(f => f.themengebiete?.slug).filter(Boolean));
       ASSESSMENT_TOPICS = (themenData || [])
-        .filter(t => t.finder_pref_column)
+        .filter(t => themenMitFragen.has(t.slug))
         .map(t => ({
           id:    t.slug,
           label: t.name,
@@ -4811,14 +4822,9 @@
           pref:  t.finder_pref_column
         }));
       if (partnerThemenFilter) {
-        ASSESSMENT_TOPICS = ASSESSMENT_TOPICS.filter(t => partnerThemenFilter.includes(t.pref));
+        ASSESSMENT_TOPICS = ASSESSMENT_TOPICS.filter(t => !t.pref || partnerThemenFilter.includes(t.pref));
       }
-      themaSlugToId = Object.fromEntries((themenData || []).map(t => [t.slug, t.id]));
 
-      // Assessment-Fragen aus DB laden
-      const { data: fragenData } = await _sb.from('assessment_questions')
-        .select('thema_id, frage, sortierung, themengebiete(slug)')
-        .eq('aktiv', true).order('sortierung');
       ASSESSMENT_QUESTIONS = ASSESSMENT_TOPICS.flatMap(topic =>
         (fragenData || [])
           .filter(f => f.themengebiete?.slug === topic.id)
