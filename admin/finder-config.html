@@ -322,14 +322,7 @@
 
   const FINDER_BASE = 'https://www.ehealth-sales.de';
 
-  const TOPICS = [
-    { key: 'ti',              label: 'Telematik Infrastruktur', color: '#3C4A7C' },
-    { key: 'security',        label: 'Cybersecurity',           color: '#E53E3E' },
-    { key: 'telemedizin',     label: 'Telemedizin',             color: '#38B2AC' },
-    { key: 'it_infrastruktur',label: 'IT Infrastruktur',        color: '#4299E1' },
-    { key: 'modern_work',     label: 'Modern Work',             color: '#6DC52D' },
-    { key: 'prozess_digital', label: 'Prozess Digitalisierung', color: '#ED8936' },
-  ];
+  let TOPICS = [];
 
   let userRole = 'partner';
   let currentPartnerId = null;
@@ -343,6 +336,14 @@
     const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
     userRole = roleRow?.role || 'partner';
     if (userRole === 'kunde') { window.location.href = 'dashboard.html'; return; }
+
+    const { data: themenData } = await sb.from('themengebiete')
+      .select('slug, name, farbe, finder_pref_column')
+      .eq('aktiv', true)
+      .order('sortierung', { ascending: true });
+    TOPICS = (themenData || [])
+      .filter(t => t.finder_pref_column)
+      .map(t => ({ key: t.finder_pref_column, label: t.name, color: t.farbe || '#3C4A7C', slug: t.slug }));
 
     buildTopicGrid();
 
