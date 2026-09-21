@@ -4096,7 +4096,7 @@
 
     // Schwerpunkt (aus Step 0 oder Assessment)
     if (wizStep0TopicId) {
-      const t = ASSESSMENT_TOPICS.find(x => x.id === wizStep0TopicId);
+      const t = ALL_THEMEN.find(x => x.id === wizStep0TopicId) || ASSESSMENT_TOPICS.find(x => x.id === wizStep0TopicId);
       if (t) rows.push(`<div class="wiz-sum-item">
         <span class="wiz-sum-dot" style="background:${esc(t.color)}"></span>
         <div><div class="wiz-sum-label">Schwerpunkt</div>
