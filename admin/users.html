@@ -378,10 +378,12 @@
 
   let allUsers = [];
   let currentId = null;
+  let currentUserId = null;
 
   async function init() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) { window.location.href = 'index.html'; return; }
+    currentUserId = session.user.id;
     _setHeaderUser(session.user.id);
 
     const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
@@ -485,6 +487,12 @@
       document.getElementById('f-rolle').value    = u.rolle || 'partner';
       document.getElementById('f-tier').value     = u.partner_tier || 'standard';
       document.getElementById('f-notizen').value  = u.notizen || '';
+      // Eigene Rolle nicht editierbar – verhindert versehentliche Selbst-Degradierung
+      const rolleSelect = document.getElementById('f-rolle');
+      rolleSelect.disabled = (id === currentUserId);
+      if (id === currentUserId) {
+        rolleSelect.title = 'Deine eigene Rolle kann hier nicht geändert werden.';
+      }
     } else {
       ['f-vorname','f-nachname','f-email','f-firma','f-telefon','f-strasse','f-plz','f-ort','f-notizen'].forEach(id => {
         document.getElementById(id).value = '';
@@ -497,7 +505,10 @@
     document.getElementById('f-vorname').focus();
   }
 
-  function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+  function closeModal() {
+    document.getElementById('modal-bg').classList.remove('open');
+    document.getElementById('f-rolle').disabled = false;
+  }
 
   async function saveUser() {
     const email = document.getElementById('f-email').value.trim().toLowerCase();
@@ -505,6 +516,7 @@
     const firma = document.getElementById('f-firma').value.trim();
     if (!firma) { showMsg('Bitte Firma / Unternehmen ausfüllen.', 'error'); return; }
 
+    const isSelf = currentId === currentUserId;
     const rolle = document.getElementById('f-rolle').value;
     const partner_tier = rolle === 'partner' ? document.getElementById('f-tier').value : null;
     const payload = {
@@ -516,12 +528,14 @@
       strasse:  document.getElementById('f-strasse').value.trim() || null,
       plz:      document.getElementById('f-plz').value.trim() || null,
       ort:      document.getElementById('f-ort').value.trim() || null,
-      rolle,
-      partner_tier,
-
       notizen:  document.getElementById('f-notizen').value.trim() || null,
       updated_at: new Date().toISOString()
     };
+    // Eigene Rolle nie überschreiben
+    if (!isSelf) {
+      payload.rolle = rolle;
+      payload.partner_tier = partner_tier;
+    }
 
     let result, data;
     if (currentId) {
@@ -533,8 +547,9 @@
 
     if (result) { showMsg(result.message, 'error'); return; }
 
-    // Wenn der Nutzer bereits verknüpft ist, Rolle + Tier auch in user_roles aktualisieren
-    if (data?.user_id) {
+    // Wenn der Nutzer bereits verknüpft ist, Rolle + Tier in user_roles aktualisieren
+    // (nicht für den eigenen Account – Selbst-Degradierung verhindern)
+    if (!isSelf && data?.user_id) {
       await sb.from('user_roles')
         .upsert({ user_id: data.user_id, role: rolle, partner_tier }, { onConflict: 'user_id' });
     }
