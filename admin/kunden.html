@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>eHS Portal – Kundenverwaltung</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/pizzip@3/dist/pizzip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docxtemplater@3/build/docxtemplater.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -252,6 +254,8 @@
   .vc-notiz-btn:hover { color: var(--navy); background: var(--gray-100); }
   .vc-del-btn { background: none; border: none; cursor: pointer; color: #fca5a5; padding: 2px 4px; border-radius: 5px; font-size: 0.82rem; }
   .vc-del-btn:hover { color: var(--red); background: #fee2e2; }
+  .vc-doc-btn { background: none; border: none; cursor: pointer; color: var(--gray-400); padding: 2px 4px; border-radius: 5px; font-size: 0.82rem; }
+  .vc-doc-btn:hover { color: var(--navy); background: var(--gray-100); }
   .pipeline-badge { font-size: 0.68rem; font-weight: 700; color: #059669; background: #d1fae5; border-radius: 20px; padding: 2px 7px; white-space: nowrap; }
 
   /* VC Modal */
@@ -1409,9 +1413,10 @@ function renderVcSection(kundenId) {
       <td>
         <button class="vc-notiz-btn" onclick="openVcModal('${kundenId}','${v.id}')" title="${v.notiz ? esc(v.notiz) : 'Bearbeiten'}">${v.notiz ? '📝' : '✏️'}</button>
       </td>
+      <td><button class="vc-doc-btn" onclick="generateAngebot('${v.id}')" title="Angebot erstellen">📄</button></td>
       <td><button class="vc-del-btn" onclick="deleteVc('${v.id}','${kundenId}')">✕</button></td>
     </tr>`;
-  }).join('') : `<tr><td colspan="11" style="color:var(--gray-400);font-size:0.82rem;padding:10px 8px;">Noch keine Verkaufschancen</td></tr>`;
+  }).join('') : `<tr><td colspan="12" style="color:var(--gray-400);font-size:0.82rem;padding:10px 8px;">Noch keine Verkaufschancen</td></tr>`;
 
   return `
     <div class="pipeline-header">
@@ -1432,7 +1437,7 @@ function renderVcSection(kundenId) {
         <th style="text-align:right;">Pipeline</th>
         <th>Status</th>
         <th>Themen</th>
-        <th></th><th></th>
+        <th></th><th></th><th></th>
       </tr></thead>
       <tbody>${tableRows}</tbody>
     </table>`;
@@ -1635,6 +1640,101 @@ async function _setHeaderUser(userId) {
 }
 
 init();
+
+// ── Angebot generieren ────────────────────────────────────────────────────────
+async function generateAngebot(vcId) {
+  const vc = allVerkaufschancen.find(v => v.id === vcId);
+  if (!vc) return;
+  const k = allKunden.find(x => x.id === vc.kunden_id);
+  if (!k) return;
+
+  const Docxtemplater = window.docxtemplater || window.Docxtemplater;
+  const PizZip = window.PizZip;
+  if (!Docxtemplater || !PizZip) {
+    alert('Bibliotheken noch nicht geladen. Bitte Seite neu laden.');
+    return;
+  }
+
+  // Template aus Supabase Storage laden
+  const { data: signedData, error: urlErr } = await sb.storage.from('vorlagen').createSignedUrl('angebot.docx', 120);
+  if (urlErr || !signedData?.signedUrl) {
+    alert('Keine Angebotsvorlage hinterlegt.\nBitte zuerst in Mein Konto → Angebotsvorlage eine Word-Vorlage (.docx) hochladen.');
+    return;
+  }
+
+  let arrayBuffer;
+  try {
+    const resp = await fetch(signedData.signedUrl);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    arrayBuffer = await resp.arrayBuffer();
+  } catch(e) {
+    alert('Fehler beim Laden der Vorlage: ' + e.message);
+    return;
+  }
+
+  // Produkte aufteilen nach monatlich / einmalig
+  const productNames = (vc.produkte || '').split(/[,\n]/).map(s => s.trim()).filter(Boolean);
+  const monatlich = [], einmalig = [];
+  let totalMonatlich = 0, totalEinmalig = 0;
+
+  for (const name of productNames) {
+    const prod = allProducts.find(p => (p.produkt || '').toLowerCase().trim() === name.toLowerCase().trim());
+    const preis = prod?.preis_flat ?? 0;
+    const abrech = prod?.abrechnungsart || vc.abrechnungsart || 'monatlich';
+    const preisStr = preis.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+    if (abrech === 'einmalig') {
+      einmalig.push({ produkt: name, preis: preisStr });
+      totalEinmalig += preis;
+    } else {
+      monatlich.push({ produkt: name, preis: preisStr });
+      totalMonatlich += preis;
+    }
+  }
+
+  const heute = new Date();
+  const datumStr = heute.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const gueltigBis = new Date(heute.getTime() + 30 * 24 * 3600000).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const angebotsnr = 'ANG-' + heute.getFullYear() + '-' + String(Date.now()).slice(-6);
+
+  const templateData = {
+    kunde_name:        k.name || '',
+    kunde_firma:       k.firma || k.name || '',
+    kunde_email:       k.email || '',
+    kunde_telefon:     k.telefon || '',
+    datum:             datumStr,
+    angebotsnummer:    angebotsnr,
+    gueltig_bis:       gueltigBis,
+    laufzeit:          vc.laufzeit ? vc.laufzeit + ' Monate' : '–',
+    notiz:             vc.notiz || '',
+    vc_status:         vcStatusLabel(vc.status),
+    monatlich,
+    einmalig,
+    gesamt_monatlich:  totalMonatlich.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }),
+    gesamt_einmalig:   totalEinmalig.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }),
+  };
+
+  try {
+    const zip = new PizZip(arrayBuffer);
+    const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+    doc.render(templateData);
+    const buf = doc.getZip().generate({
+      type: 'arraybuffer',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    });
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Angebot_' + (k.firma || k.name || 'Kunde').replace(/[^a-zA-Z0-9äöüÄÖÜß\-]/g, '_') + '_' + heute.toISOString().slice(0, 10) + '.docx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch(e) {
+    console.error('Angebot-Fehler:', e);
+    alert('Fehler beim Erstellen des Angebots: ' + (e.message || e));
+  }
+}
 </script>
 </body>
 </html>

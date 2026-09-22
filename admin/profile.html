@@ -100,6 +100,8 @@
   .btn-primary:hover { background: var(--navy-dark); }
   .btn-secondary { background: var(--gray-100); color: var(--gray-500); }
   .btn-secondary:hover { background: var(--gray-200); }
+  .btn-danger { background: #fee2e2; color: #991b1b; }
+  .btn-danger:hover { background: #fecaca; }
 
   .msg { font-size: 0.83rem; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; display: none; }
   .msg.success { display: block; background: #dcfce7; color: #166534; }
@@ -370,6 +372,45 @@
         <button class="btn btn-primary" onclick="savePassword()">Passwort ändern</button>
       </div>
     </div>
+
+    <!-- Angebotsvorlage -->
+    <div class="section-card" id="card-vorlage" style="display:none;">
+      <h2>Angebotsvorlage</h2>
+      <p style="font-size:0.85rem;color:var(--gray-400);margin-bottom:16px;line-height:1.5;">
+        Laden Sie eine Word-Vorlage (.docx) hoch. Diese wird beim Erstellen von Angeboten aus Verkaufschancen verwendet und mit den jeweiligen Kundendaten befüllt.
+      </p>
+      <div id="vorlage-msg" class="msg"></div>
+      <div id="vorlage-status" style="margin-bottom:4px;"></div>
+      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:center;">
+        <label class="btn btn-secondary" style="cursor:pointer;">
+          Vorlage auswählen (.docx)
+          <input type="file" id="vorlage-file-input" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none;" onchange="previewVorlage(this)">
+        </label>
+        <button class="btn btn-primary" id="vorlage-save-btn" onclick="saveVorlage()" style="display:none;">Vorlage hochladen</button>
+        <button class="btn btn-danger" id="vorlage-delete-btn" onclick="deleteVorlage()" style="display:none;">Vorlage löschen</button>
+      </div>
+      <div id="vorlage-filename-preview" style="font-size:0.8rem;color:var(--gray-500);margin-top:8px;display:none;"></div>
+
+      <details style="margin-top:22px;">
+        <summary style="font-size:0.8rem;font-weight:600;color:var(--gray-500);cursor:pointer;user-select:none;">Verfügbare Platzhalter für die Word-Vorlage</summary>
+        <div style="margin-top:10px;font-size:0.77rem;background:var(--gray-50);border-radius:8px;padding:14px 16px;border:1px solid var(--gray-200);line-height:2;font-family:'Courier New',monospace;">
+          <b style="font-family:Inter,sans-serif;font-size:0.75rem;color:var(--gray-500);">Kundendaten</b><br>
+          {kunde_name} &nbsp; {kunde_firma} &nbsp; {kunde_email} &nbsp; {kunde_telefon}<br>
+          {datum} &nbsp; {angebotsnummer} &nbsp; {gueltig_bis} &nbsp; {laufzeit}<br>
+          <br>
+          <b style="font-family:Inter,sans-serif;font-size:0.75rem;color:var(--gray-500);">Monatliche Kosten (Schleife)</b><br>
+          {#monatlich} {produkt} &nbsp; {preis} {/monatlich}<br>
+          {gesamt_monatlich}<br>
+          <br>
+          <b style="font-family:Inter,sans-serif;font-size:0.75rem;color:var(--gray-500);">Einmalige Kosten (Schleife)</b><br>
+          {#einmalig} {produkt} &nbsp; {preis} {/einmalig}<br>
+          {gesamt_einmalig}<br>
+          <br>
+          <b style="font-family:Inter,sans-serif;font-size:0.75rem;color:var(--gray-500);">Sonstiges</b><br>
+          {notiz} &nbsp; {vc_status}
+        </div>
+      </details>
+    </div>
   </main>
 </div>
 
@@ -409,6 +450,10 @@
     }
     setupNavRole(role).catch(console.warn);
     loadMfaStatus().catch(console.warn);
+    if (role === 'admin') {
+      document.getElementById('card-vorlage').style.display = '';
+      loadVorlage().catch(console.warn);
+    }
     if (role !== 'admin') {
       document.getElementById('f-firma').readOnly = true;
       document.getElementById('f-firma').style.background = 'var(--gray-50)';
@@ -765,6 +810,86 @@
   function showMfaMsg(text, type) {
     const el = document.getElementById('mfa-msg');
     el.textContent = text; el.className = 'msg ' + type;
+  }
+
+  // ── Angebotsvorlage ──────────────────────────────────────────────────────────
+  let pendingVorlageFile = null;
+
+  async function loadVorlage() {
+    const statusEl = document.getElementById('vorlage-status');
+    const deleteBtn = document.getElementById('vorlage-delete-btn');
+    statusEl.innerHTML = '<span style="font-size:0.85rem;color:var(--gray-400);">Wird geladen…</span>';
+    try {
+      const { data: files, error } = await sb.storage.from('vorlagen').list('', { limit: 20 });
+      if (error) throw error;
+      const file = (files || []).find(f => f.name === 'angebot.docx');
+      if (file) {
+        const ts = file.updated_at || file.created_at;
+        const dateStr = ts ? new Date(ts).toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+        statusEl.innerHTML = `<span style="display:flex;align-items:center;gap:8px;font-size:0.85rem;">
+          <span style="color:#16a34a;font-weight:700;">✓ Vorlage hinterlegt</span>
+          <span style="color:var(--gray-400);">angebot.docx${dateStr ? ' · ' + dateStr : ''}</span>
+        </span>`;
+        deleteBtn.style.display = '';
+      } else {
+        statusEl.innerHTML = '<span style="font-size:0.85rem;color:var(--gray-400);">Noch keine Vorlage hinterlegt.</span>';
+        deleteBtn.style.display = 'none';
+      }
+    } catch(e) {
+      statusEl.innerHTML = '<span style="font-size:0.82rem;color:var(--red);">Fehler beim Laden: ' + e.message + '</span>';
+    }
+  }
+
+  function previewVorlage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    pendingVorlageFile = file;
+    const prev = document.getElementById('vorlage-filename-preview');
+    prev.textContent = '📄 ' + file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
+    prev.style.display = '';
+    document.getElementById('vorlage-save-btn').style.display = '';
+  }
+
+  async function saveVorlage() {
+    const msg = document.getElementById('vorlage-msg');
+    msg.className = 'msg';
+    if (!pendingVorlageFile) return;
+    const btn = document.getElementById('vorlage-save-btn');
+    btn.disabled = true; btn.textContent = 'Wird hochgeladen…';
+    const { error } = await sb.storage.from('vorlagen').upload('angebot.docx', pendingVorlageFile, {
+      contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      upsert: true,
+    });
+    btn.disabled = false; btn.textContent = 'Vorlage hochladen';
+    if (error) {
+      msg.textContent = 'Upload-Fehler: ' + error.message;
+      msg.className = 'msg error';
+    } else {
+      pendingVorlageFile = null;
+      document.getElementById('vorlage-file-input').value = '';
+      document.getElementById('vorlage-filename-preview').style.display = 'none';
+      btn.style.display = 'none';
+      msg.textContent = 'Vorlage erfolgreich hochgeladen!';
+      msg.className = 'msg success';
+      setTimeout(() => { msg.className = 'msg'; }, 3000);
+      loadVorlage();
+    }
+  }
+
+  async function deleteVorlage() {
+    if (!confirm('Angebotsvorlage wirklich löschen?')) return;
+    const msg = document.getElementById('vorlage-msg');
+    msg.className = 'msg';
+    const { error } = await sb.storage.from('vorlagen').remove(['angebot.docx']);
+    if (error) {
+      msg.textContent = 'Fehler: ' + error.message;
+      msg.className = 'msg error';
+    } else {
+      msg.textContent = 'Vorlage gelöscht.';
+      msg.className = 'msg success';
+      setTimeout(() => { msg.className = 'msg'; }, 3000);
+      loadVorlage();
+    }
   }
 </script>
 </body>
