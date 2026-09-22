@@ -508,6 +508,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { flowType
 // ─── State ───────────────────────────────────────────────────────────────────
 let allKunden = [];
 let allProducts = [];
+let allBundles = [];
 let allVerkaufschancen = [];
 let allBerufsgruppen = [];
 let allThemen = [];
@@ -536,7 +537,28 @@ function statusPill(status) {
   const [cls,lbl] = m[status] || m.interessent;
   return `<span class="status-pill ${cls}">${lbl}</span>`;
 }
-function produktNamen() { return allProducts.map(p=>p.produkt).sort(); }
+function produktNamen() {
+  return [
+    ...allProducts.map(p => p.produkt),
+    ...allBundles.map(b => b.name),
+  ].filter(Boolean).sort();
+}
+
+function findArtikel(name) {
+  const lower = (name || '').toLowerCase().trim();
+  const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === lower);
+  if (prod) return prod;
+  const bundle = allBundles.find(b => (b.name||'').toLowerCase().trim() === lower);
+  if (bundle) return {
+    produkt: bundle.name,
+    artikelnummer: null,
+    preis_flat: bundle.preis_flat ?? null,
+    preise: bundle.preise ?? {},
+    abrechnungsart: 'monatlich',
+    einkaufspreis_flat: bundle.einkaufspreis_flat ?? null,
+  };
+  return null;
+}
 function aktivTypIcon(typ) {
   return { notiz:'📝', aufgabe:'✅', anruf:'📞', email:'✉️', meeting:'👥' }[typ] || '📝';
 }
@@ -558,14 +580,16 @@ async function init() {
   if (role !== 'admin') { window.location.href = 'dashboard.html'; return; }
   document.getElementById('nav-group-admin').style.display = '';
 
-  const [kundenRes, prodRes, vcRes, bgRes] = await Promise.all([
+  const [kundenRes, prodRes, vcRes, bgRes, bundleRes] = await Promise.all([
     sb.from('kunden').select('*, anfragen(id, produkte, created_at, status)').order('created_at', { ascending: false }),
     sb.from('products').select('produkt, artikelnummer, preis_flat, abrechnungsart, preise, einkaufspreis_flat'),
     sb.from('verkaufschancen').select('*').order('created_at', { ascending: false }),
     sb.from('berufsgruppen').select('id, nr, name').order('nr', { ascending: true }),
+    sb.from('bundles').select('name, preis_flat, preise, einkaufspreis_flat').eq('aktiv', true),
   ]);
   allKunden = kundenRes.data || [];
   allProducts = (prodRes.data || []).filter(p => p.produkt);
+  allBundles = (bundleRes.data || []).filter(b => b.name);
   allVerkaufschancen = vcRes.data || [];
   allBerufsgruppen = bgRes.data || [];
 
@@ -1351,16 +1375,19 @@ function calcPipeline(v) {
   return monatlich * laufzeit * w + einmalig * w;
 }
 function calcVcEk(v) {
-  const names = v.positionen && v.positionen.length > 0
-    ? v.positionen.map(p => p.bezeichnung).filter(Boolean)
-    : (v.produkte || v.produkt || '').split(/[,\n]/).map(p => p.trim()).filter(Boolean);
+  if (v.positionen && v.positionen.length > 0) {
+    let total = 0, found = false;
+    v.positionen.forEach(p => {
+      const ek = p.ek ?? findArtikel(p.bezeichnung)?.einkaufspreis_flat ?? null;
+      if (ek != null) { total += ek * (p.menge || 1); found = true; }
+    });
+    return found ? total : null;
+  }
+  const names = (v.produkte || v.produkt || '').split(/[,\n]/).map(p => p.trim()).filter(Boolean);
   let total = 0, found = false;
   names.forEach(name => {
-    const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === name.toLowerCase().trim());
-    if (prod?.einkaufspreis_flat != null) {
-      const menge = v.positionen ? (v.positionen.find(p => p.bezeichnung === name)?.menge || 1) : 1;
-      total += prod.einkaufspreis_flat * menge; found = true;
-    }
+    const artikel = findArtikel(name);
+    if (artikel?.einkaufspreis_flat != null) { total += artikel.einkaufspreis_flat; found = true; }
   });
   return found ? total : null;
 }
@@ -1422,9 +1449,7 @@ function renderVcSection(kundenId) {
 
 // ─── VC Inline Edit ───────────────────────────────────────────────────────────
 function vcProdPreis(name) {
-  const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === name.toLowerCase().trim());
-  if (!prod) return null;
-  return getBgPreis(prod);
+  return getBgPreis(findArtikel(name));
 }
 
 function getBgPreis(prod) {
@@ -1453,15 +1478,15 @@ function vcToPositionen(vc) {
   }
   const names = (vc.produkte || vc.produkt || '').split(/[,\n]/).map(s => s.trim()).filter(Boolean);
   return names.map((name, i) => {
-    const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === name.toLowerCase().trim());
+    const artikel = findArtikel(name);
     return {
       pos: i + 1,
-      artikelnummer: prod?.artikelnummer || '',
+      artikelnummer: artikel?.artikelnummer || '',
       bezeichnung: name,
       menge: 1,
-      einzelpreis: getBgPreis(prod) ?? 0,
-      ek: prod?.einkaufspreis_flat ?? null,
-      abrechnungsart: prod?.abrechnungsart || vc.abrechnungsart || 'monatlich',
+      einzelpreis: getBgPreis(artikel) ?? 0,
+      ek: artikel?.einkaufspreis_flat ?? null,
+      abrechnungsart: artikel?.abrechnungsart || vc.abrechnungsart || 'monatlich',
     };
   });
 }
@@ -1614,18 +1639,18 @@ function removeVcEditPosition(idx) {
 
 function onVcEditBezeichnungChange(idx) {
   const bez = (document.getElementById(`ve-p-bez-${idx}`)?.value || '').trim();
-  const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === bez.toLowerCase().trim());
-  if (prod) {
+  const artikel = findArtikel(bez);
+  if (artikel) {
     const artnrEl = document.getElementById(`ve-p-artnr-${idx}`);
     const epEl    = document.getElementById(`ve-p-ep-${idx}`);
     const abrEl   = document.getElementById(`ve-p-abr-${idx}`);
     const ekCell  = document.getElementById(`ve-p-ek-${idx}`);
-    const bgPreis = getBgPreis(prod);
-    if (artnrEl) artnrEl.value = prod.artikelnummer || artnrEl.value;
+    const bgPreis = getBgPreis(artikel);
+    if (artnrEl) artnrEl.value = artikel.artikelnummer || artnrEl.value;
     if (epEl && parseFloat(epEl.value || '0') === 0 && bgPreis != null) epEl.value = bgPreis;
-    if (abrEl && prod.abrechnungsart) abrEl.value = prod.abrechnungsart;
+    if (abrEl && artikel.abrechnungsart) abrEl.value = artikel.abrechnungsart;
     if (ekCell) {
-      const ek = prod.einkaufspreis_flat ?? null;
+      const ek = artikel.einkaufspreis_flat ?? null;
       ekCell.dataset.ek = ek ?? '';
       ekCell.textContent = ek != null ? ek.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–';
     }
