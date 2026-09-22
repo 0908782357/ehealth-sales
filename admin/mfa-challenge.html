@@ -103,15 +103,10 @@
     const { data: { session } } = await sb.auth.getSession();
     if (!session) { window.location.href = 'index.html'; return; }
 
-    const { data: { currentLevel, nextLevel } } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
-    if (currentLevel === 'aal2') {
-      // Bereits verifiziert → weiterleiten
-      goNext(); return;
-    }
-    if (nextLevel !== 'aal2') {
-      // Kein MFA erforderlich → weiterleiten
-      goNext(); return;
-    }
+    try {
+      const { data: aal } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+      if (aal?.currentLevel === 'aal2') { goNext(); return; }
+    } catch (_) { /* Ignorieren – weiter mit Challenge */ }
 
     // Factor laden und Challenge starten
     const { data: factors } = await sb.auth.mfa.listFactors();
