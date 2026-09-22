@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>eHS Portal – Mein Konto</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -580,6 +581,7 @@
       <span class="wiz-ftr-hint">Konfiguration wird in Supabase gespeichert</span>
       <div style="display:flex;gap:8px;">
         <button class="btn btn-secondary" onclick="closeWizard()">Abbrechen</button>
+        <button class="btn btn-secondary" onclick="generateDocxTemplate(wizCurrentId)" title="Erzeugt eine .docx-Vorlage mit allen Platzhaltern, die Sie in Word formatieren und dann hochladen können">📥 Vorlage generieren</button>
         <button class="btn btn-primary" onclick="saveWizardConfig()">💾 Speichern</button>
       </div>
     </div>
@@ -1223,6 +1225,145 @@
     document.getElementById('wiz-overlay').classList.remove('open');
     showToast(error ? 'Fehler: ' + error.message : 'Konfiguration gespeichert ✓');
     wizCurrentId = null;
+  }
+
+  // ── Option B: Auto-generate .docx with correct {placeholders} ──────────────
+  function buildPositionenTable(docx) {
+    const { Table, TableRow, TableCell, Paragraph, TextRun, WidthType } = docx;
+    const border = { style: 'single', size: 4, color: 'CCCCCC' };
+    const cellBorders = { top: border, bottom: border, left: border, right: border };
+    const headerFill = { fill: 'EEF2FF', type: 'clear', color: 'auto' };
+
+    const headers = ['Pos', 'Artikelnr.', 'Bezeichnung', 'Menge', 'VK EP', 'Abrechnung', 'VK Summe'];
+    const widths  = [600, 1100, 2600, 700, 1000, 1300, 1100];
+    const tokens  = [
+      '{#positionen}{pos}', '{artikelnummer}', '{bezeichnung}',
+      '{menge}', '{einzelpreis}', '{abrechnungsart}', '{vk_summe}{/positionen}'
+    ];
+
+    const headerRow = new TableRow({
+      tableHeader: true,
+      children: headers.map((h, i) => new TableCell({
+        children: [new Paragraph({ children: [new TextRun({ text: h, bold: true, size: 18 })] })],
+        borders: cellBorders,
+        shading: headerFill,
+        width: { size: widths[i], type: WidthType.DXA },
+      })),
+    });
+
+    const dataRow = new TableRow({
+      children: tokens.map((tok, i) => new TableCell({
+        children: [new Paragraph({ children: [new TextRun({ text: tok, color: '1E40AF', size: 18 })] })],
+        borders: cellBorders,
+        width: { size: widths[i], type: WidthType.DXA },
+      })),
+    });
+
+    return new Table({ rows: [headerRow, dataRow], width: { size: 100, type: WidthType.PERCENTAGE } });
+  }
+
+  async function generateDocxTemplate(tplId) {
+    if (!tplId) return;
+    if (!window.docx) {
+      showToast('docx-Bibliothek noch nicht geladen – bitte kurz warten und nochmal klicken');
+      return;
+    }
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = window.docx;
+    const tplName = TEMPLATE_TYPES.find(t => t.id === tplId)?.name || tplId;
+    const layout  = wizLayouts[tplId] || makeDefaultSections();
+    const children = [];
+
+    // Document title
+    children.push(new Paragraph({
+      children: [new TextRun({ text: tplName, bold: true, size: 40, color: '1E3A5F' })],
+      heading: HeadingLevel.TITLE,
+      spacing: { after: 300 },
+    }));
+    children.push(new Paragraph({
+      children: [new TextRun({ text: 'Vorlage generiert aus Feld-Wizard – Platzhalter in blau', italics: true, size: 18, color: '6B7280' })],
+      spacing: { after: 400 },
+    }));
+
+    for (const sec of layout) {
+      if (!sec.fields || sec.fields.length === 0) continue;
+
+      // Section heading
+      children.push(new Paragraph({
+        children: [new TextRun({ text: (sec.icon || '') + ' ' + sec.label, bold: true, size: 26, color: '374151' })],
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 360, after: 120 },
+        border: { bottom: { style: 'single', size: 4, color: 'E5E7EB' } },
+      }));
+
+      for (const fieldId of sec.fields) {
+        const field = WIZ_FIELDS.find(f => f.id === fieldId);
+        if (!field) continue;
+
+        if (fieldId === 'positionen') {
+          children.push(new Paragraph({ text: '', spacing: { before: 120 } }));
+          children.push(buildPositionenTable(window.docx));
+          // Totals rows below table
+          children.push(new Paragraph({ text: '', spacing: { after: 80 } }));
+          const summaryFields = [
+            { label: 'Summe Monatlich:', token: '{gesamt_monatlich}' },
+            { label: 'Summe Einmalig:',  token: '{gesamt_einmalig}' },
+            { label: 'Gesamtsumme:',     token: '{gesamt_gesamt}' },
+          ];
+          for (const sf of summaryFields) {
+            children.push(new Paragraph({
+              children: [
+                new TextRun({ text: sf.label, bold: true, size: 20 }),
+                new TextRun({ text: '  ' + sf.token, color: '1E40AF', size: 20 }),
+              ],
+              alignment: 'right',
+              spacing: { after: 60 },
+            }));
+          }
+        } else if (fieldId === 'unterschrift') {
+          children.push(new Paragraph({
+            children: [new TextRun({ text: '_'.repeat(40) })],
+            spacing: { before: 600, after: 60 },
+          }));
+          children.push(new Paragraph({
+            children: [new TextRun({ text: 'Datum, Ort, Unterschrift', size: 18, color: '6B7280' })],
+            spacing: { after: 160 },
+          }));
+        } else if (fieldId === 'logo') {
+          children.push(new Paragraph({
+            children: [new TextRun({ text: '{logo}', color: '1E40AF', bold: true, size: 22 })],
+            spacing: { after: 80 },
+          }));
+          children.push(new Paragraph({
+            children: [new TextRun({ text: '↑ Firmenlogo wird hier eingefügt', italics: true, size: 16, color: '9CA3AF' })],
+            spacing: { after: 80 },
+          }));
+        } else {
+          const token = `{${fieldId}}`;
+          children.push(new Paragraph({
+            children: [
+              new TextRun({ text: field.label + ':  ', bold: true, size: 20 }),
+              new TextRun({ text: token, color: '1E40AF', size: 20 }),
+            ],
+            spacing: { after: 80 },
+          }));
+        }
+      }
+    }
+
+    const doc = new Document({ sections: [{ properties: {}, children }] });
+    let blob;
+    try { blob = await Packer.toBlob(doc); }
+    catch (e) { showToast('Fehler beim Erzeugen der Datei: ' + e.message); return; }
+
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href     = url;
+    a.download = tplId + '_vorlage.docx';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast('📥 ' + tplId + '_vorlage.docx heruntergeladen – in Word formatieren, dann hochladen');
   }
 
   function showToast(msg) {
