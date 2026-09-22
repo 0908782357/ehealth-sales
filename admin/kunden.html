@@ -258,6 +258,26 @@
   .vc-doc-btn:hover { color: var(--navy); background: var(--gray-100); }
   .pipeline-badge { font-size: 0.68rem; font-weight: 700; color: #059669; background: #d1fae5; border-radius: 20px; padding: 2px 7px; white-space: nowrap; }
 
+  /* VC Inline Edit Panel */
+  .vc-edit-panel { background: white; border-radius: 12px; border: 1.5px solid var(--gray-200); overflow: hidden; }
+  .vc-edit-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; background: var(--gray-50); border-bottom: 1px solid var(--gray-100); }
+  .vc-edit-title { font-size: 0.88rem; font-weight: 700; color: var(--navy); }
+  .vc-edit-body { padding: 18px 20px 20px; }
+  .vc-edit-pos-table { width: 100%; border-collapse: collapse; font-size: 0.79rem; }
+  .vc-edit-pos-table th { font-size: 0.6rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 6px; border-bottom: 1.5px solid var(--gray-200); text-align: left; white-space: nowrap; }
+  .vc-edit-pos-table td { padding: 3px 4px; vertical-align: middle; }
+  .vc-edit-pos-table input, .vc-edit-pos-table select { font-size: 0.79rem; padding: 5px 8px; border: 1.5px solid var(--gray-200); border-radius: 6px; font-family: inherit; width: 100%; outline: none; background: white; }
+  .vc-edit-pos-table input:focus, .vc-edit-pos-table select:focus { border-color: var(--navy); }
+  .vc-ep-pos { width: 32px; text-align: center; color: var(--gray-400); font-size: 0.72rem; font-weight: 700; }
+  .vc-ep-artnr { width: 110px; }
+  .vc-ep-bez { min-width: 160px; }
+  .vc-ep-menge { width: 58px; }
+  .vc-ep-ep { width: 96px; }
+  .vc-ep-abr { width: 108px; }
+  .vc-ep-summe { width: 96px; text-align: right; font-weight: 700; color: var(--navy); white-space: nowrap; padding-right: 6px; }
+  .vc-ep-del { width: 28px; }
+  .vc-edit-summary { display: flex; gap: 18px; font-size: 0.82rem; color: var(--gray-500); padding: 8px 0 0; flex-wrap: wrap; min-height: 24px; }
+
   /* VC Modal */
   .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 200; display: none; align-items: center; justify-content: center; padding: 20px; }
   .modal-bg.open { display: flex; }
@@ -476,71 +496,6 @@
   </div>
 </div>
 
-<!-- Verkaufschance Modal -->
-<div class="modal-bg" id="vc-modal-bg" onclick="if(event.target===this)closeVcModal()">
-  <div class="modal">
-    <div class="modal-header">
-      <h2 id="vc-modal-title">Verkaufschance</h2>
-      <button class="modal-close" onclick="closeVcModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="msg" id="vc-msg"></div>
-      <input type="hidden" id="vc-edit-id">
-      <input type="hidden" id="vc-kunden-id">
-      <div class="form-group">
-        <label>Produkte *</label>
-        <div id="vc-produkt-list" style="margin-bottom:6px;"></div>
-        <div style="display:flex;gap:8px;align-items:center;">
-          <select id="vc-produkt-sel" style="flex:1;padding:7px 11px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:0.82rem;font-family:inherit;outline:none;color:var(--gray-900);"></select>
-          <button class="btn btn-sm btn-primary" onclick="addVcProdukt()">+ Hinzufügen</button>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Wert (€)</label>
-          <input type="number" id="vc-wert" placeholder="0,00" min="0" step="0.01">
-        </div>
-        <div class="form-group">
-          <label>Abrechnungsart</label>
-          <select id="vc-abrechnungsart" onchange="toggleVcLaufzeit()">
-            <option value="monatlich">Monatlich</option>
-            <option value="einmalig">Einmalig</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group" id="vc-laufzeit-group">
-          <label>Laufzeit (Monate)</label>
-          <input type="number" id="vc-laufzeit" placeholder="12" min="1" step="1">
-        </div>
-        <div class="form-group">
-          <label>Wahrscheinlichkeit (%)</label>
-          <input type="number" id="vc-wahrscheinlichkeit" placeholder="50" min="0" max="100" step="5">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>Status</label>
-          <select id="vc-status">
-            <option value="offen">Offen</option>
-            <option value="in_gespraech">In Gespräch</option>
-            <option value="angebot">Angebot gemacht</option>
-            <option value="gewonnen">Gewonnen</option>
-            <option value="verloren">Verloren</option>
-          </select>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Notiz</label>
-        <textarea id="vc-notiz" placeholder="Interne Notiz zur Verkaufschance…" style="min-height:60px;"></textarea>
-      </div>
-      <div class="modal-actions">
-        <button class="btn btn-edit" onclick="closeVcModal()">Abbrechen</button>
-        <button class="btn btn-primary" style="background:#5b21b6;" onclick="saveVc()">Speichern</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <script>
 const SUPABASE_URL  = 'https://focysklymhmcfwgxdtuk.supabase.co';
@@ -844,7 +799,9 @@ function toggleKundeThema(id) {
 
 // ─── VC-Themen-Badges ─────────────────────────────────────────────────────────
 function vcThemenBadges(vc) {
-  const namen = (vc.produkte || '').split(/[,\n]/).map(s => s.trim()).filter(Boolean);
+  const namen = vc.positionen && Array.isArray(vc.positionen) && vc.positionen.length > 0
+    ? vc.positionen.map(p => p.bezeichnung).filter(Boolean)
+    : (vc.produkte || '').split(/[,\n]/).map(s => s.trim()).filter(Boolean);
   const seen = new Set();
   const badges = namen
     .flatMap(n => prodThemenMap[n] || [])
@@ -1316,19 +1273,30 @@ async function deleteAktivitaet(id) {
 }
 
 // ─── Tab 1: Vertrieb ──────────────────────────────────────────────────────────
+let editingVcId = undefined; // undefined=list, null=new, 'uuid'=edit existing
+let editingVcKundenId = null;
+let editingVcPositionen = [];
+
 function renderKarteTab1() {
   if (!currentKundeId) return;
-  document.getElementById('ktab-1').innerHTML = `
-    <div class="ks-section">
-      <div style="overflow-x:auto;">
-        ${renderVcSection(currentKundeId)}
+  if (editingVcId !== undefined) {
+    document.getElementById('ktab-1').innerHTML = `
+      <div class="ks-section">
+        ${renderVcEditPanel()}
+      </div>`;
+    setTimeout(updateVcEditSummary, 0);
+  } else {
+    document.getElementById('ktab-1').innerHTML = `
+      <div class="ks-section">
+        <div style="overflow-x:auto;">
+          ${renderVcSection(currentKundeId)}
+        </div>
       </div>
-    </div>
-    <div class="ks-section">
-      <div class="ks-title">Anfragen-Historie</div>
-      ${renderAnfragenHistory()}
-    </div>
-  `;
+      <div class="ks-section">
+        <div class="ks-title">Anfragen-Historie</div>
+        ${renderAnfragenHistory()}
+      </div>`;
+  }
 }
 
 function renderAnfragenHistory() {
@@ -1355,25 +1323,43 @@ function vcStatusCls(s) {
 function vcStatusLabel(s) {
   return { offen:'Offen', in_gespraech:'In Gespräch', angebot:'Angebot', gewonnen:'Gewonnen', verloren:'Verloren' }[s] || s;
 }
-function calcPipeline(v) {
+function calcVcSumme(v) {
+  if (v.positionen && Array.isArray(v.positionen) && v.positionen.length > 0) {
+    let monatlich = 0, einmalig = 0;
+    for (const p of v.positionen) {
+      const s = (p.menge || 1) * (p.einzelpreis || 0);
+      if (p.abrechnungsart === 'einmalig') einmalig += s; else monatlich += s;
+    }
+    return { monatlich, einmalig };
+  }
   const wert = v.wert || 0;
-  const laufzeit = v.abrechnungsart === 'monatlich' && v.laufzeit ? v.laufzeit : 1;
-  const w = v.wahrscheinlichkeit != null ? v.wahrscheinlichkeit : 50;
-  return wert * laufzeit * (w / 100);
+  return v.abrechnungsart === 'einmalig' ? { monatlich: 0, einmalig: wert } : { monatlich: wert, einmalig: 0 };
+}
+function vcProdukteSummary(v) {
+  if (v.positionen && Array.isArray(v.positionen) && v.positionen.length > 0) {
+    return v.positionen.map(p => p.bezeichnung).filter(Boolean).join(', ');
+  }
+  return v.produkte || v.produkt || '–';
+}
+function calcPipeline(v) {
+  const w = (v.wahrscheinlichkeit ?? 50) / 100;
+  const laufzeit = v.laufzeit || 1;
+  const { monatlich, einmalig } = calcVcSumme(v);
+  return monatlich * laufzeit * w + einmalig * w;
 }
 function calcVcEk(v) {
-  const names = (v.produkte || v.produkt || '').split(/[,\n]/).map(p => p.trim()).filter(Boolean);
+  const names = v.positionen && v.positionen.length > 0
+    ? v.positionen.map(p => p.bezeichnung).filter(Boolean)
+    : (v.produkte || v.produkt || '').split(/[,\n]/).map(p => p.trim()).filter(Boolean);
   let total = 0, found = false;
   names.forEach(name => {
     const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === name.toLowerCase().trim());
-    if (prod?.einkaufspreis_flat != null) { total += prod.einkaufspreis_flat; found = true; }
+    if (prod?.einkaufspreis_flat != null) {
+      const menge = v.positionen ? (v.positionen.find(p => p.bezeichnung === name)?.menge || 1) : 1;
+      total += prod.einkaufspreis_flat * menge; found = true;
+    }
   });
   return found ? total : null;
-}
-function margePctColor(pct) {
-  if (pct >= 40) return '#059669';
-  if (pct >= 20) return '#b45309';
-  return '#dc2626';
 }
 
 function renderVcSection(kundenId) {
@@ -1383,57 +1369,45 @@ function renderVcSection(kundenId) {
 
   const tableRows = vcList.length ? vcList.map(v => {
     const pipeline = calcPipeline(v);
-    const produkte = v.produkte || v.produkt || '–';
-    const laufzeitLabel = v.abrechnungsart === 'monatlich' && v.laufzeit ? v.laufzeit + ' M' : '–';
+    const { monatlich: sumM, einmalig: sumE } = calcVcSumme(v);
     const wkeit = v.wahrscheinlichkeit != null ? v.wahrscheinlichkeit : 50;
-    const ek = calcVcEk(v);
-    const marge = (ek !== null && v.wert != null) ? v.wert - ek : null;
-    const margePct = (marge !== null && v.wert > 0) ? (marge / v.wert) * 100 : null;
-    const ekCell = ek !== null
-      ? ek.toLocaleString('de-DE', {style:'currency', currency:'EUR'})
-      : '<span style="color:var(--gray-400);">–</span>';
-    const margeCell = marge !== null
-      ? `<span style="font-weight:700;color:${margePctColor(margePct)};">${marge.toLocaleString('de-DE',{style:'currency',currency:'EUR'})}</span>
-         <span style="font-size:0.7rem;color:${margePctColor(margePct)};margin-left:3px;">(${margePct.toFixed(0)} %)</span>`
-      : '<span style="color:var(--gray-400);">–</span>';
+    const laufzeitLabel = v.laufzeit ? v.laufzeit + ' M' : '–';
+    const summary = vcProdukteSummary(v);
+    const fmt = (n) => n.toLocaleString('de-DE',{style:'currency',currency:'EUR'});
     return `<tr>
-      <td style="font-weight:600;color:var(--navy);max-width:140px;" title="${esc(produkte)}">${esc(produkte.length > 36 ? produkte.substring(0,36)+'…' : produkte)}</td>
-      <td style="text-align:right;">${v.wert != null ? v.wert.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–'}</td>
+      <td style="font-weight:600;color:var(--navy);max-width:170px;" title="${esc(summary)}">${esc(summary.length > 44 ? summary.substring(0,44)+'…' : summary)}</td>
+      <td style="text-align:right;">${sumM > 0 ? fmt(sumM) : '<span style="color:var(--gray-300);">–</span>'}</td>
+      <td style="text-align:right;">${sumE > 0 ? fmt(sumE) : '<span style="color:var(--gray-300);">–</span>'}</td>
       <td style="text-align:right;color:var(--gray-500);">${laufzeitLabel}</td>
       <td style="text-align:right;color:var(--gray-500);">${wkeit} %</td>
-      <td style="text-align:right;">${ekCell}</td>
-      <td style="text-align:right;">${margeCell}</td>
-      <td style="text-align:right;font-weight:700;color:#059669;">${pipeline > 0 ? pipeline.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–'}</td>
+      <td style="text-align:right;font-weight:700;color:#059669;">${pipeline > 0 ? fmt(pipeline) : '–'}</td>
       <td>
         <select class="vc-status-sel ${vcStatusCls(v.status)}" onchange="changeVcStatus('${v.id}',this.value,'${kundenId}');this.className='vc-status-sel '+vcStatusCls(this.value)">
           ${['offen','in_gespraech','angebot','gewonnen','verloren'].map(s=>`<option value="${s}" ${v.status===s?'selected':''}>${vcStatusLabel(s)}</option>`).join('')}
         </select>
       </td>
       <td>${vcThemenBadges(v)}</td>
-      <td>
-        <button class="vc-notiz-btn" onclick="openVcModal('${kundenId}','${v.id}')" title="${v.notiz ? esc(v.notiz) : 'Bearbeiten'}">${v.notiz ? '📝' : '✏️'}</button>
-      </td>
+      <td><button class="vc-notiz-btn" onclick="openVcEdit('${kundenId}','${v.id}')" title="Bearbeiten">✏️</button></td>
       <td><button class="vc-doc-btn" onclick="generateAngebot('${v.id}')" title="Angebot erstellen">📄</button></td>
       <td><button class="vc-del-btn" onclick="deleteVc('${v.id}','${kundenId}')">✕</button></td>
     </tr>`;
-  }).join('') : `<tr><td colspan="12" style="color:var(--gray-400);font-size:0.82rem;padding:10px 8px;">Noch keine Verkaufschancen</td></tr>`;
+  }).join('') : `<tr><td colspan="11" style="color:var(--gray-400);font-size:0.82rem;padding:10px 8px;">Noch keine Verkaufschancen</td></tr>`;
 
   return `
     <div class="pipeline-header">
       <span class="pipeline-title">Verkaufschancen (${vcList.length})</span>
       <span style="display:flex;align-items:center;gap:10px;">
         ${totalPipeline > 0 ? `<span class="pipeline-total">${totalPipeline.toLocaleString('de-DE',{style:'currency',currency:'EUR'})} Pipeline</span>` : ''}
-        <button class="btn btn-sm" style="background:#ede9fe;color:#5b21b6;padding:4px 10px;" onclick="openVcModal('${kundenId}')">+ Chance</button>
+        <button class="btn btn-sm" style="background:#ede9fe;color:#5b21b6;padding:4px 10px;" onclick="openVcEdit('${kundenId}',null)">+ Chance</button>
       </span>
     </div>
     <table class="pipeline-table">
       <thead><tr>
-        <th>Produkte</th>
-        <th style="text-align:right;">VK</th>
+        <th>Positionen</th>
+        <th style="text-align:right;">Summe mtl.</th>
+        <th style="text-align:right;">Summe einm.</th>
         <th style="text-align:right;">Laufzeit</th>
         <th style="text-align:right;">W'keit</th>
-        <th style="text-align:right;">EK</th>
-        <th style="text-align:right;">Marge</th>
         <th style="text-align:right;">Pipeline</th>
         <th>Status</th>
         <th>Themen</th>
@@ -1443,102 +1417,7 @@ function renderVcSection(kundenId) {
     </table>`;
 }
 
-// ─── Verkaufschancen CRUD ─────────────────────────────────────────────────────
-let vcSelectedProdukte = [];
-
-function renderVcProduktList() {
-  const container = document.getElementById('vc-produkt-list');
-  if (!container) return;
-  if (!vcSelectedProdukte.length) {
-    container.innerHTML = '<div style="color:var(--gray-400);font-size:0.78rem;padding:4px 0 2px;">Noch keine Produkte hinzugefügt.</div>';
-  } else {
-    container.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.82rem;border:1.5px solid var(--gray-200);border-radius:9px;overflow:hidden;">
-      <thead><tr style="background:var(--gray-50);">
-        <th style="padding:5px 10px;text-align:left;font-size:0.62rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;">Produkt</th>
-        <th style="padding:5px 10px;text-align:right;font-size:0.62rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;">VK</th>
-        <th style="padding:5px 10px;text-align:right;font-size:0.62rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:.05em;">EK</th>
-        <th style="width:28px;"></th>
-      </tr></thead>
-      <tbody>${vcSelectedProdukte.map((name, i) => {
-        const prod = allProducts.find(p => (p.produkt||'') === name);
-        const vk = vcProdPreis(name);
-        const ek = prod?.einkaufspreis_flat;
-        return `<tr style="border-top:1px solid var(--gray-100);">
-          <td style="padding:7px 10px;font-weight:600;color:var(--navy);">${esc(name)}</td>
-          <td style="padding:7px 10px;text-align:right;color:var(--gray-500);white-space:nowrap;">${vk != null ? vk.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–'}</td>
-          <td style="padding:7px 10px;text-align:right;color:var(--gray-400);font-size:0.75rem;white-space:nowrap;">${ek != null ? ek.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–'}</td>
-          <td style="padding:7px 6px;text-align:center;"><button onclick="removeVcProdukt(${i})" style="background:none;border:none;cursor:pointer;color:#fca5a5;font-size:0.9rem;line-height:1;padding:2px 4px;border-radius:4px;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#fca5a5'">✕</button></td>
-        </tr>`;
-      }).join('')}</tbody>
-    </table>`;
-  }
-  populateVcProduktSel();
-}
-
-function populateVcProduktSel() {
-  const sel = document.getElementById('vc-produkt-sel');
-  if (!sel) return;
-  const namen = produktNamen();
-  sel.innerHTML = '<option value="">Produkt hinzufügen…</option>'
-    + namen.filter(n => !vcSelectedProdukte.includes(n))
-           .map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
-}
-
-function addVcProdukt() {
-  const sel = document.getElementById('vc-produkt-sel');
-  const name = sel?.value;
-  if (!name) return;
-  vcSelectedProdukte.push(name);
-  renderVcProduktList();
-  autoCalcVcWert();
-}
-
-function removeVcProdukt(i) {
-  vcSelectedProdukte.splice(i, 1);
-  renderVcProduktList();
-  autoCalcVcWert();
-}
-
-function autoCalcVcWert() {
-  const wertInput = document.getElementById('vc-wert');
-  if (!wertInput || wertInput.dataset.manual === '1') return;
-  let sum = 0;
-  vcSelectedProdukte.forEach(name => { const p = vcProdPreis(name); if (p != null) sum += p; });
-  wertInput.value = sum > 0 ? sum : '';
-}
-
-function openVcModal(kundenId, vcId) {
-  vcId = vcId || null;
-  const vc = vcId ? allVerkaufschancen.find(v => v.id === vcId) : null;
-  document.getElementById('vc-modal-title').textContent = vc ? 'Verkaufschance bearbeiten' : 'Neue Verkaufschance';
-  document.getElementById('vc-edit-id').value = vcId || '';
-  document.getElementById('vc-kunden-id').value = kundenId;
-
-  const vcProdukte = vc?.produkte || vc?.produkt || '';
-  vcSelectedProdukte = vcProdukte.split(/[,\n]/).map(p => p.trim()).filter(Boolean);
-  renderVcProduktList();
-
-  const abrech = vc?.abrechnungsart || 'monatlich';
-  document.getElementById('vc-abrechnungsart').value = abrech;
-  document.getElementById('vc-laufzeit').value = vc?.laufzeit ?? '';
-  document.getElementById('vc-wahrscheinlichkeit').value = vc?.wahrscheinlichkeit ?? 50;
-  const wertEl = document.getElementById('vc-wert');
-  wertEl.value = vc?.wert != null ? vc.wert : '';
-  wertEl.dataset.manual = vc?.wert != null ? '1' : '0';
-  wertEl.oninput = () => { wertEl.dataset.manual = wertEl.value ? '1' : '0'; };
-  document.getElementById('vc-status').value = vc?.status || 'offen';
-  document.getElementById('vc-notiz').value = vc?.notiz || '';
-  document.getElementById('vc-msg').className = 'msg';
-  toggleVcLaufzeit();
-  document.getElementById('vc-modal-bg').classList.add('open');
-}
-
-function closeVcModal() { document.getElementById('vc-modal-bg').classList.remove('open'); }
-function toggleVcLaufzeit() {
-  const abrech = document.getElementById('vc-abrechnungsart').value;
-  document.getElementById('vc-laufzeit-group').style.display = abrech === 'monatlich' ? '' : 'none';
-}
-
+// ─── VC Inline Edit ───────────────────────────────────────────────────────────
 function vcProdPreis(name) {
   const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === name.toLowerCase().trim());
   if (!prod) return null;
@@ -1550,27 +1429,217 @@ function vcProdPreis(name) {
   return null;
 }
 
-async function saveVc() {
-  const msg = document.getElementById('vc-msg');
-  if (!vcSelectedProdukte.length) { msg.textContent = 'Mindestens ein Produkt hinzufügen.'; msg.className = 'msg error'; return; }
+function vcToPositionen(vc) {
+  if (!vc) return [];
+  if (vc.positionen && Array.isArray(vc.positionen) && vc.positionen.length > 0) {
+    return vc.positionen.map((p, i) => ({ pos: i + 1, ...p }));
+  }
+  const names = (vc.produkte || vc.produkt || '').split(/[,\n]/).map(s => s.trim()).filter(Boolean);
+  return names.map((name, i) => {
+    const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === name.toLowerCase().trim());
+    return {
+      pos: i + 1,
+      artikelnummer: prod?.artikelnummer || '',
+      bezeichnung: name,
+      menge: 1,
+      einzelpreis: prod?.preis_flat ?? 0,
+      abrechnungsart: prod?.abrechnungsart || vc.abrechnungsart || 'monatlich',
+    };
+  });
+}
 
-  const kundenId = document.getElementById('vc-kunden-id').value;
-  const vcId = document.getElementById('vc-edit-id').value;
-  const wertRaw = document.getElementById('vc-wert').value;
-  const wert = wertRaw !== '' ? parseFloat(wertRaw) : null;
-  const abrechnungsart = document.getElementById('vc-abrechnungsart').value;
-  const laufzeitRaw = document.getElementById('vc-laufzeit').value;
-  const laufzeit = abrechnungsart === 'monatlich' && laufzeitRaw ? parseInt(laufzeitRaw, 10) : null;
-  const wRaw = document.getElementById('vc-wahrscheinlichkeit').value;
-  const wahrscheinlichkeit = wRaw !== '' ? parseInt(wRaw, 10) : 50;
+function openVcEdit(kundenId, vcId) {
+  vcId = vcId || null;
+  editingVcKundenId = kundenId;
+  editingVcId = vcId;
+  const vc = vcId ? allVerkaufschancen.find(v => v.id === vcId) : null;
+  editingVcPositionen = vcToPositionen(vc);
+  renderKarteTab1();
+}
 
-  const payload = {
-    produkte: vcSelectedProdukte.join(', '), wert: isNaN(wert) ? null : wert,
-    abrechnungsart, laufzeit, wahrscheinlichkeit,
-    status: document.getElementById('vc-status').value,
-    notiz: document.getElementById('vc-notiz').value.trim() || null,
-    updated_at: new Date().toISOString(),
-  };
+function closeVcEdit() {
+  editingVcId = undefined;
+  editingVcKundenId = null;
+  editingVcPositionen = [];
+  renderKarteTab1();
+}
+
+function renderVcEditPanel() {
+  const vc = editingVcId ? allVerkaufschancen.find(v => v.id === editingVcId) : null;
+  const title = vc ? 'Verkaufschance bearbeiten' : 'Neue Verkaufschance';
+  const laufzeit = vc?.laufzeit ?? '';
+  const wkeit = vc?.wahrscheinlichkeit ?? 50;
+  const status = vc?.status ?? 'offen';
+  const notiz = esc(vc?.notiz ?? '');
+  return `
+    <div class="vc-edit-panel">
+      <div class="vc-edit-header">
+        <button class="btn btn-edit btn-sm" onclick="closeVcEdit()">← Zurück</button>
+        <span class="vc-edit-title">${esc(title)}</span>
+        <button class="btn btn-sm" style="background:#5b21b6;color:white;" onclick="saveVcEdit()">Speichern</button>
+      </div>
+      <div class="vc-edit-body">
+        <div id="vc-edit-msg" class="msg" style="margin-bottom:10px;"></div>
+        <div class="ks-title" style="margin-bottom:8px;">Positionen</div>
+        <div style="overflow-x:auto;">
+          <div id="vc-edit-pos-wrap">${renderVcEditPositionenHTML()}</div>
+        </div>
+        <button class="btn btn-sm" style="margin-top:8px;background:var(--gray-100);color:var(--navy);" onclick="addVcEditPosition()">+ Position hinzufügen</button>
+        <div class="vc-edit-summary" id="vc-edit-summary"></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;padding-top:16px;border-top:1px solid var(--gray-100);margin-top:4px;">
+          <div class="form-group" style="margin:0;">
+            <label>Laufzeit (Monate) <span style="font-weight:400;color:var(--gray-400);text-transform:none;">für Pipeline</span></label>
+            <input type="number" id="ve-laufzeit" value="${laufzeit}" placeholder="12" min="1" step="1">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Wahrscheinlichkeit (%)</label>
+            <input type="number" id="ve-wkeit" value="${wkeit}" placeholder="50" min="0" max="100" step="5">
+          </div>
+          <div class="form-group" style="margin:0;">
+            <label>Status</label>
+            <select id="ve-status">
+              ${['offen','in_gespraech','angebot','gewonnen','verloren'].map(s=>`<option value="${s}" ${status===s?'selected':''}>${vcStatusLabel(s)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:14px;margin-bottom:0;">
+          <label>Notiz</label>
+          <textarea id="ve-notiz" placeholder="Interne Notiz zur Verkaufschance…">${notiz}</textarea>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderVcEditPositionenHTML() {
+  const dl = `<datalist id="vc-produkt-dl">${produktNamen().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>`;
+  if (!editingVcPositionen.length) {
+    return dl + `<div style="color:var(--gray-400);font-size:0.82rem;padding:8px 2px;">Noch keine Positionen. Klicken Sie auf "+ Position hinzufügen".</div>`;
+  }
+  const rows = editingVcPositionen.map((p, i) => {
+    const summe = (p.menge || 1) * (p.einzelpreis || 0);
+    return `<tr data-pos-idx="${i}">
+      <td class="vc-ep-pos">${p.pos}</td>
+      <td class="vc-ep-artnr"><input type="text" id="ve-p-artnr-${i}" value="${esc(p.artikelnummer||'')}" placeholder="Artikelnr."></td>
+      <td class="vc-ep-bez"><input type="text" id="ve-p-bez-${i}" value="${esc(p.bezeichnung||'')}" list="vc-produkt-dl" placeholder="Bezeichnung" onchange="onVcEditBezeichnungChange(${i})" oninput="updateVcEditSummary()"></td>
+      <td class="vc-ep-menge"><input type="number" id="ve-p-menge-${i}" value="${p.menge||1}" min="1" step="1" oninput="updateVcEditSummary()"></td>
+      <td class="vc-ep-ep"><input type="number" id="ve-p-ep-${i}" value="${p.einzelpreis||''}" placeholder="0.00" min="0" step="0.01" oninput="updateVcEditSummary()"></td>
+      <td class="vc-ep-abr">
+        <select id="ve-p-abr-${i}" onchange="updateVcEditSummary()">
+          <option value="monatlich" ${p.abrechnungsart!=='einmalig'?'selected':''}>Monatlich</option>
+          <option value="einmalig" ${p.abrechnungsart==='einmalig'?'selected':''}>Einmalig</option>
+        </select>
+      </td>
+      <td class="vc-ep-summe" id="ve-p-summe-${i}">${summe > 0 ? summe.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–'}</td>
+      <td class="vc-ep-del"><button class="vc-del-btn" onclick="removeVcEditPosition(${i})">✕</button></td>
+    </tr>`;
+  }).join('');
+  return dl + `<table class="vc-edit-pos-table">
+    <thead><tr>
+      <th class="vc-ep-pos">Pos</th>
+      <th class="vc-ep-artnr">Artikelnr.</th>
+      <th class="vc-ep-bez">Bezeichnung</th>
+      <th class="vc-ep-menge">Menge</th>
+      <th class="vc-ep-ep">Einzelpreis</th>
+      <th class="vc-ep-abr">Abrechnung</th>
+      <th class="vc-ep-summe" style="text-align:right;">Summe</th>
+      <th class="vc-ep-del"></th>
+    </tr></thead>
+    <tbody id="vc-edit-pos-tbody">${rows}</tbody>
+  </table>`;
+}
+
+function readPositionenFromDom() {
+  const positions = [];
+  document.querySelectorAll('#vc-edit-pos-tbody tr[data-pos-idx]').forEach((row, i) => {
+    const idx = parseInt(row.dataset.posIdx, 10);
+    positions.push({
+      pos: i + 1,
+      artikelnummer: (document.getElementById(`ve-p-artnr-${idx}`)?.value || '').trim(),
+      bezeichnung:   (document.getElementById(`ve-p-bez-${idx}`)?.value || '').trim(),
+      menge:         Math.max(1, parseInt(document.getElementById(`ve-p-menge-${idx}`)?.value || '1', 10) || 1),
+      einzelpreis:   parseFloat(document.getElementById(`ve-p-ep-${idx}`)?.value || '0') || 0,
+      abrechnungsart: document.getElementById(`ve-p-abr-${idx}`)?.value || 'monatlich',
+    });
+  });
+  return positions;
+}
+
+function addVcEditPosition() {
+  editingVcPositionen = readPositionenFromDom();
+  editingVcPositionen.push({ pos: editingVcPositionen.length + 1, artikelnummer: '', bezeichnung: '', menge: 1, einzelpreis: 0, abrechnungsart: 'monatlich' });
+  document.getElementById('vc-edit-pos-wrap').innerHTML = renderVcEditPositionenHTML();
+  updateVcEditSummary();
+}
+
+function removeVcEditPosition(idx) {
+  editingVcPositionen = readPositionenFromDom();
+  editingVcPositionen.splice(idx, 1);
+  editingVcPositionen.forEach((p, i) => { p.pos = i + 1; });
+  document.getElementById('vc-edit-pos-wrap').innerHTML = renderVcEditPositionenHTML();
+  updateVcEditSummary();
+}
+
+function onVcEditBezeichnungChange(idx) {
+  const bez = (document.getElementById(`ve-p-bez-${idx}`)?.value || '').trim();
+  const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === bez.toLowerCase().trim());
+  if (prod) {
+    const artnrEl = document.getElementById(`ve-p-artnr-${idx}`);
+    const epEl    = document.getElementById(`ve-p-ep-${idx}`);
+    const abrEl   = document.getElementById(`ve-p-abr-${idx}`);
+    if (artnrEl && !artnrEl.value.trim() && prod.artikelnummer) artnrEl.value = prod.artikelnummer;
+    if (epEl && parseFloat(epEl.value || '0') === 0 && prod.preis_flat != null) epEl.value = prod.preis_flat;
+    if (abrEl && prod.abrechnungsart) abrEl.value = prod.abrechnungsart;
+    updateVcEditSummary();
+  }
+}
+
+function updateVcEditSummary() {
+  let totalM = 0, totalE = 0;
+  document.querySelectorAll('#vc-edit-pos-tbody tr[data-pos-idx]').forEach(row => {
+    const i = parseInt(row.dataset.posIdx, 10);
+    const menge = parseFloat(document.getElementById(`ve-p-menge-${i}`)?.value || '1') || 1;
+    const ep    = parseFloat(document.getElementById(`ve-p-ep-${i}`)?.value || '0') || 0;
+    const abr   = document.getElementById(`ve-p-abr-${i}`)?.value || 'monatlich';
+    const s = menge * ep;
+    const cell = document.getElementById(`ve-p-summe-${i}`);
+    if (cell) cell.textContent = s > 0 ? s.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–';
+    if (abr === 'einmalig') totalE += s; else totalM += s;
+  });
+  const el = document.getElementById('vc-edit-summary');
+  if (!el) return;
+  const fmt = n => n.toLocaleString('de-DE',{style:'currency',currency:'EUR'});
+  const parts = [];
+  if (totalM > 0) parts.push(`<span>Summe monatlich: <b>${fmt(totalM)}</b></span>`);
+  if (totalE > 0) parts.push(`<span>Summe einmalig: <b>${fmt(totalE)}</b></span>`);
+  el.innerHTML = parts.join('');
+}
+
+async function saveVcEdit() {
+  const msg = document.getElementById('vc-edit-msg');
+  if (msg) msg.className = 'msg';
+  const positionen = readPositionenFromDom();
+  if (!positionen.length) {
+    if (msg) { msg.textContent = 'Mindestens eine Position hinzufügen.'; msg.className = 'msg error'; }
+    return;
+  }
+  let totalM = 0, totalE = 0;
+  positionen.forEach(p => {
+    const s = (p.menge || 1) * (p.einzelpreis || 0);
+    if (p.abrechnungsart === 'einmalig') totalE += s; else totalM += s;
+  });
+  const wert = totalM + totalE;
+  const abrechnungsart = totalM >= totalE ? 'monatlich' : 'einmalig';
+  const produkte = positionen.map(p => p.bezeichnung).filter(Boolean).join(', ');
+  const laufzeitRaw = document.getElementById('ve-laufzeit')?.value;
+  const laufzeit = laufzeitRaw ? parseInt(laufzeitRaw, 10) : null;
+  const wkeitRaw = document.getElementById('ve-wkeit')?.value;
+  const wahrscheinlichkeit = wkeitRaw !== '' ? parseInt(wkeitRaw, 10) : 50;
+  const status = document.getElementById('ve-status')?.value || 'offen';
+  const notiz  = document.getElementById('ve-notiz')?.value?.trim() || null;
+  const vcId = editingVcId, kundenId = editingVcKundenId;
+
+  const payload = { positionen, produkte, wert, abrechnungsart, laufzeit, wahrscheinlichkeit, status, notiz, updated_at: new Date().toISOString() };
 
   let error;
   if (vcId) {
@@ -1584,15 +1653,10 @@ async function saveVc() {
     error = e;
     if (!error && data) allVerkaufschancen.unshift(data);
   }
-
-  if (error) { msg.textContent = error.message; msg.className = 'msg error'; return; }
-  closeVcModal();
+  if (error) { if (msg) { msg.textContent = error.message; msg.className = 'msg error'; } return; }
+  closeVcEdit();
   applyFilter();
-  if (currentKundeId === kundenId) {
-    renderKarteHeader();
-    renderKarteTab0();
-    renderKarteTab1();
-  }
+  if (currentKundeId === kundenId) { renderKarteHeader(); renderKarteTab0(); }
 }
 
 async function changeVcStatus(vcId, newStatus, kundenId) {
@@ -1673,21 +1737,37 @@ async function generateAngebot(vcId) {
   }
 
   // Produkte aufteilen nach monatlich / einmalig
-  const productNames = (vc.produkte || '').split(/[,\n]/).map(s => s.trim()).filter(Boolean);
   const monatlich = [], einmalig = [];
   let totalMonatlich = 0, totalEinmalig = 0;
 
-  for (const name of productNames) {
-    const prod = allProducts.find(p => (p.produkt || '').toLowerCase().trim() === name.toLowerCase().trim());
-    const preis = prod?.preis_flat ?? 0;
-    const abrech = prod?.abrechnungsart || vc.abrechnungsart || 'monatlich';
-    const preisStr = preis.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
-    if (abrech === 'einmalig') {
-      einmalig.push({ produkt: name, preis: preisStr });
-      totalEinmalig += preis;
-    } else {
-      monatlich.push({ produkt: name, preis: preisStr });
-      totalMonatlich += preis;
+  if (vc.positionen && Array.isArray(vc.positionen) && vc.positionen.length > 0) {
+    for (const p of vc.positionen) {
+      const name = p.bezeichnung || '';
+      const preis = (p.menge || 1) * (p.einzelpreis || 0);
+      const abrech = p.abrechnungsart || 'monatlich';
+      const preisStr = preis.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+      if (abrech === 'einmalig') {
+        einmalig.push({ produkt: name, preis: preisStr, menge: p.menge || 1 });
+        totalEinmalig += preis;
+      } else {
+        monatlich.push({ produkt: name, preis: preisStr, menge: p.menge || 1 });
+        totalMonatlich += preis;
+      }
+    }
+  } else {
+    const productNames = (vc.produkte || '').split(/[,\n]/).map(s => s.trim()).filter(Boolean);
+    for (const name of productNames) {
+      const prod = allProducts.find(p => (p.produkt || '').toLowerCase().trim() === name.toLowerCase().trim());
+      const preis = prod?.preis_flat ?? 0;
+      const abrech = prod?.abrechnungsart || vc.abrechnungsart || 'monatlich';
+      const preisStr = preis.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' });
+      if (abrech === 'einmalig') {
+        einmalig.push({ produkt: name, preis: preisStr, menge: 1 });
+        totalEinmalig += preis;
+      } else {
+        monatlich.push({ produkt: name, preis: preisStr, menge: 1 });
+        totalMonatlich += preis;
+      }
     }
   }
 
