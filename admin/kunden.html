@@ -268,14 +268,17 @@
   .vc-edit-pos-table td { padding: 3px 4px; vertical-align: middle; }
   .vc-edit-pos-table input, .vc-edit-pos-table select { font-size: 0.79rem; padding: 5px 8px; border: 1.5px solid var(--gray-200); border-radius: 6px; font-family: inherit; width: 100%; outline: none; background: white; }
   .vc-edit-pos-table input:focus, .vc-edit-pos-table select:focus { border-color: var(--navy); }
-  .vc-ep-pos { width: 32px; text-align: center; color: var(--gray-400); font-size: 0.72rem; font-weight: 700; }
-  .vc-ep-artnr { width: 110px; }
-  .vc-ep-bez { min-width: 160px; }
-  .vc-ep-menge { width: 58px; }
-  .vc-ep-ep { width: 96px; }
-  .vc-ep-abr { width: 108px; }
-  .vc-ep-summe { width: 96px; text-align: right; font-weight: 700; color: var(--navy); white-space: nowrap; padding-right: 6px; }
-  .vc-ep-del { width: 28px; }
+  .vc-ep-pos { width: 28px; text-align: center; color: var(--gray-400); font-size: 0.72rem; font-weight: 700; }
+  .vc-ep-artnr { width: 90px; }
+  .vc-ep-bez { min-width: 120px; max-width: 180px; }
+  .vc-ep-menge { width: 52px; }
+  .vc-ep-ep { width: 86px; }
+  .vc-ep-abr { width: 100px; }
+  .vc-ep-summe { width: 82px; text-align: right; font-weight: 700; color: var(--navy); white-space: nowrap; padding-right: 4px; }
+  .vc-ep-ek { width: 72px; text-align: right; color: var(--gray-400); font-size: 0.75rem; white-space: nowrap; padding-right: 4px; }
+  .vc-ep-ek-sum { width: 78px; text-align: right; color: var(--gray-400); font-size: 0.75rem; white-space: nowrap; padding-right: 4px; }
+  .vc-ep-marge { width: 56px; text-align: right; font-weight: 700; white-space: nowrap; padding-right: 4px; }
+  .vc-ep-del { width: 24px; }
   .vc-edit-summary { display: flex; gap: 18px; font-size: 0.82rem; color: var(--gray-500); padding: 8px 0 0; flex-wrap: wrap; min-height: 24px; }
 
   /* VC Modal */
@@ -557,9 +560,9 @@ async function init() {
 
   const [kundenRes, prodRes, vcRes, bgRes] = await Promise.all([
     sb.from('kunden').select('*, anfragen(id, produkte, created_at, status)').order('created_at', { ascending: false }),
-    sb.from('products').select('produkt, preis_flat, abrechnungsart, preise, einkaufspreis_flat'),
+    sb.from('products').select('produkt, artikelnummer, preis_flat, abrechnungsart, preise, einkaufspreis_flat'),
     sb.from('verkaufschancen').select('*').order('created_at', { ascending: false }),
-    sb.from('berufsgruppen').select('id, name').order('nr', { ascending: true }),
+    sb.from('berufsgruppen').select('id, nr, name').order('nr', { ascending: true }),
   ]);
   allKunden = kundenRes.data || [];
   allProducts = (prodRes.data || []).filter(p => p.produkt);
@@ -1421,6 +1424,20 @@ function renderVcSection(kundenId) {
 function vcProdPreis(name) {
   const prod = allProducts.find(p => (p.produkt||'').toLowerCase().trim() === name.toLowerCase().trim());
   if (!prod) return null;
+  return getBgPreis(prod);
+}
+
+function getBgPreis(prod) {
+  if (!prod) return null;
+  const kunde = allKunden.find(k => k.id === editingVcKundenId);
+  const bgName = kunde?.berufsgruppe;
+  if (bgName && prod.preise && typeof prod.preise === 'object') {
+    const bg = allBerufsgruppen.find(b => b.name === bgName);
+    if (bg?.nr != null) {
+      const p = prod.preise[String(bg.nr)];
+      if (p != null) return p;
+    }
+  }
   if (prod.preis_flat != null) return prod.preis_flat;
   if (prod.preise && typeof prod.preise === 'object') {
     const vals = Object.values(prod.preise).map(Number).filter(v => v > 0);
@@ -1442,7 +1459,8 @@ function vcToPositionen(vc) {
       artikelnummer: prod?.artikelnummer || '',
       bezeichnung: name,
       menge: 1,
-      einzelpreis: prod?.preis_flat ?? 0,
+      einzelpreis: getBgPreis(prod) ?? 0,
+      ek: prod?.einkaufspreis_flat ?? null,
       abrechnungsart: prod?.abrechnungsart || vc.abrechnungsart || 'monatlich',
     };
   });
@@ -1516,8 +1534,13 @@ function renderVcEditPositionenHTML() {
   if (!editingVcPositionen.length) {
     return dl + `<div style="color:var(--gray-400);font-size:0.82rem;padding:8px 2px;">Noch keine Positionen. Klicken Sie auf "+ Position hinzufügen".</div>`;
   }
+  const fmt = n => n != null ? n.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–';
   const rows = editingVcPositionen.map((p, i) => {
-    const summe = (p.menge || 1) * (p.einzelpreis || 0);
+    const vkSumme = (p.menge || 1) * (p.einzelpreis || 0);
+    const ek = p.ek ?? null;
+    const ekSumme = ek != null ? (p.menge || 1) * ek : null;
+    const marge = vkSumme > 0 && ekSumme != null ? ((vkSumme - ekSumme) / vkSumme * 100) : null;
+    const margeColor = marge == null ? 'var(--gray-300)' : marge >= 30 ? '#059669' : marge >= 15 ? '#d97706' : '#ef4444';
     return `<tr data-pos-idx="${i}">
       <td class="vc-ep-pos">${p.pos}</td>
       <td class="vc-ep-artnr"><input type="text" id="ve-p-artnr-${i}" value="${esc(p.artikelnummer||'')}" placeholder="Artikelnr."></td>
@@ -1530,7 +1553,10 @@ function renderVcEditPositionenHTML() {
           <option value="einmalig" ${p.abrechnungsart==='einmalig'?'selected':''}>Einmalig</option>
         </select>
       </td>
-      <td class="vc-ep-summe" id="ve-p-summe-${i}">${summe > 0 ? summe.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–'}</td>
+      <td class="vc-ep-summe" id="ve-p-summe-${i}">${vkSumme > 0 ? fmt(vkSumme) : '–'}</td>
+      <td class="vc-ep-ek" id="ve-p-ek-${i}" data-ek="${ek ?? ''}">${fmt(ek)}</td>
+      <td class="vc-ep-ek-sum" id="ve-p-ek-sum-${i}">${ekSumme != null ? fmt(ekSumme) : '–'}</td>
+      <td class="vc-ep-marge" id="ve-p-marge-${i}" style="color:${margeColor};">${marge != null ? marge.toFixed(1) + ' %' : '–'}</td>
       <td class="vc-ep-del"><button class="vc-del-btn" onclick="removeVcEditPosition(${i})">✕</button></td>
     </tr>`;
   }).join('');
@@ -1540,9 +1566,12 @@ function renderVcEditPositionenHTML() {
       <th class="vc-ep-artnr">Artikelnr.</th>
       <th class="vc-ep-bez">Bezeichnung</th>
       <th class="vc-ep-menge">Menge</th>
-      <th class="vc-ep-ep">Einzelpreis</th>
+      <th class="vc-ep-ep">VK</th>
       <th class="vc-ep-abr">Abrechnung</th>
-      <th class="vc-ep-summe" style="text-align:right;">Summe</th>
+      <th class="vc-ep-summe" style="text-align:right;">VK Summe</th>
+      <th class="vc-ep-ek" style="text-align:right;">EK</th>
+      <th class="vc-ep-ek-sum" style="text-align:right;">EK Summe</th>
+      <th class="vc-ep-marge" style="text-align:right;">Marge</th>
       <th class="vc-ep-del"></th>
     </tr></thead>
     <tbody id="vc-edit-pos-tbody">${rows}</tbody>
@@ -1553,6 +1582,8 @@ function readPositionenFromDom() {
   const positions = [];
   document.querySelectorAll('#vc-edit-pos-tbody tr[data-pos-idx]').forEach((row, i) => {
     const idx = parseInt(row.dataset.posIdx, 10);
+    const ekRaw = document.getElementById(`ve-p-ek-${idx}`)?.dataset.ek;
+    const ek = ekRaw !== '' && ekRaw != null ? parseFloat(ekRaw) : null;
     positions.push({
       pos: i + 1,
       artikelnummer: (document.getElementById(`ve-p-artnr-${idx}`)?.value || '').trim(),
@@ -1560,6 +1591,7 @@ function readPositionenFromDom() {
       menge:         Math.max(1, parseInt(document.getElementById(`ve-p-menge-${idx}`)?.value || '1', 10) || 1),
       einzelpreis:   parseFloat(document.getElementById(`ve-p-ep-${idx}`)?.value || '0') || 0,
       abrechnungsart: document.getElementById(`ve-p-abr-${idx}`)?.value || 'monatlich',
+      ...(ek != null ? { ek } : {}),
     });
   });
   return positions;
@@ -1587,31 +1619,56 @@ function onVcEditBezeichnungChange(idx) {
     const artnrEl = document.getElementById(`ve-p-artnr-${idx}`);
     const epEl    = document.getElementById(`ve-p-ep-${idx}`);
     const abrEl   = document.getElementById(`ve-p-abr-${idx}`);
-    if (artnrEl && !artnrEl.value.trim() && prod.artikelnummer) artnrEl.value = prod.artikelnummer;
-    if (epEl && parseFloat(epEl.value || '0') === 0 && prod.preis_flat != null) epEl.value = prod.preis_flat;
+    const ekCell  = document.getElementById(`ve-p-ek-${idx}`);
+    const bgPreis = getBgPreis(prod);
+    if (artnrEl) artnrEl.value = prod.artikelnummer || artnrEl.value;
+    if (epEl && parseFloat(epEl.value || '0') === 0 && bgPreis != null) epEl.value = bgPreis;
     if (abrEl && prod.abrechnungsart) abrEl.value = prod.abrechnungsart;
+    if (ekCell) {
+      const ek = prod.einkaufspreis_flat ?? null;
+      ekCell.dataset.ek = ek ?? '';
+      ekCell.textContent = ek != null ? ek.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–';
+    }
     updateVcEditSummary();
   }
 }
 
 function updateVcEditSummary() {
-  let totalM = 0, totalE = 0;
+  let totalM = 0, totalE = 0, totalEkM = 0, totalEkE = 0;
+  const fmt = n => n != null ? n.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–';
   document.querySelectorAll('#vc-edit-pos-tbody tr[data-pos-idx]').forEach(row => {
     const i = parseInt(row.dataset.posIdx, 10);
-    const menge = parseFloat(document.getElementById(`ve-p-menge-${i}`)?.value || '1') || 1;
-    const ep    = parseFloat(document.getElementById(`ve-p-ep-${i}`)?.value || '0') || 0;
-    const abr   = document.getElementById(`ve-p-abr-${i}`)?.value || 'monatlich';
-    const s = menge * ep;
-    const cell = document.getElementById(`ve-p-summe-${i}`);
-    if (cell) cell.textContent = s > 0 ? s.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–';
-    if (abr === 'einmalig') totalE += s; else totalM += s;
+    const menge  = parseFloat(document.getElementById(`ve-p-menge-${i}`)?.value || '1') || 1;
+    const ep     = parseFloat(document.getElementById(`ve-p-ep-${i}`)?.value || '0') || 0;
+    const abr    = document.getElementById(`ve-p-abr-${i}`)?.value || 'monatlich';
+    const ekRaw  = document.getElementById(`ve-p-ek-${i}`)?.dataset.ek;
+    const ek     = ekRaw !== '' && ekRaw != null ? parseFloat(ekRaw) : null;
+    const vkS    = menge * ep;
+    const ekS    = ek != null ? menge * ek : null;
+    const marge  = vkS > 0 && ekS != null ? ((vkS - ekS) / vkS * 100) : null;
+    const margeColor = marge == null ? 'var(--gray-300)' : marge >= 30 ? '#059669' : marge >= 15 ? '#d97706' : '#ef4444';
+
+    const sumCell = document.getElementById(`ve-p-summe-${i}`);
+    if (sumCell) sumCell.textContent = vkS > 0 ? fmt(vkS) : '–';
+    const ekSumCell = document.getElementById(`ve-p-ek-sum-${i}`);
+    if (ekSumCell) ekSumCell.textContent = ekS != null ? fmt(ekS) : '–';
+    const margeCell = document.getElementById(`ve-p-marge-${i}`);
+    if (margeCell) { margeCell.textContent = marge != null ? marge.toFixed(1) + ' %' : '–'; margeCell.style.color = margeColor; }
+
+    if (abr === 'einmalig') { totalE += vkS; if (ekS != null) totalEkE += ekS; }
+    else { totalM += vkS; if (ekS != null) totalEkM += ekS; }
   });
   const el = document.getElementById('vc-edit-summary');
   if (!el) return;
-  const fmt = n => n.toLocaleString('de-DE',{style:'currency',currency:'EUR'});
   const parts = [];
-  if (totalM > 0) parts.push(`<span>Summe monatlich: <b>${fmt(totalM)}</b></span>`);
-  if (totalE > 0) parts.push(`<span>Summe einmalig: <b>${fmt(totalE)}</b></span>`);
+  if (totalM > 0) {
+    const gm = totalEkM > 0 ? ((totalM - totalEkM) / totalM * 100).toFixed(1) + ' %' : null;
+    parts.push(`<span>Monatlich: <b>${fmt(totalM)}</b>${gm ? ` · Marge: <b>${gm}</b>` : ''}</span>`);
+  }
+  if (totalE > 0) {
+    const ge = totalEkE > 0 ? ((totalE - totalEkE) / totalE * 100).toFixed(1) + ' %' : null;
+    parts.push(`<span>Einmalig: <b>${fmt(totalE)}</b>${ge ? ` · Marge: <b>${ge}</b>` : ''}</span>`);
+  }
   el.innerHTML = parts.join('');
 }
 
