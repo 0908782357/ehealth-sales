@@ -552,7 +552,7 @@ function findArtikel(name) {
   if (bundle) return {
     produkt: bundle.name,
     artikelnummer: null,
-    preis_flat: bundle.preis_flat ?? null,
+    preis_flat: null,
     preise: bundle.preise ?? {},
     abrechnungsart: 'monatlich',
     einkaufspreis_flat: bundle.einkaufspreis_flat ?? null,
@@ -585,7 +585,7 @@ async function init() {
     sb.from('products').select('produkt, artikelnummer, preis_flat, abrechnungsart, preise, einkaufspreis_flat'),
     sb.from('verkaufschancen').select('*').order('created_at', { ascending: false }),
     sb.from('berufsgruppen').select('id, nr, name').order('nr', { ascending: true }),
-    sb.from('bundles').select('name, preis_flat, preise, einkaufspreis_flat').eq('aktiv', true),
+    sb.from('bundles').select('name, preise, einkaufspreis_flat').neq('aktiv', false),
   ]);
   allKunden = kundenRes.data || [];
   allProducts = (prodRes.data || []).filter(p => p.produkt);
