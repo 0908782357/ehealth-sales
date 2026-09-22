@@ -461,11 +461,17 @@
       msg.className = 'msg error'; return;
     }
 
-    const { error } = await sb.auth.updateUser({ password: pw });
+    const { data: { user }, error } = await sb.auth.updateUser({ password: pw });
     if (error) {
       msg.textContent = 'Fehler: ' + error.message;
       msg.className = 'msg error';
     } else {
+      // password_set = true sicherstellen (relevant für Nutzer die über Einladung kamen)
+      if (user) {
+        await sb.from('user_profiles')
+          .update({ password_set: true })
+          .eq('user_id', user.id);
+      }
       msg.textContent = 'Passwort wurde erfolgreich geändert.';
       msg.className = 'msg success';
       document.getElementById('f-pw-new').value = '';

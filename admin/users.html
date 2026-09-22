@@ -558,7 +558,7 @@
     setTimeout(() => { closeModal(); loadUsers(); }, 700);
   }
 
-  const PORTAL_URL = 'https://ehealth-sales.de/admin/index.html';
+  const SET_PASSWORD_URL = 'https://ehealth-sales.de/admin/set-password.html';
 
   async function sendInvite(email, profileId) {
     const btn = document.querySelector(`button[onclick="sendInvite('${email.replace(/'/g,"\\'")}','${profileId}')"]`);
@@ -566,7 +566,7 @@
 
     const { error } = await sb.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true, emailRedirectTo: PORTAL_URL }
+      options: { shouldCreateUser: true, emailRedirectTo: SET_PASSWORD_URL }
     });
 
     if (error) {
