@@ -113,10 +113,11 @@
   .karte-view { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 
   /* Karte header */
-  .karte-header { padding: 14px 22px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--gray-50); flex-shrink: 0; }
-  .karte-hdr-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
-  .karte-title { font-family: Montserrat, sans-serif; font-size: 1.05rem; font-weight: 800; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .karte-hdr-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .karte-header { padding: 12px 22px; border-bottom: 1px solid var(--gray-100); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; background: var(--gray-50); flex-shrink: 0; }
+  .karte-hdr-left { display: flex; align-items: center; gap: 10px; min-width: 0; overflow: hidden; }
+  .karte-title { font-family: Montserrat, sans-serif; font-size: 1rem; font-weight: 800; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .karte-hdr-center { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+  .karte-hdr-right { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
 
   /* Karte tabs */
   .karte-tabs { display: flex; border-bottom: 1px solid var(--gray-200); flex-shrink: 0; padding: 0 22px; background: white; }
@@ -130,6 +131,28 @@
   /* Section titles */
   .ks-title { font-size: 0.62rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--gray-400); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--gray-100); }
   .ks-section { margin-bottom: 22px; }
+
+  /* Pipeline header bar */
+  .kpb-label { font-size: 0.58rem; font-weight: 800; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 2px; }
+  .kpb-value { font-size: 0.92rem; font-weight: 800; color: var(--navy); display: block; }
+  .kpb-sub { font-size: 0.7rem; color: var(--gray-400); display: block; }
+  .kpb-stages { display: flex; gap: 4px; margin-top: 5px; justify-content: center; flex-wrap: wrap; }
+  .kpb-stage { font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; white-space: nowrap; cursor: pointer; border: none; }
+  .kpb-stage:hover { opacity: 0.8; }
+
+  /* Tab 0 new layout */
+  .karte-top-cols { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 22px; }
+  .karte-ansp-bottom { border-top: 1px solid var(--gray-100); padding-top: 16px; margin-top: 6px; }
+  .karte-ansp-inner { max-width: 640px; }
+
+  /* Aktivitäten as compact table */
+  .aktiv-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+  .aktiv-table th { font-size: 0.6rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.06em; padding: 5px 6px; border-bottom: 1px solid var(--gray-200); text-align: left; white-space: nowrap; }
+  .aktiv-table td { padding: 6px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+  .aktiv-table tr:last-child td { border-bottom: none; }
+  .aktiv-table tr:hover td { background: var(--gray-50); }
+  .aktiv-td-text { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: default; font-size: 0.8rem; }
+  .aktiv-td-text.erledigt { text-decoration: line-through; color: var(--gray-400); }
 
   /* Two-column layout inside Tab 1 */
   .karte-cols { display: grid; grid-template-columns: 1fr 290px; gap: 22px; }
@@ -392,6 +415,7 @@
                 <div id="karte-status-pill" style="margin-top:3px;"></div>
               </div>
             </div>
+            <div class="karte-hdr-center" id="karte-hdr-center"></div>
             <div class="karte-hdr-right" id="karte-hdr-right">
               <!-- dynamisch befüllt -->
             </div>
@@ -408,6 +432,44 @@
       </div>
     </div>
   </main>
+</div>
+
+<!-- Ansprechpartner Modal -->
+<div class="modal-bg" id="ansp-modal-bg" onclick="if(event.target===this)closeAnspModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="ansp-modal-title">Ansprechpartner</h2>
+      <button class="modal-close" onclick="closeAnspModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="msg" id="ansp-msg"></div>
+      <input type="hidden" id="ansp-modal-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Name *</label>
+          <input type="text" id="ansp-modal-name" placeholder="Vor- und Nachname">
+        </div>
+        <div class="form-group">
+          <label>Rolle / Funktion</label>
+          <input type="text" id="ansp-modal-rolle" placeholder="z.B. Praxismanager">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>E-Mail</label>
+          <input type="email" id="ansp-modal-email" placeholder="kontakt@beispiel.de">
+        </div>
+        <div class="form-group">
+          <label>Telefon</label>
+          <input type="tel" id="ansp-modal-telefon" placeholder="+49 …">
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-edit" onclick="closeAnspModal()">Abbrechen</button>
+        <button class="btn btn-primary" onclick="saveAnspModal()">Speichern</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Verkaufschance Modal -->
@@ -683,11 +745,13 @@ function renderKarteHeader(prefill, fromAnfrageId) {
   const k = allKunden.find(x => x.id === currentKundeId);
   const titleEl = document.getElementById('karte-title');
   const statusEl = document.getElementById('karte-status-pill');
+  const centerEl = document.getElementById('karte-hdr-center');
   const actionsEl = document.getElementById('karte-hdr-right');
 
   if (isCreateMode) {
     titleEl.textContent = prefill ? 'Kunde aus Anfrage anlegen' : 'Neuer Kunde';
     statusEl.innerHTML = '';
+    if (centerEl) centerEl.innerHTML = '';
     actionsEl.innerHTML = `
       <button class="btn btn-primary btn-sm" onclick="saveKunde()">Speichern</button>
       <button class="btn btn-edit btn-sm" onclick="closeKundenkarte()">Abbrechen</button>
@@ -698,6 +762,33 @@ function renderKarteHeader(prefill, fromAnfrageId) {
   if (!k) return;
   titleEl.textContent = k.name + (k.firma ? ` – ${k.firma}` : '');
   statusEl.innerHTML = statusPill(k.status);
+
+  if (centerEl) {
+    const vcList = allVerkaufschancen.filter(v => v.kunden_id === k.id);
+    const aktiv = vcList.filter(v => v.status !== 'verloren');
+    const pipelineWert = aktiv.reduce((s,v) => s + calcPipeline(v), 0);
+    const stageCounts = {};
+    aktiv.forEach(v => { stageCounts[v.status] = (stageCounts[v.status] || 0) + 1; });
+    const stageMap = {
+      offen:        { label: 'Offen', bg: '#fef3c7', color: '#92400e' },
+      in_gespraech: { label: 'Gespräch', bg: '#dbeafe', color: '#1e40af' },
+      angebot:      { label: 'Angebot', bg: '#ede9fe', color: '#5b21b6' },
+      gewonnen:     { label: 'Gewonnen', bg: '#d1fae5', color: '#065f46' },
+    };
+    const stageChips = Object.entries(stageCounts).map(([s, n]) => {
+      const sm = stageMap[s] || { label: s, bg: '#f1f5f9', color: '#64748b' };
+      return `<button class="kpb-stage" style="background:${sm.bg};color:${sm.color};" onclick="switchKarteTab(1)">${sm.label} ${n}</button>`;
+    }).join('');
+    if (vcList.length) {
+      centerEl.innerHTML = `
+        <span class="kpb-label">Pipeline</span>
+        <span class="kpb-value">${pipelineWert > 0 ? pipelineWert.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–'}</span>
+        <span class="kpb-sub">${aktiv.length} aktive Chance${aktiv.length !== 1 ? 'n' : ''} · ${vcList.length} gesamt</span>
+        ${stageChips ? `<div class="kpb-stages">${stageChips}</div>` : ''}`;
+    } else {
+      centerEl.innerHTML = `<span class="kpb-label">Pipeline</span><span class="kpb-sub" style="font-size:0.78rem;margin-top:2px;">Noch keine Chancen</span>`;
+    }
+  }
 
   if (isEditMode) {
     actionsEl.innerHTML = `
@@ -775,17 +866,12 @@ function renderKarteTab0() {
   if (!k) return;
 
   const anfragen = k.anfragen || [];
-  const vcList = allVerkaufschancen.filter(v => v.kunden_id === k.id);
-  const aktivVC = vcList.filter(v => v.status !== 'verloren');
-  const pipelineWert = aktivVC.reduce((s,v) => s + calcPipeline(v), 0);
-
   const produkte = (k.produkte || []);
 
   document.getElementById('ktab-0').innerHTML = `
-    <div class="karte-cols">
-      <!-- Left column: fields + ansprechpartner -->
+    <div class="karte-top-cols">
+      <!-- Left: Stammdaten -->
       <div>
-        <!-- Stammdaten -->
         <div class="ks-section">
           <div class="ks-title">Stammdaten</div>
           <div class="kf-grid">
@@ -835,36 +921,25 @@ function renderKarteTab0() {
             </div>` : ''}
           </div>
         </div>
-
-        <!-- Ansprechpartner -->
-        <div class="ks-section">
-          <div class="ks-title" style="display:flex;align-items:center;justify-content:space-between;">
-            <span>Ansprechpartner</span>
-            <button class="btn btn-sm" style="background:#eef0f7;color:var(--navy);font-size:0.7rem;padding:3px 9px;margin-right:2px;flex-shrink:0;" onclick="addAnsprechpartnerRow()">+ Hinzufügen</button>
-          </div>
-          ${renderAnsprechpartnerTable()}
-        </div>
       </div>
 
-      <!-- Right column: pipeline + aktivitäten -->
+      <!-- Right: Aktivitäten -->
       <div>
-        <!-- Pipeline mini -->
-        <div class="ks-section">
-          <div class="ks-title">Pipeline</div>
-          <div class="pipeline-mini">
-            ${vcList.length ? `
-              <div class="pm-total">${pipelineWert > 0 ? pipelineWert.toLocaleString('de-DE',{style:'currency',currency:'EUR'}) : '–'}</div>
-              <div class="pm-sub">${aktivVC.length} offene Chance${aktivVC.length!==1?'n':''} · ${vcList.length} gesamt</div>
-            ` : '<div class="pm-sub" style="font-size:0.82rem;color:var(--gray-400);">Noch keine Verkaufschancen</div>'}
-            <a class="pm-link" onclick="switchKarteTab(1)">→ Vertrieb-Übersicht</a>
-          </div>
-        </div>
-
-        <!-- Aktivitäten & Notizen -->
         <div class="ks-section">
           <div class="ks-title">Aktivitäten & Notizen</div>
           ${renderAktivitaetenSection(currentKundeId)}
         </div>
+      </div>
+    </div>
+
+    <!-- Bottom: Ansprechpartner -->
+    <div class="karte-ansp-bottom">
+      <div class="karte-ansp-inner">
+        <div class="ks-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <span>Ansprechpartner</span>
+          <button class="btn btn-sm" style="background:#eef0f7;color:var(--navy);font-size:0.7rem;padding:3px 9px;" onclick="openAnspModal()">+ Hinzufügen</button>
+        </div>
+        ${renderAnsprechpartnerTable()}
       </div>
     </div>
   `;
@@ -1080,13 +1155,15 @@ function renderAnsprechpartnerTable() {
     return `<div id="ansp-container"><div class="ansp-empty">Noch keine Ansprechpartner hinterlegt.</div></div>`;
   }
   const rows = ansprechpartner.map(a => `
-    <tr id="ansp-row-${esc(a.id)}">
-      <td style="font-weight:600;color:var(--navy);">${esc(a.name)}</td>
-      <td>${a.email ? `<a href="mailto:${esc(a.email)}" style="color:var(--navy);text-decoration:none;">${esc(a.email)}</a>` : '<span style="color:var(--gray-400);">–</span>'}</td>
-      <td>${a.telefon ? `<a href="tel:${esc(a.telefon)}" style="color:var(--navy);text-decoration:none;">${esc(a.telefon)}</a>` : '<span style="color:var(--gray-400);">–</span>'}</td>
-      <td>${esc(a.rolle) || '<span style="color:var(--gray-400);">–</span>'}</td>
+    <tr>
+      <td>
+        <div style="font-weight:600;color:var(--navy);font-size:0.82rem;">${esc(a.name)}</div>
+        ${a.rolle ? `<div style="font-size:0.72rem;color:var(--gray-400);">${esc(a.rolle)}</div>` : ''}
+      </td>
+      <td>${a.email ? `<a href="mailto:${esc(a.email)}" style="color:var(--navy);text-decoration:none;font-size:0.8rem;">${esc(a.email)}</a>` : '<span style="color:var(--gray-400);">–</span>'}</td>
+      <td>${a.telefon ? `<a href="tel:${esc(a.telefon)}" style="color:var(--navy);text-decoration:none;font-size:0.8rem;">${esc(a.telefon)}</a>` : '<span style="color:var(--gray-400);">–</span>'}</td>
       <td style="white-space:nowrap;">
-        <button class="btn btn-xs btn-edit" onclick="editAnsprechpartnerRow('${esc(a.id)}')">✏️</button>
+        <button class="btn btn-xs btn-edit" onclick="openAnspModal('${esc(a.id)}')">✏️</button>
         <button class="btn btn-xs btn-danger" style="margin-left:3px;" onclick="deleteAnsprechpartner('${esc(a.id)}')">✕</button>
       </td>
     </tr>`).join('');
@@ -1094,110 +1171,62 @@ function renderAnsprechpartnerTable() {
     <div id="ansp-container">
       <div class="ansp-wrap">
         <table class="ansp-table">
-          <thead><tr><th>Name</th><th>E-Mail</th><th>Telefon</th><th>Rolle</th><th></th></tr></thead>
-          <tbody id="ansp-tbody">${rows}</tbody>
+          <thead><tr><th>Name</th><th>E-Mail</th><th>Telefon</th><th></th></tr></thead>
+          <tbody>${rows}</tbody>
         </table>
       </div>
     </div>`;
 }
 
-function refreshAnsprechpartnerSection() {
-  const container = document.getElementById('ansp-container');
-  if (!container) return;
-  container.outerHTML = renderAnsprechpartnerTable();
+
+function addAnsprechpartnerRow() { openAnspModal(); }
+
+function editAnsprechpartnerRow(id) { openAnspModal(id); }
+
+// ─── Ansprechpartner Modal ────────────────────────────────────────────────────
+function openAnspModal(id) {
+  id = id || null;
+  const a = id ? ansprechpartner.find(x => x.id === id) : null;
+  document.getElementById('ansp-modal-title').textContent = a ? 'Ansprechpartner bearbeiten' : 'Ansprechpartner hinzufügen';
+  document.getElementById('ansp-modal-id').value = id || '';
+  document.getElementById('ansp-modal-name').value = a?.name || '';
+  document.getElementById('ansp-modal-email').value = a?.email || '';
+  document.getElementById('ansp-modal-telefon').value = a?.telefon || '';
+  document.getElementById('ansp-modal-rolle').value = a?.rolle || '';
+  document.getElementById('ansp-msg').className = 'msg';
+  document.getElementById('ansp-modal-bg').classList.add('open');
+  setTimeout(() => document.getElementById('ansp-modal-name').focus(), 80);
 }
 
-let _addingAnsp = false;
-
-function addAnsprechpartnerRow() {
-  if (_addingAnsp) return;
-  _addingAnsp = true;
-  // Re-render Tab 0 with the add-row shown
-  renderKarteTab0WithAnspAdd();
+function closeAnspModal() {
+  document.getElementById('ansp-modal-bg').classList.remove('open');
 }
 
-function renderKarteTab0WithAnspAdd() {
-  // Re-render full Tab 0 but inject the ansp add-row
-  renderKarteTab0();
-  // Now inject an input row at the bottom of ansp-tbody
-  const tbody = document.getElementById('ansp-tbody');
-  if (!tbody) {
-    // Table not there yet (empty list), replace container with table+new-row
-    const container = document.getElementById('ansp-container');
-    if (container) {
-      container.innerHTML = `
-        <div class="ansp-wrap">
-          <table class="ansp-table">
-            <thead><tr><th>Name</th><th>E-Mail</th><th>Telefon</th><th>Rolle</th><th></th></tr></thead>
-            <tbody id="ansp-tbody"></tbody>
-          </table>
-        </div>`;
+async function saveAnspModal() {
+  const name = document.getElementById('ansp-modal-name').value.trim();
+  const msg = document.getElementById('ansp-msg');
+  if (!name) { msg.textContent = 'Name ist Pflichtfeld.'; msg.className = 'msg error'; return; }
+  const id = document.getElementById('ansp-modal-id').value;
+  const payload = {
+    name,
+    email:   document.getElementById('ansp-modal-email').value.trim() || null,
+    telefon: document.getElementById('ansp-modal-telefon').value.trim() || null,
+    rolle:   document.getElementById('ansp-modal-rolle').value.trim() || null,
+  };
+  let error;
+  if (id) {
+    ({ error } = await sb.from('kunden_ansprechpartner').update(payload).eq('id', id));
+    if (!error) {
+      const idx = ansprechpartner.findIndex(x => x.id === id);
+      if (idx >= 0) ansprechpartner[idx] = { ...ansprechpartner[idx], ...payload };
     }
+  } else {
+    const { data, error: e } = await sb.from('kunden_ansprechpartner').insert({ ...payload, kunden_id: currentKundeId }).select().single();
+    error = e;
+    if (!error && data) ansprechpartner.push(data);
   }
-  const tbodyEl = document.getElementById('ansp-tbody');
-  if (!tbodyEl) { _addingAnsp = false; return; }
-  const tr = document.createElement('tr');
-  tr.id = 'ansp-new-row';
-  tr.innerHTML = `
-    <td><input class="ansp-input" id="ansp-new-name" placeholder="Name *" style="min-width:100px;"></td>
-    <td><input class="ansp-input" id="ansp-new-email" placeholder="E-Mail" type="email"></td>
-    <td><input class="ansp-input" id="ansp-new-telefon" placeholder="Telefon"></td>
-    <td><input class="ansp-input" id="ansp-new-rolle" placeholder="Rolle/Funktion"></td>
-    <td style="white-space:nowrap;">
-      <button class="btn btn-xs btn-primary" onclick="saveNewAnsprechpartner()">✓</button>
-      <button class="btn btn-xs btn-edit" style="margin-left:3px;" onclick="_addingAnsp=false;renderKarteTab0()">✕</button>
-    </td>`;
-  tbodyEl.appendChild(tr);
-  document.getElementById('ansp-new-name').focus();
-}
-
-async function saveNewAnsprechpartner() {
-  const name = document.getElementById('ansp-new-name')?.value.trim();
-  if (!name) { document.getElementById('ansp-new-name').style.borderColor='var(--red)'; return; }
-  const payload = {
-    kunden_id: currentKundeId,
-    name,
-    email:   document.getElementById('ansp-new-email')?.value.trim() || null,
-    telefon: document.getElementById('ansp-new-telefon')?.value.trim() || null,
-    rolle:   document.getElementById('ansp-new-rolle')?.value.trim() || null,
-  };
-  const { data, error } = await sb.from('kunden_ansprechpartner').insert(payload).select().single();
-  if (error) { alert('Fehler: ' + error.message); return; }
-  ansprechpartner.push(data);
-  _addingAnsp = false;
-  renderKarteTab0();
-}
-
-function editAnsprechpartnerRow(id) {
-  const a = ansprechpartner.find(x => x.id === id);
-  if (!a) return;
-  const row = document.getElementById(`ansp-row-${id}`);
-  if (!row) return;
-  row.innerHTML = `
-    <td><input class="ansp-input" id="ansp-edit-name" value="${esc(a.name)}" placeholder="Name *"></td>
-    <td><input class="ansp-input" id="ansp-edit-email" value="${esc(a.email||'')}" placeholder="E-Mail" type="email"></td>
-    <td><input class="ansp-input" id="ansp-edit-telefon" value="${esc(a.telefon||'')}" placeholder="Telefon"></td>
-    <td><input class="ansp-input" id="ansp-edit-rolle" value="${esc(a.rolle||'')}" placeholder="Rolle"></td>
-    <td style="white-space:nowrap;">
-      <button class="btn btn-xs btn-primary" onclick="saveEditAnsprechpartner('${esc(id)}')">✓</button>
-      <button class="btn btn-xs btn-edit" style="margin-left:3px;" onclick="renderKarteTab0()">✕</button>
-    </td>`;
-  document.getElementById('ansp-edit-name').focus();
-}
-
-async function saveEditAnsprechpartner(id) {
-  const name = document.getElementById('ansp-edit-name')?.value.trim();
-  if (!name) return;
-  const payload = {
-    name,
-    email:   document.getElementById('ansp-edit-email')?.value.trim() || null,
-    telefon: document.getElementById('ansp-edit-telefon')?.value.trim() || null,
-    rolle:   document.getElementById('ansp-edit-rolle')?.value.trim() || null,
-  };
-  const { error } = await sb.from('kunden_ansprechpartner').update(payload).eq('id', id);
-  if (error) { alert('Fehler: ' + error.message); return; }
-  const idx = ansprechpartner.findIndex(x => x.id === id);
-  if (idx >= 0) ansprechpartner[idx] = { ...ansprechpartner[idx], ...payload };
+  if (error) { msg.textContent = error.message; msg.className = 'msg error'; return; }
+  closeAnspModal();
   renderKarteTab0();
 }
 
@@ -1212,33 +1241,26 @@ async function deleteAnsprechpartner(id) {
 
 // ─── Aktivitäten ─────────────────────────────────────────────────────────────
 function renderAktivitaetenSection(kundenId) {
-  const entries = aktivitaeten.map(a => {
+  const tableRows = aktivitaeten.map(a => {
     const typIcon = aktivTypIcon(a.typ);
-    const typCls  = aktivTypClass(a.typ);
     const typLbl  = aktivTypLabel(a.typ);
+    const text = a.text || '';
     return `
-      <div class="aktiv-entry" id="aktiv-${esc(a.id)}">
-        <div class="aktiv-icon ${typCls}">${typIcon}</div>
-        <div class="aktiv-body">
-          <div class="aktiv-text${a.erledigt ? ' erledigt' : ''}">${esc(a.text)}</div>
-          <div class="aktiv-meta">
-            <span>${typLbl}</span>
-            ${a.datum_geplant ? `<span>${fmtDate(a.datum_geplant)}</span>` : ''}
-            ${a.erledigt ? '<span class="aktiv-done-tag">✓ Erledigt</span>' : ''}
-            <span style="color:var(--gray-300);">·</span>
-            <span>${fmt(a.created_at)}</span>
-          </div>
-        </div>
-        <div class="aktiv-actions">
-          ${!a.erledigt ? `<button class="aktiv-btn" onclick="toggleAktivitaet('${esc(a.id)}', true)" title="Als erledigt markieren">✓</button>` : `<button class="aktiv-btn" onclick="toggleAktivitaet('${esc(a.id)}', false)" title="Wiedereröffnen">↩</button>`}
+      <tr id="aktiv-${esc(a.id)}">
+        <td style="white-space:nowrap;"><span style="font-size:0.85rem;">${typIcon}</span> <span style="font-size:0.7rem;color:var(--gray-500);">${typLbl}</span></td>
+        <td class="aktiv-td-text${a.erledigt ? ' erledigt' : ''}" title="${esc(text)}">${esc(text)}</td>
+        <td style="white-space:nowrap;color:var(--gray-400);font-size:0.72rem;">${a.datum_geplant ? fmtDate(a.datum_geplant) : fmt(a.created_at)}</td>
+        <td>${a.erledigt ? '<span style="font-size:0.7rem;font-weight:700;color:#059669;">✓</span>' : ''}</td>
+        <td style="white-space:nowrap;">
+          ${!a.erledigt ? `<button class="aktiv-btn" onclick="toggleAktivitaet('${esc(a.id)}', true)" title="Erledigt">✓</button>` : `<button class="aktiv-btn" onclick="toggleAktivitaet('${esc(a.id)}', false)" title="Wiedereröffnen">↩</button>`}
           <button class="aktiv-btn del" onclick="deleteAktivitaet('${esc(a.id)}')" title="Löschen">✕</button>
-        </div>
-      </div>`;
+        </td>
+      </tr>`;
   }).join('');
 
   return `
     <div class="aktiv-add">
-      <textarea id="aktiv-new-text" placeholder="Notiz, Aufgabe oder Aktivität hinzufügen…" rows="2"></textarea>
+      <textarea id="aktiv-new-text" placeholder="Notiz, Aufgabe oder Aktivität…" rows="2"></textarea>
       <div class="aktiv-add-controls">
         <select id="aktiv-new-typ">
           <option value="notiz">📝 Notiz</option>
@@ -1247,13 +1269,17 @@ function renderAktivitaetenSection(kundenId) {
           <option value="email">✉️ E-Mail</option>
           <option value="meeting">👥 Meeting</option>
         </select>
-        <input type="date" id="aktiv-new-datum" title="Geplantes Datum (optional)">
+        <input type="date" id="aktiv-new-datum" title="Geplantes Datum">
         <div class="aktiv-spacer"></div>
         <button class="btn btn-primary btn-sm" onclick="addAktivitaet()">Hinzufügen</button>
       </div>
     </div>
-    <div class="aktiv-list" id="aktiv-list">
-      ${entries || '<div class="aktiv-empty">Noch keine Aktivitäten oder Notizen.</div>'}
+    <div style="overflow-x:auto;">
+      ${aktivitaeten.length ? `
+        <table class="aktiv-table">
+          <thead><tr><th>Typ</th><th>Text</th><th>Datum</th><th></th><th></th></tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>` : '<div class="aktiv-empty">Noch keine Aktivitäten oder Notizen.</div>'}
     </div>`;
 }
 
@@ -1558,6 +1584,7 @@ async function saveVc() {
   closeVcModal();
   applyFilter();
   if (currentKundeId === kundenId) {
+    renderKarteHeader();
     renderKarteTab0();
     renderKarteTab1();
   }
@@ -1569,7 +1596,7 @@ async function changeVcStatus(vcId, newStatus, kundenId) {
     const vc = allVerkaufschancen.find(v => v.id === vcId);
     if (vc) vc.status = newStatus;
     applyFilter();
-    if (currentKundeId === kundenId) renderKarteTab0();
+    if (currentKundeId === kundenId) { renderKarteHeader(); renderKarteTab0(); }
   }
 }
 
@@ -1579,7 +1606,7 @@ async function deleteVc(vcId, kundenId) {
   if (!error) {
     allVerkaufschancen = allVerkaufschancen.filter(v => v.id !== vcId);
     applyFilter();
-    if (currentKundeId === kundenId) { renderKarteTab0(); renderKarteTab1(); }
+    if (currentKundeId === kundenId) { renderKarteHeader(); renderKarteTab0(); renderKarteTab1(); }
   }
 }
 
