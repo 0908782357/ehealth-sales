@@ -253,7 +253,7 @@
     const next = redirectAfterLogin();
 
     // Primär: AAL-Level prüfen
-    const { data: aal } = await sb.auth.getAuthenticatorAssuranceLevel();
+    const { data: aal } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
     if (aal?.nextLevel === 'aal2' && aal?.currentLevel !== 'aal2') {
       sessionStorage.setItem('mfa_next', next);
       window.location.href = 'mfa-challenge.html';

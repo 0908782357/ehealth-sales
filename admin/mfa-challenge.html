@@ -103,7 +103,7 @@
     const { data: { session } } = await sb.auth.getSession();
     if (!session) { window.location.href = 'index.html'; return; }
 
-    const { data: { currentLevel, nextLevel } } = await sb.auth.getAuthenticatorAssuranceLevel();
+    const { data: { currentLevel, nextLevel } } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
     if (currentLevel === 'aal2') {
       // Bereits verifiziert → weiterleiten
       goNext(); return;
