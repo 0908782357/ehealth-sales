@@ -292,6 +292,65 @@
       </div>
     </div>
 
+    <!-- Zwei-Faktor-Authentifizierung -->
+    <div class="section-card">
+      <h2>Zwei-Faktor-Authentifizierung</h2>
+      <div id="mfa-msg" class="msg"></div>
+
+      <!-- Status -->
+      <div id="mfa-status-area" style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+        <span id="mfa-status-badge" style="display:inline-block;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;">Laden…</span>
+        <span id="mfa-status-text" style="font-size:0.85rem;color:var(--gray-500);"></span>
+      </div>
+
+      <!-- Enrollment-Flow -->
+      <div id="mfa-enroll-flow" style="display:none">
+        <div style="background:var(--gray-50);border-radius:12px;padding:20px;margin-bottom:16px;display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+          <img id="mfa-qr-img" src="" alt="QR Code" style="width:160px;height:160px;border-radius:8px;border:1.5px solid var(--gray-200);">
+          <div style="flex:1;min-width:200px;">
+            <p style="font-size:0.82rem;color:var(--gray-500);margin-bottom:10px;line-height:1.5;">
+              Scannen Sie den QR-Code mit Ihrer Authenticator-App<br>(z. B. Google Authenticator oder Authy).
+            </p>
+            <p style="font-size:0.72rem;color:var(--gray-400);margin-bottom:6px;">Manueller Schlüssel:</p>
+            <code id="mfa-secret" style="font-size:0.78rem;background:white;border:1.5px solid var(--gray-200);border-radius:7px;padding:6px 10px;display:block;word-break:break-all;letter-spacing:0.05em;"></code>
+          </div>
+        </div>
+        <div class="form-group" style="max-width:240px;">
+          <label>Code zur Bestätigung</label>
+          <input type="text" id="mfa-verify-input" placeholder="000000" maxlength="6" inputmode="numeric"
+            style="font-size:1.3rem;font-weight:700;letter-spacing:0.3em;text-align:center;font-family:'Courier New',monospace;border:1.5px solid var(--gray-200);border-radius:10px;padding:10px 14px;outline:none;"
+            autocomplete="one-time-code">
+        </div>
+        <div class="actions" style="gap:8px;">
+          <button class="btn btn-primary" onclick="confirmEnroll()">2FA aktivieren</button>
+          <button class="btn btn-secondary" onclick="cancelEnroll()">Abbrechen</button>
+        </div>
+      </div>
+
+      <!-- Unenroll-Flow -->
+      <div id="mfa-unenroll-flow" style="display:none">
+        <p style="font-size:0.85rem;color:var(--gray-500);margin-bottom:14px;">
+          Geben Sie Ihren aktuellen Authenticator-Code ein, um 2FA zu deaktivieren.
+        </p>
+        <div class="form-group" style="max-width:240px;">
+          <label>Bestätigungscode</label>
+          <input type="text" id="mfa-unenroll-input" placeholder="000000" maxlength="6" inputmode="numeric"
+            style="font-size:1.3rem;font-weight:700;letter-spacing:0.3em;text-align:center;font-family:'Courier New',monospace;border:1.5px solid var(--gray-200);border-radius:10px;padding:10px 14px;outline:none;"
+            autocomplete="one-time-code">
+        </div>
+        <div class="actions" style="gap:8px;">
+          <button class="btn btn-danger" onclick="confirmUnenroll()">2FA deaktivieren</button>
+          <button class="btn btn-secondary" onclick="cancelUnenroll()">Abbrechen</button>
+        </div>
+      </div>
+
+      <!-- Aktions-Buttons (wenn kein Flow aktiv) -->
+      <div id="mfa-action-area" class="actions" style="display:none;">
+        <button class="btn btn-primary" id="mfa-enable-btn" style="display:none;" onclick="startEnroll()">2FA aktivieren</button>
+        <button class="btn btn-danger"  id="mfa-disable-btn" style="display:none;" onclick="startUnenroll()">2FA deaktivieren</button>
+      </div>
+    </div>
+
     <!-- Passwort -->
     <div class="section-card">
       <h2>Passwort</h2>
@@ -349,6 +408,7 @@
       document.getElementById('nav-item-products').style.display = 'none';
     }
     setupNavRole(role).catch(console.warn);
+    loadMfaStatus().catch(console.warn);
     if (role !== 'admin') {
       document.getElementById('f-firma').readOnly = true;
       document.getElementById('f-firma').style.background = 'var(--gray-50)';
@@ -592,6 +652,119 @@
       badge.className = 'role-badge role-' + role;
       badge.style.display = '';
     }
+  }
+
+  // ── 2FA / MFA ──────────────────────────────────────────────
+  let mfaEnrollId = null;
+
+  async function loadMfaStatus() {
+    const { data: factors } = await sb.auth.mfa.listFactors();
+    const verified = factors?.totp?.filter(f => f.status === 'verified') || [];
+    const badge  = document.getElementById('mfa-status-badge');
+    const text   = document.getElementById('mfa-status-text');
+    const area   = document.getElementById('mfa-action-area');
+    const enBtn  = document.getElementById('mfa-enable-btn');
+    const disBtn = document.getElementById('mfa-disable-btn');
+
+    if (verified.length > 0) {
+      badge.textContent = '✓ Aktiv';
+      badge.style.background = '#f0fdf4'; badge.style.color = '#16a34a';
+      text.textContent = 'Zwei-Faktor-Authentifizierung ist aktiviert.';
+      enBtn.style.display = 'none'; disBtn.style.display = '';
+    } else {
+      badge.textContent = 'Nicht aktiv';
+      badge.style.background = '#f1f5f9'; badge.style.color = 'var(--gray-500)';
+      text.textContent = 'Schützen Sie Ihr Konto mit einem Authenticator.';
+      enBtn.style.display = ''; disBtn.style.display = 'none';
+    }
+    area.style.display = 'flex';
+  }
+
+  async function startEnroll() {
+    document.getElementById('mfa-action-area').style.display = 'none';
+    document.getElementById('mfa-msg').className = 'msg';
+
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', issuer: 'eHS Portal' });
+    if (error) {
+      showMfaMsg('Fehler: ' + error.message, 'error');
+      document.getElementById('mfa-action-area').style.display = 'flex';
+      return;
+    }
+    mfaEnrollId = data.id;
+    document.getElementById('mfa-qr-img').src = data.totp.qr_code;
+    document.getElementById('mfa-secret').textContent = data.totp.secret;
+    document.getElementById('mfa-enroll-flow').style.display = '';
+    document.getElementById('mfa-verify-input').focus();
+  }
+
+  async function confirmEnroll() {
+    const code = document.getElementById('mfa-verify-input').value.trim();
+    if (code.length !== 6) { showMfaMsg('Bitte einen 6-stelligen Code eingeben.', 'error'); return; }
+
+    const { data: challenge, error: cErr } = await sb.auth.mfa.challenge({ factorId: mfaEnrollId });
+    if (cErr) { showMfaMsg('Fehler: ' + cErr.message, 'error'); return; }
+
+    const { error } = await sb.auth.mfa.verify({ factorId: mfaEnrollId, challengeId: challenge.id, code });
+    if (error) {
+      showMfaMsg('Code ungültig. Bitte erneut versuchen.', 'error');
+      document.getElementById('mfa-verify-input').value = '';
+      document.getElementById('mfa-verify-input').focus();
+      return;
+    }
+    document.getElementById('mfa-enroll-flow').style.display = 'none';
+    showMfaMsg('2FA erfolgreich aktiviert!', 'success');
+    setTimeout(() => { document.getElementById('mfa-msg').className = 'msg'; loadMfaStatus(); }, 2000);
+  }
+
+  function cancelEnroll() {
+    document.getElementById('mfa-enroll-flow').style.display = 'none';
+    document.getElementById('mfa-verify-input').value = '';
+    mfaEnrollId = null;
+    loadMfaStatus();
+  }
+
+  async function startUnenroll() {
+    document.getElementById('mfa-action-area').style.display = 'none';
+    document.getElementById('mfa-unenroll-flow').style.display = '';
+    document.getElementById('mfa-unenroll-input').value = '';
+    document.getElementById('mfa-unenroll-input').focus();
+  }
+
+  async function confirmUnenroll() {
+    const code = document.getElementById('mfa-unenroll-input').value.trim();
+    if (code.length !== 6) { showMfaMsg('Bitte einen 6-stelligen Code eingeben.', 'error'); return; }
+
+    const { data: factors } = await sb.auth.mfa.listFactors();
+    const factor = factors?.totp?.find(f => f.status === 'verified');
+    if (!factor) { showMfaMsg('Kein aktiver 2FA-Faktor gefunden.', 'error'); return; }
+
+    const { data: challenge, error: cErr } = await sb.auth.mfa.challenge({ factorId: factor.id });
+    if (cErr) { showMfaMsg('Fehler: ' + cErr.message, 'error'); return; }
+
+    const { error: vErr } = await sb.auth.mfa.verify({ factorId: factor.id, challengeId: challenge.id, code });
+    if (vErr) {
+      showMfaMsg('Code ungültig. Bitte erneut versuchen.', 'error');
+      document.getElementById('mfa-unenroll-input').value = '';
+      return;
+    }
+
+    const { error } = await sb.auth.mfa.unenroll({ factorId: factor.id });
+    if (error) { showMfaMsg('Fehler beim Deaktivieren: ' + error.message, 'error'); return; }
+
+    document.getElementById('mfa-unenroll-flow').style.display = 'none';
+    showMfaMsg('2FA wurde deaktiviert.', 'success');
+    setTimeout(() => { document.getElementById('mfa-msg').className = 'msg'; loadMfaStatus(); }, 2000);
+  }
+
+  function cancelUnenroll() {
+    document.getElementById('mfa-unenroll-flow').style.display = 'none';
+    document.getElementById('mfa-unenroll-input').value = '';
+    loadMfaStatus();
+  }
+
+  function showMfaMsg(text, type) {
+    const el = document.getElementById('mfa-msg');
+    el.textContent = text; el.className = 'msg ' + type;
   }
 </script>
 </body>

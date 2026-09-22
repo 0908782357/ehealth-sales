@@ -246,7 +246,17 @@
   function redirectAfterLogin() {
     const params = new URLSearchParams(window.location.search);
     const eventId = params.get('event');
-    window.location.href = eventId ? `events.html?event=${eventId}` : 'dashboard.html';
+    return eventId ? `events.html?event=${eventId}` : 'dashboard.html';
+  }
+
+  async function checkMfaAndRedirect() {
+    const { data: { currentLevel, nextLevel } } = await sb.auth.getAuthenticatorAssuranceLevel();
+    if (nextLevel === 'aal2' && currentLevel !== 'aal2') {
+      sessionStorage.setItem('mfa_next', redirectAfterLogin());
+      window.location.href = 'mfa-challenge.html';
+    } else {
+      window.location.href = redirectAfterLogin();
+    }
   }
 
   function showLogin() {
@@ -268,12 +278,12 @@
       if (fromMagicLink && !passwordSet) {
         showPwStep();
       } else {
-        redirectAfterLogin();
+        await checkMfaAndRedirect();
       }
     } else if (event === 'INITIAL_SESSION') {
       if (session) {
-        // Bereits eingeloggt → direkt zum Dashboard
-        redirectAfterLogin();
+        // Bereits eingeloggt → direkt zum Dashboard (mit MFA-Check)
+        await checkMfaAndRedirect();
       } else {
         // Kein Token, kein Login → Login-Formular zeigen
         showLogin();
@@ -308,7 +318,7 @@
     }
     msg.textContent = 'Passwort gespeichert! Weiterleitung…';
     msg.className = 'msg success';
-    setTimeout(() => redirectAfterLogin(), 900);
+    setTimeout(() => checkMfaAndRedirect(), 900);
   }
 
   function showMsg(text, type) {
@@ -350,7 +360,7 @@
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) return showMsg(error.message, 'error');
     await claimProfile(data.session);
-    redirectAfterLogin();
+    await checkMfaAndRedirect();
   }
 
   let otpEmail = '';
@@ -374,7 +384,7 @@
     const { data, error } = await sb.auth.verifyOtp({ email: otpEmail, token, type: 'email' });
     if (error) return showMsg('Code ungültig oder abgelaufen.', 'error');
     await claimProfile(data.session);
-    redirectAfterLogin();
+    await checkMfaAndRedirect();
   }
 
   function resetOtp() {
