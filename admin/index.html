@@ -250,13 +250,27 @@
   }
 
   async function checkMfaAndRedirect() {
-    const { data: { currentLevel, nextLevel } } = await sb.auth.getAuthenticatorAssuranceLevel();
-    if (nextLevel === 'aal2' && currentLevel !== 'aal2') {
-      sessionStorage.setItem('mfa_next', redirectAfterLogin());
+    const next = redirectAfterLogin();
+
+    // Primär: AAL-Level prüfen
+    const { data: aal } = await sb.auth.getAuthenticatorAssuranceLevel();
+    if (aal?.nextLevel === 'aal2' && aal?.currentLevel !== 'aal2') {
+      sessionStorage.setItem('mfa_next', next);
       window.location.href = 'mfa-challenge.html';
-    } else {
-      window.location.href = redirectAfterLogin();
+      return;
     }
+
+    // Fallback: direkt die enrollten Faktoren prüfen
+    // (AAL-Level wird nach frischem Login manchmal noch nicht korrekt gemeldet)
+    const { data: factors } = await sb.auth.mfa.listFactors();
+    const hasVerified = factors?.totp?.some(f => f.status === 'verified');
+    if (hasVerified && aal?.currentLevel !== 'aal2') {
+      sessionStorage.setItem('mfa_next', next);
+      window.location.href = 'mfa-challenge.html';
+      return;
+    }
+
+    window.location.href = next;
   }
 
   function showLogin() {
