@@ -11,7 +11,7 @@
     --navy: #3C4A7C; --green: #6DC52D; --navy-dark: #2d3a63;
     --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0;
     --gray-400: #94a3b8; --gray-500: #64748b; --gray-900: #0f172a;
-    --red: #ef4444;
+    --red: #ef4444; --purple: #5b21b6;
   }
   body { font-family: 'Inter','Helvetica Neue',sans-serif; background: var(--gray-50); color: var(--gray-900); }
   .topbar {
@@ -42,7 +42,6 @@
   }
   .nav-link:hover { background: var(--gray-100); color: var(--navy); }
   .nav-link.active { background: #eef0f7; color: var(--navy); font-weight: 700; }
-  /* Collapsible nav groups */
   .nav-group-header {
     display: flex; align-items: center; gap: 10px;
     padding: 9px 10px; border-radius: 9px;
@@ -68,7 +67,7 @@
 
   .main { flex: 1; padding: 32px 36px; max-width: 860px; }
   h1 { font-family: Montserrat, sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
-  .page-sub { color: var(--gray-400); font-size: 0.85rem; margin-bottom: 28px; }
+  .page-sub { color: var(--gray-400); font-size: 0.85rem; margin-bottom: 20px; }
 
   .section-card {
     background: white; border-radius: 14px; padding: 28px 32px;
@@ -102,6 +101,8 @@
   .btn-secondary:hover { background: var(--gray-200); }
   .btn-danger { background: #fee2e2; color: #991b1b; }
   .btn-danger:hover { background: #fecaca; }
+  .btn-purple { background: var(--purple); color: white; }
+  .btn-purple:hover { background: #4c1d95; }
 
   .msg { font-size: 0.83rem; padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; display: none; }
   .msg.success { display: block; background: #dcfce7; color: #166534; }
@@ -113,11 +114,154 @@
   }
   .role-admin   { background: #fef3c7; color: #92400e; }
   .role-partner { background: #dbeafe; color: #1e40af; }
-  .role-kunde{ background: #f0fdf4; color: #166534; }
+  .role-kunde   { background: #f0fdf4; color: #166534; }
 
   .divider { border: none; border-top: 1px solid var(--gray-100); margin: 4px 0 20px; }
-
   .pw-hint { font-size: 0.75rem; color: var(--gray-400); margin-top: 4px; }
+
+  /* ── Profile tabs ──────────────────────────────────────────────────────── */
+  .profile-tabs {
+    display: flex; gap: 2px; border-bottom: 2px solid var(--gray-200); margin-bottom: 24px;
+  }
+  .profile-tab {
+    padding: 9px 18px; font-size: 0.85rem; font-weight: 600;
+    color: var(--gray-400); cursor: pointer; border: none; background: none;
+    font-family: inherit; border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .profile-tab:hover { color: var(--navy); }
+  .profile-tab.active { color: var(--navy); border-bottom-color: var(--navy); }
+  .profile-panel { display: none; }
+  .profile-panel.active { display: block; }
+
+  /* ── Template grid ──────────────────────────────────────────────────────── */
+  .tpl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
+  .tpl-card {
+    background: white; border: 1.5px solid var(--gray-200); border-radius: 12px; overflow: hidden;
+  }
+  .tpl-card-head {
+    padding: 14px 16px; display: flex; align-items: center; gap: 11px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .tpl-ico {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0;
+  }
+  .tpl-meta { flex: 1; min-width: 0; }
+  .tpl-name { font-weight: 700; font-size: 0.88rem; }
+  .tpl-status { font-size: 0.72rem; color: var(--gray-400); margin-top: 2px; }
+  .tpl-card-body { padding: 12px 16px 14px; }
+
+  /* ── Wizard ────────────────────────────────────────────────────────────── */
+  .wiz-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200;
+    display: flex; align-items: flex-end; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .wiz-overlay.open { opacity: 1; pointer-events: all; }
+  .wiz-sheet {
+    background: white; width: 100%; max-width: 860px; height: 84vh;
+    border-radius: 20px 20px 0 0; display: flex; flex-direction: column;
+    transform: translateY(100%); transition: transform .25s cubic-bezier(.22,1,.36,1);
+    overflow: hidden;
+  }
+  .wiz-overlay.open .wiz-sheet { transform: translateY(0); }
+  .wiz-hdr {
+    display: flex; align-items: center; gap: 12px; padding: 16px 22px;
+    border-bottom: 1px solid var(--gray-200); background: var(--gray-50); flex-shrink: 0;
+  }
+  .wiz-hdr-txt { flex: 1; }
+  .wiz-hdr-title { font-weight: 700; font-size: 0.95rem; }
+  .wiz-hdr-sub { font-size: 0.72rem; color: var(--gray-500); margin-top: 2px; }
+  .wiz-close {
+    width: 30px; height: 30px; border-radius: 7px; background: none; border: none;
+    cursor: pointer; font-size: 1.1rem; color: var(--gray-500);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .wiz-close:hover { background: var(--gray-200); color: var(--gray-900); }
+  .wiz-body { display: grid; grid-template-columns: 1fr 240px; flex: 1; overflow: hidden; min-height: 0; }
+  .wiz-sections { padding: 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+  .wiz-right {
+    border-left: 1px solid var(--gray-200); background: var(--gray-50);
+    padding: 16px 14px; overflow-y: auto; display: flex; flex-direction: column;
+  }
+  .wiz-right-title {
+    font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.07em; color: var(--gray-400); margin-bottom: 6px;
+  }
+  .wiz-note {
+    font-size: 0.7rem; color: var(--gray-400); background: var(--gray-100);
+    border-radius: 6px; padding: 6px 8px; margin-bottom: 12px; line-height: 1.4;
+  }
+  .wiz-ftr {
+    display: flex; align-items: center; justify-content: space-between; padding: 12px 22px;
+    border-top: 1px solid var(--gray-200); background: var(--gray-50); flex-shrink: 0;
+  }
+  .wiz-ftr-hint { font-size: 0.72rem; color: var(--gray-400); }
+
+  /* Sections */
+  .wsec { background: white; border: 1.5px solid var(--gray-200); border-radius: 10px; overflow: hidden; transition: border-color .15s, background .15s; }
+  .wsec.dragover { border-color: var(--purple); background: #f5f3ff; }
+  .wsec-hdr {
+    display: flex; align-items: center; gap: 7px; padding: 7px 12px;
+    background: var(--gray-50); border-bottom: 1px solid var(--gray-200);
+    font-size: 0.68rem; font-weight: 700; color: var(--gray-500);
+    text-transform: uppercase; letter-spacing: 0.05em; user-select: none;
+  }
+  .wsec-drop {
+    min-height: 42px; padding: 7px 8px;
+    display: flex; flex-wrap: wrap; gap: 5px; align-content: flex-start;
+  }
+  .wsec-empty {
+    width: 100%; padding: 6px 2px; font-size: 0.72rem;
+    color: var(--gray-400); text-align: center; font-style: italic; pointer-events: none;
+  }
+
+  /* Field chips */
+  .fchip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 7px 4px 6px; border-radius: 6px; font-size: 0.7rem; font-weight: 600;
+    cursor: grab; user-select: none; border: 1px solid transparent;
+    transition: opacity .15s; position: relative;
+  }
+  .fchip:active { cursor: grabbing; }
+  .fchip.dragging { opacity: .35; }
+  .fchip.chip-used { opacity: .35; pointer-events: none; cursor: default; }
+  .fchip.drop-before::before {
+    content: ''; position: absolute; left: -4px; top: 0; bottom: 0;
+    width: 2px; background: var(--purple); border-radius: 2px;
+  }
+  .chip-x {
+    background: none; border: none; cursor: pointer;
+    font-size: .7rem; color: inherit; opacity: .55; padding: 0 0 0 1px; line-height: 1;
+  }
+  .chip-x:hover { opacity: 1; }
+  .chip-m { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+  .chip-a { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+  .chip-k { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
+  .chip-p { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+
+  .avail-cat {
+    font-size: .62rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--gray-400); margin: 10px 0 5px;
+  }
+  .avail-cat:first-child { margin-top: 0; }
+  .avail-drop {
+    border: 1.5px dashed var(--gray-200); border-radius: 8px;
+    padding: 8px 10px; font-size: .72rem; color: var(--gray-400);
+    text-align: center; margin-top: 12px; transition: .15s;
+  }
+  .avail-drop.dragover { border-color: var(--red); background: #fee2e2; color: #991b1b; }
+
+  /* Toast */
+  .profile-toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    background: var(--gray-900); color: white; padding: 10px 20px;
+    border-radius: 10px; font-size: 0.82rem; font-weight: 600;
+    opacity: 0; transition: .25s; z-index: 300; pointer-events: none; white-space: nowrap;
+  }
+  .profile-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
@@ -135,7 +279,7 @@
 </div>
 
 <div class="layout">
-        <nav class="sidebar">
+  <nav class="sidebar">
     <a class="nav-link" href="dashboard.html">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
       Dashboard
@@ -155,8 +299,6 @@
         <a class="nav-link nav-sub" href="alliance-config.html">Alliance-Stufen</a>
       </div>
     </div>
-
-    
 
     <div class="nav-group" id="nav-group-produkte">
       <div class="nav-group-header" onclick="toggleNavGroup(this)">
@@ -194,12 +336,10 @@
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
       Shop
     </a>
-
     <a class="nav-link" href="knowledge.html">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
       Community
     </a>
-
     <a class="nav-link" href="rechner.html">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
       TI-Rechner
@@ -222,177 +362,174 @@
     </a>
   </nav>
 
-
   <main class="main">
     <h1>Mein Konto <span class="role-badge" id="role-badge"></span></h1>
     <p class="page-sub">Persönliche Daten und Sicherheitseinstellungen verwalten</p>
 
-    <!-- Profildaten -->
-    <div class="section-card">
-      <h2>Persönliche Daten</h2>
-      <div id="profile-msg" class="msg"></div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Vorname</label>
-          <input type="text" id="f-vorname" placeholder="Max">
-        </div>
-        <div class="form-group">
-          <label>Nachname</label>
-          <input type="text" id="f-nachname" placeholder="Mustermann">
-        </div>
-        <div class="form-group">
-          <label>E-Mail</label>
-          <input type="email" id="f-email" readonly>
-        </div>
-        <div class="form-group">
-          <label>Firma *</label>
-          <input type="text" id="f-firma" placeholder="Muster GmbH" required>
-        </div>
-        <div class="form-group">
-          <label>Telefon</label>
-          <input type="tel" id="f-telefon" placeholder="+49 123 456789">
-        </div>
-        <div class="form-group full">
-          <label>Straße & Hausnummer</label>
-          <input type="text" id="f-strasse" placeholder="Musterstraße 1">
-        </div>
-        <div class="form-group">
-          <label>PLZ</label>
-          <input type="text" id="f-plz" placeholder="12345">
-        </div>
-        <div class="form-group">
-          <label>Ort</label>
-          <input type="text" id="f-ort" placeholder="Musterstadt">
-        </div>
-        <div class="form-group full">
-          <label>Website</label>
-          <input type="url" id="f-website" placeholder="https://www.ihrefirma.de">
-        </div>
-      </div>
-      <div class="actions">
-        <button class="btn btn-primary" onclick="saveProfile()">Speichern</button>
-      </div>
+    <!-- TAB BAR -->
+    <div class="profile-tabs">
+      <button class="profile-tab active" data-tab="profil" onclick="switchProfileTab('profil')">Profil</button>
+      <button class="profile-tab" data-tab="logo" onclick="switchProfileTab('logo')">Logo</button>
+      <button class="profile-tab" data-tab="templates" id="tab-btn-templates" style="display:none" onclick="switchProfileTab('templates')">Templates</button>
     </div>
 
-    <!-- Logo -->
-    <div class="section-card" id="card-logo">
-      <h2>Firmenlogo</h2>
-      <p style="font-size:0.85rem;color:var(--gray-400);margin-bottom:16px;">Ihr Logo erscheint auf der Partnerseite der ehealth-sales.de und im Falle einer Alliance-Mitgliedschaft auf der Partnerseite der ehealth-alliance.de. Empfohlen: quadratisches Format, min. 200×200 px.</p>
-      <div id="logo-msg" class="msg"></div>
-      <div id="logo-upload-area" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
-        <div id="logo-preview-wrap" style="width:120px;height:120px;border-radius:12px;border:2px dashed var(--gray-200);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--gray-50);flex-shrink:0;">
-          <img id="logo-preview" src="" style="width:100%;height:100%;object-fit:contain;display:none;" alt="Logo">
-          <span id="logo-placeholder" style="font-size:0.75rem;color:var(--gray-400);text-align:center;padding:8px;">Kein Logo</span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <label class="btn btn-secondary" style="cursor:pointer;">
-            Logo auswählen
-            <input type="file" id="logo-file-input" accept="image/*" style="display:none;" onchange="previewLogo(this)">
-          </label>
-          <button class="btn btn-primary" id="logo-save-btn" onclick="saveLogo()" style="display:none;">Logo speichern</button>
-        </div>
-      </div>
-    </div>
+    <!-- ── PANEL: PROFIL ─────────────────────────────────────────────────── -->
+    <div id="profile-panel-profil" class="profile-panel active">
 
-    <!-- Zwei-Faktor-Authentifizierung -->
-    <div class="section-card">
-      <h2>Zwei-Faktor-Authentifizierung</h2>
-      <div id="mfa-msg" class="msg"></div>
-
-      <!-- Status -->
-      <div id="mfa-status-area" style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
-        <span id="mfa-status-badge" style="display:inline-block;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;">Laden…</span>
-        <span id="mfa-status-text" style="font-size:0.85rem;color:var(--gray-500);"></span>
-      </div>
-
-      <!-- Enrollment-Flow -->
-      <div id="mfa-enroll-flow" style="display:none">
-        <div style="background:var(--gray-50);border-radius:12px;padding:20px;margin-bottom:16px;display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
-          <img id="mfa-qr-img" src="" alt="QR Code" style="width:160px;height:160px;border-radius:8px;border:1.5px solid var(--gray-200);">
-          <div style="flex:1;min-width:200px;">
-            <p style="font-size:0.82rem;color:var(--gray-500);margin-bottom:10px;line-height:1.5;">
-              Scannen Sie den QR-Code mit Ihrer Authenticator-App<br>(z. B. Google Authenticator oder Authy).
-            </p>
-            <p style="font-size:0.72rem;color:var(--gray-400);margin-bottom:6px;">Manueller Schlüssel:</p>
-            <code id="mfa-secret" style="font-size:0.78rem;background:white;border:1.5px solid var(--gray-200);border-radius:7px;padding:6px 10px;display:block;word-break:break-all;letter-spacing:0.05em;"></code>
+      <!-- Profildaten -->
+      <div class="section-card">
+        <h2>Persönliche Daten</h2>
+        <div id="profile-msg" class="msg"></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Vorname</label>
+            <input type="text" id="f-vorname" placeholder="Max">
+          </div>
+          <div class="form-group">
+            <label>Nachname</label>
+            <input type="text" id="f-nachname" placeholder="Mustermann">
+          </div>
+          <div class="form-group">
+            <label>E-Mail</label>
+            <input type="email" id="f-email" readonly>
+          </div>
+          <div class="form-group">
+            <label>Firma *</label>
+            <input type="text" id="f-firma" placeholder="Muster GmbH" required>
+          </div>
+          <div class="form-group">
+            <label>Telefon</label>
+            <input type="tel" id="f-telefon" placeholder="+49 123 456789">
+          </div>
+          <div class="form-group full">
+            <label>Straße &amp; Hausnummer</label>
+            <input type="text" id="f-strasse" placeholder="Musterstraße 1">
+          </div>
+          <div class="form-group">
+            <label>PLZ</label>
+            <input type="text" id="f-plz" placeholder="12345">
+          </div>
+          <div class="form-group">
+            <label>Ort</label>
+            <input type="text" id="f-ort" placeholder="Musterstadt">
+          </div>
+          <div class="form-group full">
+            <label>Website</label>
+            <input type="url" id="f-website" placeholder="https://www.ihrefirma.de">
           </div>
         </div>
-        <div class="form-group" style="max-width:240px;">
-          <label>Code zur Bestätigung</label>
-          <input type="text" id="mfa-verify-input" placeholder="000000" maxlength="6" inputmode="numeric"
-            style="font-size:1.3rem;font-weight:700;letter-spacing:0.3em;text-align:center;font-family:'Courier New',monospace;border:1.5px solid var(--gray-200);border-radius:10px;padding:10px 14px;outline:none;"
-            autocomplete="one-time-code">
-        </div>
-        <div class="actions" style="gap:8px;">
-          <button class="btn btn-primary" onclick="confirmEnroll()">2FA aktivieren</button>
-          <button class="btn btn-secondary" onclick="cancelEnroll()">Abbrechen</button>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="saveProfile()">Speichern</button>
         </div>
       </div>
 
-      <!-- Unenroll-Flow -->
-      <div id="mfa-unenroll-flow" style="display:none">
-        <p style="font-size:0.85rem;color:var(--gray-500);margin-bottom:14px;">
-          Geben Sie Ihren aktuellen Authenticator-Code ein, um 2FA zu deaktivieren.
-        </p>
-        <div class="form-group" style="max-width:240px;">
-          <label>Bestätigungscode</label>
-          <input type="text" id="mfa-unenroll-input" placeholder="000000" maxlength="6" inputmode="numeric"
-            style="font-size:1.3rem;font-weight:700;letter-spacing:0.3em;text-align:center;font-family:'Courier New',monospace;border:1.5px solid var(--gray-200);border-radius:10px;padding:10px 14px;outline:none;"
-            autocomplete="one-time-code">
+      <!-- Zwei-Faktor-Authentifizierung -->
+      <div class="section-card">
+        <h2>Zwei-Faktor-Authentifizierung</h2>
+        <div id="mfa-msg" class="msg"></div>
+        <div id="mfa-status-area" style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+          <span id="mfa-status-badge" style="display:inline-block;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;">Laden…</span>
+          <span id="mfa-status-text" style="font-size:0.85rem;color:var(--gray-500);"></span>
         </div>
-        <div class="actions" style="gap:8px;">
-          <button class="btn btn-danger" onclick="confirmUnenroll()">2FA deaktivieren</button>
-          <button class="btn btn-secondary" onclick="cancelUnenroll()">Abbrechen</button>
+        <div id="mfa-enroll-flow" style="display:none">
+          <div style="background:var(--gray-50);border-radius:12px;padding:20px;margin-bottom:16px;display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+            <img id="mfa-qr-img" src="" alt="QR Code" style="width:160px;height:160px;border-radius:8px;border:1.5px solid var(--gray-200);">
+            <div style="flex:1;min-width:200px;">
+              <p style="font-size:0.82rem;color:var(--gray-500);margin-bottom:10px;line-height:1.5;">
+                Scannen Sie den QR-Code mit Ihrer Authenticator-App<br>(z. B. Google Authenticator oder Authy).
+              </p>
+              <p style="font-size:0.72rem;color:var(--gray-400);margin-bottom:6px;">Manueller Schlüssel:</p>
+              <code id="mfa-secret" style="font-size:0.78rem;background:white;border:1.5px solid var(--gray-200);border-radius:7px;padding:6px 10px;display:block;word-break:break-all;letter-spacing:0.05em;"></code>
+            </div>
+          </div>
+          <div class="form-group" style="max-width:240px;">
+            <label>Code zur Bestätigung</label>
+            <input type="text" id="mfa-verify-input" placeholder="000000" maxlength="6" inputmode="numeric"
+              style="font-size:1.3rem;font-weight:700;letter-spacing:0.3em;text-align:center;font-family:'Courier New',monospace;border:1.5px solid var(--gray-200);border-radius:10px;padding:10px 14px;outline:none;"
+              autocomplete="one-time-code">
+          </div>
+          <div class="actions" style="gap:8px;">
+            <button class="btn btn-primary" onclick="confirmEnroll()">2FA aktivieren</button>
+            <button class="btn btn-secondary" onclick="cancelEnroll()">Abbrechen</button>
+          </div>
+        </div>
+        <div id="mfa-unenroll-flow" style="display:none">
+          <p style="font-size:0.85rem;color:var(--gray-500);margin-bottom:14px;">
+            Geben Sie Ihren aktuellen Authenticator-Code ein, um 2FA zu deaktivieren.
+          </p>
+          <div class="form-group" style="max-width:240px;">
+            <label>Bestätigungscode</label>
+            <input type="text" id="mfa-unenroll-input" placeholder="000000" maxlength="6" inputmode="numeric"
+              style="font-size:1.3rem;font-weight:700;letter-spacing:0.3em;text-align:center;font-family:'Courier New',monospace;border:1.5px solid var(--gray-200);border-radius:10px;padding:10px 14px;outline:none;"
+              autocomplete="one-time-code">
+          </div>
+          <div class="actions" style="gap:8px;">
+            <button class="btn btn-danger" onclick="confirmUnenroll()">2FA deaktivieren</button>
+            <button class="btn btn-secondary" onclick="cancelUnenroll()">Abbrechen</button>
+          </div>
+        </div>
+        <div id="mfa-action-area" class="actions" style="display:none;">
+          <button class="btn btn-primary" id="mfa-enable-btn" style="display:none;" onclick="startEnroll()">2FA aktivieren</button>
+          <button class="btn btn-danger"  id="mfa-disable-btn" style="display:none;" onclick="startUnenroll()">2FA deaktivieren</button>
         </div>
       </div>
 
-      <!-- Aktions-Buttons (wenn kein Flow aktiv) -->
-      <div id="mfa-action-area" class="actions" style="display:none;">
-        <button class="btn btn-primary" id="mfa-enable-btn" style="display:none;" onclick="startEnroll()">2FA aktivieren</button>
-        <button class="btn btn-danger"  id="mfa-disable-btn" style="display:none;" onclick="startUnenroll()">2FA deaktivieren</button>
-      </div>
-    </div>
-
-    <!-- Passwort -->
-    <div class="section-card">
-      <h2>Passwort</h2>
-      <div id="pw-msg" class="msg"></div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>Neues Passwort</label>
-          <input type="password" id="f-pw-new" placeholder="Mindestens 8 Zeichen" autocomplete="new-password">
-          <p class="pw-hint">Leer lassen, um das Passwort nicht zu ändern.</p>
+      <!-- Passwort -->
+      <div class="section-card">
+        <h2>Passwort</h2>
+        <div id="pw-msg" class="msg"></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Neues Passwort</label>
+            <input type="password" id="f-pw-new" placeholder="Mindestens 8 Zeichen" autocomplete="new-password">
+            <p class="pw-hint">Leer lassen, um das Passwort nicht zu ändern.</p>
+          </div>
+          <div class="form-group">
+            <label>Passwort bestätigen</label>
+            <input type="password" id="f-pw-confirm" placeholder="Passwort wiederholen" autocomplete="new-password">
+          </div>
         </div>
-        <div class="form-group">
-          <label>Passwort bestätigen</label>
-          <input type="password" id="f-pw-confirm" placeholder="Passwort wiederholen" autocomplete="new-password">
+        <div class="actions">
+          <button class="btn btn-primary" onclick="savePassword()">Passwort ändern</button>
         </div>
       </div>
-      <div class="actions">
-        <button class="btn btn-primary" onclick="savePassword()">Passwort ändern</button>
-      </div>
-    </div>
 
-    <!-- Angebotsvorlage -->
-    <div class="section-card" id="card-vorlage" style="display:none;">
-      <h2>Angebotsvorlage</h2>
-      <p style="font-size:0.85rem;color:var(--gray-400);margin-bottom:16px;line-height:1.5;">
-        Laden Sie eine Word-Vorlage (.docx) hoch. Diese wird beim Erstellen von Angeboten aus Verkaufschancen verwendet und mit den jeweiligen Kundendaten befüllt.
+    </div><!-- /panel-profil -->
+
+    <!-- ── PANEL: LOGO ──────────────────────────────────────────────────── -->
+    <div id="profile-panel-logo" class="profile-panel">
+      <div class="section-card" id="card-logo">
+        <h2>Firmenlogo</h2>
+        <p style="font-size:0.85rem;color:var(--gray-400);margin-bottom:16px;">Ihr Logo erscheint auf der Partnerseite der ehealth-sales.de und im Falle einer Alliance-Mitgliedschaft auf der Partnerseite der ehealth-alliance.de. Empfohlen: quadratisches Format, min. 200×200 px.</p>
+        <div id="logo-msg" class="msg"></div>
+        <div id="logo-upload-area" style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+          <div id="logo-preview-wrap" style="width:120px;height:120px;border-radius:12px;border:2px dashed var(--gray-200);display:flex;align-items:center;justify-content:center;overflow:hidden;background:var(--gray-50);flex-shrink:0;">
+            <img id="logo-preview" src="" style="width:100%;height:100%;object-fit:contain;display:none;" alt="Logo">
+            <span id="logo-placeholder" style="font-size:0.75rem;color:var(--gray-400);text-align:center;padding:8px;">Kein Logo</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <label class="btn btn-secondary" style="cursor:pointer;">
+              Logo auswählen
+              <input type="file" id="logo-file-input" accept="image/*" style="display:none;" onchange="previewLogo(this)">
+            </label>
+            <button class="btn btn-primary" id="logo-save-btn" onclick="saveLogo()" style="display:none;">Logo speichern</button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /panel-logo -->
+
+    <!-- ── PANEL: TEMPLATES (admin only) ───────────────────────────────── -->
+    <div id="profile-panel-templates" class="profile-panel">
+      <p style="font-size:0.85rem;color:var(--gray-400);margin-bottom:18px;line-height:1.6;">
+        Lade für jeden Dokumenttyp eine Word-Vorlage (.docx) hoch. Mit dem Feld-Wizard legst du fest, welche Platzhalter in welchen Abschnitt gehören — die gespeicherte Konfiguration steuert später die automatische Befüllung.
       </p>
-      <div id="vorlage-msg" class="msg"></div>
-      <div id="vorlage-status" style="margin-bottom:4px;"></div>
-      <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;align-items:center;">
-        <label class="btn btn-secondary" style="cursor:pointer;">
-          Vorlage auswählen (.docx)
-          <input type="file" id="vorlage-file-input" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" style="display:none;" onchange="previewVorlage(this)">
-        </label>
-        <button class="btn btn-primary" id="vorlage-save-btn" onclick="saveVorlage()" style="display:none;">Vorlage hochladen</button>
-        <button class="btn btn-danger" id="vorlage-delete-btn" onclick="deleteVorlage()" style="display:none;">Vorlage löschen</button>
+      <div id="tpl-msg" class="msg"></div>
+      <div class="tpl-grid" id="templates-grid">
+        <!-- rendered by JS -->
       </div>
-      <div id="vorlage-filename-preview" style="font-size:0.8rem;color:var(--gray-500);margin-top:8px;display:none;"></div>
 
-      <details style="margin-top:22px;">
-        <summary style="font-size:0.8rem;font-weight:600;color:var(--gray-500);cursor:pointer;user-select:none;">Verfügbare Platzhalter für die Word-Vorlage</summary>
+      <details style="margin-top:8px;">
+        <summary style="font-size:0.8rem;font-weight:600;color:var(--gray-500);cursor:pointer;user-select:none;">Verfügbare Platzhalter (Referenz)</summary>
         <div style="margin-top:10px;font-size:0.77rem;background:var(--gray-50);border-radius:8px;padding:14px 16px;border:1px solid var(--gray-200);line-height:2;font-family:'Courier New',monospace;">
           <b style="font-family:Inter,sans-serif;font-size:0.75rem;color:var(--gray-500);">Kundendaten</b><br>
           {kunde_name} &nbsp; {kunde_firma} &nbsp; {kunde_email} &nbsp; {kunde_telefon}<br>
@@ -410,17 +547,54 @@
           {notiz} &nbsp; {vc_status}
         </div>
       </details>
-    </div>
+    </div><!-- /panel-templates -->
+
   </main>
 </div>
+
+<!-- ── WIZARD OVERLAY ──────────────────────────────────────────────────────── -->
+<div class="wiz-overlay" id="wiz-overlay" onclick="closeWizard(event)">
+  <div class="wiz-sheet" onclick="event.stopPropagation()">
+    <div class="wiz-hdr">
+      <div class="wiz-hdr-txt">
+        <div class="wiz-hdr-title" id="wiz-title">Feld-Wizard</div>
+        <div class="wiz-hdr-sub">Felder per Drag &amp; Drop in Abschnitte ziehen und anordnen</div>
+      </div>
+      <button class="wiz-close" onclick="closeWizard()">✕</button>
+    </div>
+    <div class="wiz-body">
+      <div class="wiz-sections" id="wiz-sections"></div>
+      <div class="wiz-right">
+        <div class="wiz-right-title">Verfügbare Felder</div>
+        <div class="wiz-note">Felder per Drag &amp; Drop in einen Abschnitt ziehen · ✕ zum Entfernen aus Abschnitt</div>
+        <div id="wiz-avail"></div>
+        <div class="avail-drop" id="wiz-avail-drop"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="wizDropToAvailable(event)">
+          Hier ablegen zum Entfernen
+        </div>
+      </div>
+    </div>
+    <div class="wiz-ftr">
+      <span class="wiz-ftr-hint">Konfiguration wird in Supabase gespeichert</span>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-secondary" onclick="closeWizard()">Abbrechen</button>
+        <button class="btn btn-primary" onclick="saveWizardConfig()">💾 Speichern</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="profile-toast" id="profile-toast"></div>
 
 <script>
   const SUPABASE_URL  = 'https://focysklymhmcfwgxdtuk.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { flowType: 'implicit' } });
 
-  let currentUserId = null;
-  let currentProfileId = null; // DB-PK der user_profiles-Zeile
+  let currentUserId  = null;
+  let currentProfileId = null;
 
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'INITIAL_SESSION') {
@@ -433,7 +607,6 @@
     currentUserId = user.id;
     _setHeaderUser(user.id);
 
-    // Rolle aus user_roles laden
     const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', user.id).maybeSingle();
     const role = roleRow?.role || 'partner';
 
@@ -441,7 +614,6 @@
     badge.textContent = { admin: 'Admin', partner: 'Kunde', customer: 'Endkunde' }[role] || role;
     badge.className = `role-badge role-${role}`;
 
-    // Admin: Nutzer-Link einblenden
     if (role === 'admin') {
       document.getElementById('nav-group-admin').style.display = '';
     }
@@ -450,24 +622,24 @@
     }
     setupNavRole(role).catch(console.warn);
     loadMfaStatus().catch(console.warn);
+
     if (role === 'admin') {
-      document.getElementById('card-vorlage').style.display = '';
-      loadVorlage().catch(console.warn);
+      document.getElementById('tab-btn-templates').style.display = '';
+      loadAllTemplates().catch(console.warn);
     }
+
     if (role !== 'admin') {
       document.getElementById('f-firma').readOnly = true;
       document.getElementById('f-firma').style.background = 'var(--gray-50)';
       document.getElementById('f-firma').style.color = 'var(--gray-500)';
     }
 
-    // Profil laden – erst per user_id, Fallback per E-Mail
     let { data: profile } = await sb.from('user_profiles')
       .select('*')
       .eq('user_id', user.id)
       .maybeSingle();
 
     if (!profile) {
-      // Fallback: Profil per E-Mail suchen und user_id verknüpfen
       const { data: byEmail } = await sb.from('user_profiles')
         .select('*')
         .eq('email', user.email.toLowerCase())
@@ -495,21 +667,25 @@
         img.style.display = '';
         document.getElementById('logo-placeholder').style.display = 'none';
       }
+      // Load wizard layouts from saved config
+      const saved = profile.template_configs || {};
+      TEMPLATE_TYPES.forEach(t => {
+        wizLayouts[t.id] = saved[t.id]
+          ? JSON.parse(JSON.stringify(saved[t.id]))
+          : makeDefaultSections();
+      });
     } else {
       document.getElementById('f-email').value = user.email;
+      TEMPLATE_TYPES.forEach(t => { wizLayouts[t.id] = makeDefaultSections(); });
     }
   }
 
+  // ── Profile / Password ────────────────────────────────────────────────────
   async function saveProfile() {
     const msg = document.getElementById('profile-msg');
     msg.className = 'msg';
-
     const firma = document.getElementById('f-firma').value.trim();
-    if (!firma) {
-      msg.textContent = 'Bitte Firma / Unternehmen ausfüllen.';
-      msg.className = 'msg error'; return;
-    }
-
+    if (!firma) { msg.textContent = 'Bitte Firma / Unternehmen ausfüllen.'; msg.className = 'msg error'; return; }
     const payload = {
       vorname:  document.getElementById('f-vorname').value.trim(),
       nachname: document.getElementById('f-nachname').value.trim(),
@@ -521,62 +697,32 @@
       website:  document.getElementById('f-website').value.trim() || null,
       updated_at: new Date().toISOString(),
     };
-
     let error;
     if (currentProfileId) {
-      ({ error } = await sb.from('user_profiles')
-        .update({ ...payload, user_id: currentUserId })
-        .eq('id', currentProfileId));
+      ({ error } = await sb.from('user_profiles').update({ ...payload, user_id: currentUserId }).eq('id', currentProfileId));
     } else {
-      // Kein Profil vorhanden → neu anlegen
       const ins = await sb.from('user_profiles')
         .insert({ ...payload, user_id: currentUserId, email: document.getElementById('f-email').value.trim().toLowerCase() })
         .select('id').single();
       error = ins.error;
       if (ins.data?.id) currentProfileId = ins.data.id;
     }
-
-    if (error) {
-      msg.textContent = 'Fehler: ' + error.message;
-      msg.className = 'msg error';
-    } else {
-      msg.textContent = 'Profildaten gespeichert.';
-      msg.className = 'msg success';
-      setTimeout(() => { msg.className = 'msg'; }, 3000);
-    }
+    if (error) { msg.textContent = 'Fehler: ' + error.message; msg.className = 'msg error'; }
+    else { msg.textContent = 'Profildaten gespeichert.'; msg.className = 'msg success'; setTimeout(() => { msg.className = 'msg'; }, 3000); }
   }
 
   async function savePassword() {
     const msg = document.getElementById('pw-msg');
     msg.className = 'msg';
-
     const pw        = document.getElementById('f-pw-new').value;
     const pwConfirm = document.getElementById('f-pw-confirm').value;
-
-    if (!pw) {
-      msg.textContent = 'Bitte ein neues Passwort eingeben.';
-      msg.className = 'msg error'; return;
-    }
-    if (pw.length < 8) {
-      msg.textContent = 'Mindestens 8 Zeichen erforderlich.';
-      msg.className = 'msg error'; return;
-    }
-    if (pw !== pwConfirm) {
-      msg.textContent = 'Passwörter stimmen nicht überein.';
-      msg.className = 'msg error'; return;
-    }
-
+    if (!pw) { msg.textContent = 'Bitte ein neues Passwort eingeben.'; msg.className = 'msg error'; return; }
+    if (pw.length < 8) { msg.textContent = 'Mindestens 8 Zeichen erforderlich.'; msg.className = 'msg error'; return; }
+    if (pw !== pwConfirm) { msg.textContent = 'Passwörter stimmen nicht überein.'; msg.className = 'msg error'; return; }
     const { data: { user }, error } = await sb.auth.updateUser({ password: pw });
-    if (error) {
-      msg.textContent = 'Fehler: ' + error.message;
-      msg.className = 'msg error';
-    } else {
-      // password_set = true sicherstellen (relevant für Nutzer die über Einladung kamen)
-      if (user) {
-        await sb.from('user_profiles')
-          .update({ password_set: true })
-          .eq('user_id', user.id);
-      }
+    if (error) { msg.textContent = 'Fehler: ' + error.message; msg.className = 'msg error'; }
+    else {
+      if (user) await sb.from('user_profiles').update({ password_set: true }).eq('user_id', user.id);
       msg.textContent = 'Passwort wurde erfolgreich geändert.';
       msg.className = 'msg success';
       document.getElementById('f-pw-new').value = '';
@@ -585,11 +731,9 @@
     }
   }
 
-  async function logout() {
-    await sb.auth.signOut();
-    window.location.href = 'index.html';
-  }
+  async function logout() { await sb.auth.signOut(); window.location.href = 'index.html'; }
 
+  // ── Logo ──────────────────────────────────────────────────────────────────
   let pendingLogoFile = null;
 
   function previewLogo(input) {
@@ -611,8 +755,6 @@
     const msg = document.getElementById('logo-msg');
     msg.className = 'msg';
     if (!pendingLogoFile) return;
-
-    // Canvas-Crop: quadratisch, max 400px
     const blob = await new Promise(resolve => {
       const reader = new FileReader();
       reader.onload = e => {
@@ -621,37 +763,22 @@
           const side = Math.min(image.width, image.height);
           const canvas = document.createElement('canvas');
           canvas.width = 400; canvas.height = 400;
-          canvas.getContext('2d').drawImage(
-            image,
-            (image.width - side) / 2, (image.height - side) / 2, side, side,
-            0, 0, 400, 400
-          );
+          canvas.getContext('2d').drawImage(image, (image.width-side)/2, (image.height-side)/2, side, side, 0, 0, 400, 400);
           canvas.toBlob(resolve, 'image/png', 0.92);
         };
         image.src = e.target.result;
       };
       reader.readAsDataURL(pendingLogoFile);
     });
-
     const { data: { session } } = await sb.auth.getSession();
     const userId = session?.user?.id;
     if (!userId) { msg.textContent = 'Nicht eingeloggt.'; msg.className = 'msg error'; return; }
-
     const path = `logos/${userId}.png`;
-    const { error: uploadErr } = await sb.storage
-      .from('partner-logos')
-      .upload(path, blob, { contentType: 'image/png', upsert: true });
-
+    const { error: uploadErr } = await sb.storage.from('partner-logos').upload(path, blob, { contentType: 'image/png', upsert: true });
     if (uploadErr) { msg.textContent = 'Upload-Fehler: ' + uploadErr.message; msg.className = 'msg error'; return; }
-
     const { data: { publicUrl } } = sb.storage.from('partner-logos').getPublicUrl(path);
-
-    const { error: dbErr } = await sb.from('user_profiles')
-      .update({ logo_url: publicUrl, updated_at: new Date().toISOString() })
-      .eq('user_id', userId);
-
+    const { error: dbErr } = await sb.from('user_profiles').update({ logo_url: publicUrl, updated_at: new Date().toISOString() }).eq('user_id', userId);
     if (dbErr) { msg.textContent = 'Fehler: ' + dbErr.message; msg.className = 'msg error'; return; }
-
     msg.textContent = 'Logo gespeichert!';
     msg.className = 'msg success';
     pendingLogoFile = null;
@@ -659,6 +786,7 @@
     setTimeout(() => { msg.className = 'msg'; }, 3000);
   }
 
+  // ── Nav helpers ────────────────────────────────────────────────────────────
   function toggleNavGroup(h) { h.closest('.nav-group').classList.toggle('open'); }
 
   async function setupNavRole(roleArg) {
@@ -675,7 +803,7 @@
       }
     }
   }
-  
+
   async function _setHeaderUser(userId) {
     const [profileRes, roleRes] = await Promise.all([
       sb.from('user_profiles').select('vorname, nachname').eq('user_id', userId).maybeSingle(),
@@ -699,7 +827,15 @@
     }
   }
 
-  // ── 2FA / MFA ──────────────────────────────────────────────
+  // ── Tab switching ──────────────────────────────────────────────────────────
+  function switchProfileTab(id) {
+    document.querySelectorAll('.profile-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('profile-panel-' + id).classList.add('active');
+    document.querySelector(`.profile-tab[data-tab="${id}"]`).classList.add('active');
+  }
+
+  // ── 2FA / MFA ──────────────────────────────────────────────────────────────
   let mfaEnrollId = null;
 
   async function loadMfaStatus() {
@@ -710,7 +846,6 @@
     const area   = document.getElementById('mfa-action-area');
     const enBtn  = document.getElementById('mfa-enable-btn');
     const disBtn = document.getElementById('mfa-disable-btn');
-
     if (verified.length > 0) {
       badge.textContent = '✓ Aktiv';
       badge.style.background = '#f0fdf4'; badge.style.color = '#16a34a';
@@ -728,13 +863,8 @@
   async function startEnroll() {
     document.getElementById('mfa-action-area').style.display = 'none';
     document.getElementById('mfa-msg').className = 'msg';
-
     const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', issuer: 'eHS Portal' });
-    if (error) {
-      showMfaMsg('Fehler: ' + error.message, 'error');
-      document.getElementById('mfa-action-area').style.display = 'flex';
-      return;
-    }
+    if (error) { showMfaMsg('Fehler: ' + error.message, 'error'); document.getElementById('mfa-action-area').style.display = 'flex'; return; }
     mfaEnrollId = data.id;
     document.getElementById('mfa-qr-img').src = data.totp.qr_code;
     document.getElementById('mfa-secret').textContent = data.totp.secret;
@@ -745,10 +875,8 @@
   async function confirmEnroll() {
     const code = document.getElementById('mfa-verify-input').value.trim();
     if (code.length !== 6) { showMfaMsg('Bitte einen 6-stelligen Code eingeben.', 'error'); return; }
-
     const { data: challenge, error: cErr } = await sb.auth.mfa.challenge({ factorId: mfaEnrollId });
     if (cErr) { showMfaMsg('Fehler: ' + cErr.message, 'error'); return; }
-
     const { error } = await sb.auth.mfa.verify({ factorId: mfaEnrollId, challengeId: challenge.id, code });
     if (error) {
       showMfaMsg('Code ungültig. Bitte erneut versuchen.', 'error');
@@ -778,24 +906,15 @@
   async function confirmUnenroll() {
     const code = document.getElementById('mfa-unenroll-input').value.trim();
     if (code.length !== 6) { showMfaMsg('Bitte einen 6-stelligen Code eingeben.', 'error'); return; }
-
     const { data: factors } = await sb.auth.mfa.listFactors();
     const factor = factors?.totp?.find(f => f.status === 'verified');
     if (!factor) { showMfaMsg('Kein aktiver 2FA-Faktor gefunden.', 'error'); return; }
-
     const { data: challenge, error: cErr } = await sb.auth.mfa.challenge({ factorId: factor.id });
     if (cErr) { showMfaMsg('Fehler: ' + cErr.message, 'error'); return; }
-
     const { error: vErr } = await sb.auth.mfa.verify({ factorId: factor.id, challengeId: challenge.id, code });
-    if (vErr) {
-      showMfaMsg('Code ungültig. Bitte erneut versuchen.', 'error');
-      document.getElementById('mfa-unenroll-input').value = '';
-      return;
-    }
-
+    if (vErr) { showMfaMsg('Code ungültig. Bitte erneut versuchen.', 'error'); document.getElementById('mfa-unenroll-input').value = ''; return; }
     const { error } = await sb.auth.mfa.unenroll({ factorId: factor.id });
     if (error) { showMfaMsg('Fehler beim Deaktivieren: ' + error.message, 'error'); return; }
-
     document.getElementById('mfa-unenroll-flow').style.display = 'none';
     showMfaMsg('2FA wurde deaktiviert.', 'success');
     setTimeout(() => { document.getElementById('mfa-msg').className = 'msg'; loadMfaStatus(); }, 2000);
@@ -812,84 +931,306 @@
     el.textContent = text; el.className = 'msg ' + type;
   }
 
-  // ── Angebotsvorlage ──────────────────────────────────────────────────────────
-  let pendingVorlageFile = null;
+  // ── Templates ──────────────────────────────────────────────────────────────
+  const TEMPLATE_TYPES = [
+    { id:'angebot',  name:'Angebot',  icon:'📄', bg:'#ede9fe' },
+    { id:'auftrag',  name:'Auftrag',  icon:'📋', bg:'#dbeafe' },
+    { id:'rechnung', name:'Rechnung', icon:'💶', bg:'#d1fae5' },
+    { id:'vertrag',  name:'Vertrag',  icon:'📝', bg:'#fef3c7' },
+  ];
 
-  async function loadVorlage() {
-    const statusEl = document.getElementById('vorlage-status');
-    const deleteBtn = document.getElementById('vorlage-delete-btn');
-    statusEl.innerHTML = '<span style="font-size:0.85rem;color:var(--gray-400);">Wird geladen…</span>';
+  let tplFileStatus = {};
+  let pendingTemplateFiles = {};
+
+  async function loadAllTemplates() {
     try {
-      const { data: files, error } = await sb.storage.from('vorlagen').list('', { limit: 20 });
-      if (error) throw error;
-      const file = (files || []).find(f => f.name === 'angebot.docx');
-      if (file) {
-        const ts = file.updated_at || file.created_at;
-        const dateStr = ts ? new Date(ts).toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
-        statusEl.innerHTML = `<span style="display:flex;align-items:center;gap:8px;font-size:0.85rem;">
-          <span style="color:#16a34a;font-weight:700;">✓ Vorlage hinterlegt</span>
-          <span style="color:var(--gray-400);">angebot.docx${dateStr ? ' · ' + dateStr : ''}</span>
-        </span>`;
-        deleteBtn.style.display = '';
-      } else {
-        statusEl.innerHTML = '<span style="font-size:0.85rem;color:var(--gray-400);">Noch keine Vorlage hinterlegt.</span>';
-        deleteBtn.style.display = 'none';
-      }
+      const { data: files } = await sb.storage.from('vorlagen').list('', { limit: 50 });
+      const names = (files || []).map(f => f.name);
+      TEMPLATE_TYPES.forEach(t => { tplFileStatus[t.id] = names.includes(t.id + '.docx'); });
     } catch(e) {
-      statusEl.innerHTML = '<span style="font-size:0.82rem;color:var(--red);">Fehler beim Laden: ' + e.message + '</span>';
+      console.warn('loadAllTemplates:', e);
     }
+    renderTemplatesGrid();
   }
 
-  function previewVorlage(input) {
+  function renderTemplatesGrid() {
+    const grid = document.getElementById('templates-grid');
+    if (!grid) return;
+    grid.innerHTML = TEMPLATE_TYPES.map(t => {
+      const hasFile = tplFileStatus[t.id] || false;
+      return `
+        <div class="tpl-card">
+          <div class="tpl-card-head">
+            <div class="tpl-ico" style="background:${t.bg}">${t.icon}</div>
+            <div class="tpl-meta">
+              <div class="tpl-name">${t.name}</div>
+              <div class="tpl-status">${hasFile
+                ? '<span style="color:#16a34a">✓ Vorlage hinterlegt</span>'
+                : '<span style="color:var(--gray-400)">Keine Vorlage</span>'
+              }</div>
+            </div>
+          </div>
+          <div class="tpl-card-body">
+            <div id="tpl-prev-${t.id}" style="font-size:0.78rem;color:var(--gray-500);margin-bottom:8px;display:none;"></div>
+            <div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center;">
+              <label class="btn btn-secondary" style="cursor:pointer;padding:6px 12px;font-size:0.78rem;">
+                ${hasFile ? 'Neu hochladen' : '.docx hochladen'}
+                <input type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  style="display:none;" onchange="onTplFileSelected('${t.id}',this)">
+              </label>
+              <button id="tpl-save-${t.id}" class="btn btn-primary"
+                style="display:none;padding:6px 12px;font-size:0.78rem;"
+                onclick="uploadTemplate('${t.id}')">Hochladen</button>
+              <button id="tpl-del-${t.id}" class="btn btn-danger"
+                style="display:${hasFile ? '' : 'none'};padding:6px 12px;font-size:0.78rem;"
+                onclick="deleteTemplate('${t.id}')">Löschen</button>
+              <button class="btn btn-purple"
+                style="padding:6px 12px;font-size:0.78rem;"
+                onclick="openWizard('${t.id}')">✦ Felder</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function onTplFileSelected(tplId, input) {
     const file = input.files[0];
     if (!file) return;
-    pendingVorlageFile = file;
-    const prev = document.getElementById('vorlage-filename-preview');
-    prev.textContent = '📄 ' + file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
-    prev.style.display = '';
-    document.getElementById('vorlage-save-btn').style.display = '';
+    pendingTemplateFiles[tplId] = file;
+    const prev = document.getElementById('tpl-prev-' + tplId);
+    if (prev) { prev.textContent = '📄 ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)'; prev.style.display = ''; }
+    const btn = document.getElementById('tpl-save-' + tplId);
+    if (btn) btn.style.display = '';
   }
 
-  async function saveVorlage() {
-    const msg = document.getElementById('vorlage-msg');
+  async function uploadTemplate(tplId) {
+    const file = pendingTemplateFiles[tplId];
+    if (!file) return;
+    const msg = document.getElementById('tpl-msg');
     msg.className = 'msg';
-    if (!pendingVorlageFile) return;
-    const btn = document.getElementById('vorlage-save-btn');
-    btn.disabled = true; btn.textContent = 'Wird hochgeladen…';
-    const { error } = await sb.storage.from('vorlagen').upload('angebot.docx', pendingVorlageFile, {
+    const btn = document.getElementById('tpl-save-' + tplId);
+    if (btn) { btn.disabled = true; btn.textContent = 'Wird hochgeladen…'; }
+    const { error } = await sb.storage.from('vorlagen').upload(tplId + '.docx', file, {
       contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       upsert: true,
     });
-    btn.disabled = false; btn.textContent = 'Vorlage hochladen';
+    if (btn) { btn.disabled = false; btn.textContent = 'Hochladen'; btn.style.display = 'none'; }
     if (error) {
-      msg.textContent = 'Upload-Fehler: ' + error.message;
-      msg.className = 'msg error';
+      msg.textContent = 'Upload-Fehler: ' + error.message; msg.className = 'msg error';
     } else {
-      pendingVorlageFile = null;
-      document.getElementById('vorlage-file-input').value = '';
-      document.getElementById('vorlage-filename-preview').style.display = 'none';
-      btn.style.display = 'none';
-      msg.textContent = 'Vorlage erfolgreich hochgeladen!';
-      msg.className = 'msg success';
+      pendingTemplateFiles[tplId] = null;
+      tplFileStatus[tplId] = true;
+      msg.textContent = 'Vorlage hochgeladen!'; msg.className = 'msg success';
       setTimeout(() => { msg.className = 'msg'; }, 3000);
-      loadVorlage();
+      renderTemplatesGrid();
     }
   }
 
-  async function deleteVorlage() {
-    if (!confirm('Angebotsvorlage wirklich löschen?')) return;
-    const msg = document.getElementById('vorlage-msg');
-    msg.className = 'msg';
-    const { error } = await sb.storage.from('vorlagen').remove(['angebot.docx']);
-    if (error) {
-      msg.textContent = 'Fehler: ' + error.message;
-      msg.className = 'msg error';
-    } else {
-      msg.textContent = 'Vorlage gelöscht.';
-      msg.className = 'msg success';
+  async function deleteTemplate(tplId) {
+    const name = TEMPLATE_TYPES.find(t => t.id === tplId)?.name || tplId;
+    if (!confirm(name + '-Vorlage wirklich löschen?')) return;
+    const msg = document.getElementById('tpl-msg');
+    const { error } = await sb.storage.from('vorlagen').remove([tplId + '.docx']);
+    if (error) { msg.textContent = 'Fehler: ' + error.message; msg.className = 'msg error'; }
+    else {
+      tplFileStatus[tplId] = false;
+      msg.textContent = 'Vorlage gelöscht.'; msg.className = 'msg success';
       setTimeout(() => { msg.className = 'msg'; }, 3000);
-      loadVorlage();
+      renderTemplatesGrid();
     }
+  }
+
+  // ── Wizard constants ────────────────────────────────────────────────────────
+  const WIZ_FIELDS = [
+    { id:'logo',             label:'Firmenlogo',         cat:'m' },
+    { id:'datum',            label:'Datum',              cat:'m' },
+    { id:'angebotsnummer',   label:'Dok.-Nummer',        cat:'a' },
+    { id:'gueltig_bis',      label:'Gültig bis',         cat:'a' },
+    { id:'laufzeit',         label:'Laufzeit',           cat:'a' },
+    { id:'kunde_firma',      label:'Firma',              cat:'k' },
+    { id:'kunde_name',       label:'Kundenname',         cat:'k' },
+    { id:'kunde_adresse',    label:'Adresse',            cat:'k' },
+    { id:'kunde_email',      label:'E-Mail',             cat:'k' },
+    { id:'kunde_telefon',    label:'Telefon',            cat:'k' },
+    { id:'positionen',       label:'Positionen (Tab.)',  cat:'p' },
+    { id:'gesamt_monatlich', label:'Summe Monatlich',    cat:'p' },
+    { id:'gesamt_einmalig',  label:'Summe Einmalig',     cat:'p' },
+    { id:'gesamt_gesamt',    label:'Gesamtsumme',        cat:'p' },
+    { id:'notiz',            label:'Notiz',              cat:'m' },
+    { id:'vc_status',        label:'Status',             cat:'m' },
+    { id:'unterschrift',     label:'Unterschriftzeile',  cat:'m' },
+  ];
+  const WIZ_CATS = [
+    { key:'m', label:'Dokument',   cls:'chip-m' },
+    { key:'a', label:'Angebot',    cls:'chip-a' },
+    { key:'k', label:'Empfänger',  cls:'chip-k' },
+    { key:'p', label:'Positionen', cls:'chip-p' },
+  ];
+  function makeDefaultSections() {
+    return [
+      { id:'hdr',  icon:'📋', label:'Kopfzeile',  fields:['logo','datum','angebotsnummer','gueltig_bis'] },
+      { id:'rcpt', icon:'👤', label:'Empfänger',  fields:['kunde_firma','kunde_name','kunde_adresse','kunde_email'] },
+      { id:'pos',  icon:'📦', label:'Positionen', fields:['positionen'] },
+      { id:'sum',  icon:'💶', label:'Summen',     fields:['gesamt_monatlich','gesamt_einmalig','laufzeit'] },
+      { id:'ftr',  icon:'✍️', label:'Fußzeile',   fields:['notiz','unterschrift'] },
+    ];
+  }
+
+  // ── Wizard state ────────────────────────────────────────────────────────────
+  let wizLayouts = {};
+  let wizCurrentId = null;
+  let wizDrag = { fieldId: null, sourceSectionId: null };
+  let wizDropInsertBeforeId = null;
+
+  function openWizard(tplId) {
+    wizCurrentId = tplId;
+    if (!wizLayouts[tplId]) wizLayouts[tplId] = makeDefaultSections();
+    const tpl = TEMPLATE_TYPES.find(t => t.id === tplId);
+    document.getElementById('wiz-title').textContent = (tpl?.name || tplId) + ' – Feld-Wizard';
+    renderWizardBody();
+    document.getElementById('wiz-overlay').classList.add('open');
+  }
+
+  function closeWizard(e) {
+    if (e && e.target !== document.getElementById('wiz-overlay')) return;
+    document.getElementById('wiz-overlay').classList.remove('open');
+    wizCurrentId = null;
+  }
+
+  function wizUsedFields() {
+    if (!wizCurrentId || !wizLayouts[wizCurrentId]) return [];
+    return wizLayouts[wizCurrentId].flatMap(s => s.fields);
+  }
+
+  function renderWizardBody() {
+    renderWizardSections();
+    renderWizardAvailable();
+  }
+
+  function renderWizardSections() {
+    const secs = wizLayouts[wizCurrentId] || [];
+    const cont = document.getElementById('wiz-sections');
+    cont.innerHTML = secs.map(sec => {
+      const chipsHtml = sec.fields.length === 0
+        ? '<span class="wsec-empty">Felder aus der rechten Spalte hierher ziehen</span>'
+        : sec.fields.map(fid => {
+            const f = WIZ_FIELDS.find(x => x.id === fid);
+            if (!f) return '';
+            const catCls = WIZ_CATS.find(c => c.key === f.cat)?.cls || '';
+            return `<span class="fchip ${catCls}"
+              draggable="true"
+              ondragstart="wizStartDrag(event,'${fid}','${sec.id}')"
+              ondragend="wizEndDrag(event)"
+              ondragenter="event.preventDefault();wizDropInsertBeforeId='${fid}';document.querySelectorAll('.fchip.drop-before').forEach(c=>c.classList.remove('drop-before'));event.currentTarget.classList.add('drop-before')"
+              >⠿ ${f.label}<button class="chip-x" onclick="wizRemoveField('${sec.id}','${fid}')">✕</button></span>`;
+          }).join('');
+      return `<div class="wsec" id="wsec-${sec.id}"
+        ondragover="event.preventDefault();document.querySelectorAll('.wsec').forEach(x=>x.classList.remove('dragover'));this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="wizDropToSection(event,'${sec.id}')">
+        <div class="wsec-hdr">${sec.icon}&nbsp; ${sec.label}</div>
+        <div class="wsec-drop">${chipsHtml}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderWizardAvailable() {
+    const used = wizUsedFields();
+    const cont = document.getElementById('wiz-avail');
+    cont.innerHTML = WIZ_CATS.map(cat => {
+      const fields = WIZ_FIELDS.filter(f => f.cat === cat.key);
+      return `<div class="avail-cat">${cat.label}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px;">
+          ${fields.map(f => {
+            const isUsed = used.includes(f.id);
+            return `<span class="fchip ${cat.cls}${isUsed ? ' chip-used' : ''}"
+              draggable="${isUsed ? 'false' : 'true'}"
+              ondragstart="wizStartDrag(event,'${f.id}',null)"
+              ondragend="wizEndDrag(event)">${f.label}</span>`;
+          }).join('')}
+        </div>`;
+    }).join('');
+  }
+
+  function wizStartDrag(e, fieldId, sourceSectionId) {
+    wizDrag.fieldId = fieldId;
+    wizDrag.sourceSectionId = sourceSectionId;
+    wizDropInsertBeforeId = null;
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => e.currentTarget.classList.add('dragging'), 0);
+  }
+
+  function wizEndDrag(e) {
+    wizDrag.fieldId = null;
+    wizDrag.sourceSectionId = null;
+    wizDropInsertBeforeId = null;
+    document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+    document.querySelectorAll('.fchip.drop-before').forEach(el => el.classList.remove('drop-before'));
+    document.querySelectorAll('.wsec.dragover').forEach(el => el.classList.remove('dragover'));
+    document.getElementById('wiz-avail-drop')?.classList.remove('dragover');
+  }
+
+  function wizDropToSection(e, sectionId) {
+    e.preventDefault();
+    e.stopPropagation();
+    const { fieldId, sourceSectionId } = wizDrag;
+    if (!fieldId) return;
+    const layout = wizLayouts[wizCurrentId];
+    if (sourceSectionId) {
+      const src = layout.find(s => s.id === sourceSectionId);
+      if (src) src.fields = src.fields.filter(f => f !== fieldId);
+    }
+    const tgt = layout.find(s => s.id === sectionId);
+    if (tgt && !tgt.fields.includes(fieldId)) {
+      if (wizDropInsertBeforeId && tgt.fields.includes(wizDropInsertBeforeId)) {
+        tgt.fields.splice(tgt.fields.indexOf(wizDropInsertBeforeId), 0, fieldId);
+      } else {
+        tgt.fields.push(fieldId);
+      }
+    }
+    wizEndDrag(e);
+    renderWizardBody();
+  }
+
+  function wizDropToAvailable(e) {
+    e.preventDefault();
+    document.getElementById('wiz-avail-drop')?.classList.remove('dragover');
+    const { fieldId, sourceSectionId } = wizDrag;
+    if (!fieldId || !sourceSectionId) return;
+    const src = wizLayouts[wizCurrentId]?.find(s => s.id === sourceSectionId);
+    if (src) src.fields = src.fields.filter(f => f !== fieldId);
+    wizEndDrag(e);
+    renderWizardBody();
+  }
+
+  function wizRemoveField(sectionId, fieldId) {
+    const sec = wizLayouts[wizCurrentId]?.find(s => s.id === sectionId);
+    if (sec) sec.fields = sec.fields.filter(f => f !== fieldId);
+    renderWizardBody();
+  }
+
+  async function saveWizardConfig() {
+    if (!wizCurrentId) return;
+    const { data: prof } = await sb.from('user_profiles')
+      .select('template_configs')
+      .eq('user_id', currentUserId)
+      .maybeSingle();
+    const existing = prof?.template_configs || {};
+    existing[wizCurrentId] = wizLayouts[wizCurrentId];
+    const { error } = await sb.from('user_profiles')
+      .update({ template_configs: existing })
+      .eq('user_id', currentUserId);
+    document.getElementById('wiz-overlay').classList.remove('open');
+    showToast(error ? 'Fehler: ' + error.message : 'Konfiguration gespeichert ✓');
+    wizCurrentId = null;
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('profile-toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2400);
   }
 </script>
 </body>
