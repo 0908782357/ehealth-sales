@@ -4536,9 +4536,7 @@
       if (!qty) return;
       const prod = PRODUCTS.find(p => p.nr === parseInt(nr));
       if (!prod) return;
-      const label = prod.artikelnummer
-        ? `${prod.produkt} [${prod.artikelnummer}]${qty > 1 ? ' × ' + qty : ''}`
-        : `${prod.produkt}${qty > 1 ? ' × ' + qty : ''}`;
+      const label = `${prod.produkt}${qty > 1 ? ' × ' + qty : ''}`;
       selectedLines.push(label);
     });
     const products = selectedLines.join(', ') || 'Produktanfrage';
