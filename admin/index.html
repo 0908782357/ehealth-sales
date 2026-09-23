@@ -284,7 +284,7 @@
     if (event === 'SIGNED_IN' && session) {
       authHandled = true;
       const passwordSet = await claimProfile(session);
-      if (fromMagicLink && !passwordSet) {
+      if (!passwordSet) {
         showPwStep();
       } else {
         await checkMfaAndRedirect();
@@ -372,15 +372,9 @@
     const email    = document.getElementById('email-pw').value.trim();
     const password = document.getElementById('password').value;
     if (!email || !password) return showMsg('Bitte E-Mail und Passwort eingeben.', 'error');
-    const { data, error } = await sb.auth.signInWithPassword({ email, password });
+    const { error } = await sb.auth.signInWithPassword({ email, password });
     if (error) return showMsg(error.message, 'error');
-    const passwordSet = await claimProfile(data.session);
-    // Temporäres Passwort: Nutzer muss eigenes Passwort wählen
-    if (!passwordSet) {
-      showPwStep();
-    } else {
-      await checkMfaAndRedirect();
-    }
+    // Routing übernimmt onAuthStateChange SIGNED_IN
   }
 
   let otpEmail = '';
@@ -403,8 +397,7 @@
     if (!token || token.length !== 6) return showMsg('Bitte den 6-stelligen Code eingeben.', 'error');
     const { data, error } = await sb.auth.verifyOtp({ email: otpEmail, token, type: 'email' });
     if (error) return showMsg('Code ungültig oder abgelaufen.', 'error');
-    await claimProfile(data.session);
-    await checkMfaAndRedirect();
+    // Routing übernimmt onAuthStateChange SIGNED_IN
   }
 
   function resetOtp() {
