@@ -45,6 +45,15 @@ CREATE TABLE IF NOT EXISTS events (
   created_at       timestamptz DEFAULT now()
 );
 
+-- Spalte nachträglich hinzufügen falls Tabelle aus früherem Lauf ohne sie existiert
+ALTER TABLE events ADD COLUMN IF NOT EXISTS partner_id uuid REFERENCES partners(id) ON DELETE SET NULL;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS kurzbeschreibung text;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS uhrzeit_start time;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS dauer_min int NOT NULL DEFAULT 60;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS max_teilnehmer int;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS teilnahme_link text;
+ALTER TABLE events ADD COLUMN IF NOT EXISTS oeffentlich boolean NOT NULL DEFAULT false;
+
 CREATE INDEX IF NOT EXISTS idx_events_datum       ON events(datum);
 CREATE INDEX IF NOT EXISTS idx_events_partner_id  ON events(partner_id);
 CREATE INDEX IF NOT EXISTS idx_events_status      ON events(status);
@@ -78,6 +87,11 @@ ALTER TABLE event_themen     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE event_anmeldungen ENABLE ROW LEVEL SECURITY;
 
 -- themengebiete: jeder liest, nur Admins schreiben
+DROP POLICY IF EXISTS "themengebiete_read_all"      ON themengebiete;
+DROP POLICY IF EXISTS "themengebiete_admin_insert"  ON themengebiete;
+DROP POLICY IF EXISTS "themengebiete_admin_update"  ON themengebiete;
+DROP POLICY IF EXISTS "themengebiete_admin_delete"  ON themengebiete;
+
 CREATE POLICY "themengebiete_read_all"
   ON themengebiete FOR SELECT USING (true);
 
@@ -93,6 +107,11 @@ CREATE POLICY "themengebiete_admin_update"
 CREATE POLICY "themengebiete_admin_delete"
   ON themengebiete FOR DELETE
   USING (EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin'));
+
+-- events
+DROP POLICY IF EXISTS "events_public_read"    ON events;
+DROP POLICY IF EXISTS "events_auth_read"      ON events;
+DROP POLICY IF EXISTS "events_partner_write"  ON events;
 
 -- events: anon liest nur öffentliche+geplante+zukünftige
 CREATE POLICY "events_public_read"
@@ -121,6 +140,10 @@ CREATE POLICY "events_partner_write"
     OR EXISTS (SELECT 1 FROM user_roles WHERE user_id = auth.uid() AND role = 'admin')
   );
 
+-- event_themen
+DROP POLICY IF EXISTS "event_themen_read"   ON event_themen;
+DROP POLICY IF EXISTS "event_themen_write"  ON event_themen;
+
 -- event_themen: folgt events-Rechten
 CREATE POLICY "event_themen_read"
   ON event_themen FOR SELECT USING (true);
@@ -138,6 +161,12 @@ CREATE POLICY "event_themen_write"
       )
     )
   );
+
+-- event_anmeldungen
+DROP POLICY IF EXISTS "event_anm_user_read"    ON event_anmeldungen;
+DROP POLICY IF EXISTS "event_anm_user_insert"  ON event_anmeldungen;
+DROP POLICY IF EXISTS "event_anm_user_update"  ON event_anmeldungen;
+DROP POLICY IF EXISTS "event_anm_user_delete"  ON event_anmeldungen;
 
 -- event_anmeldungen: User sieht eigene
 CREATE POLICY "event_anm_user_read"
