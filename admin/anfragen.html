@@ -497,7 +497,7 @@ async function loadAnfragen() {
       allShopItems = siRes.data || [];
     }
     const { data: rows } = await sb.from('anfragen_weiterleitungen')
-      .select('id, notiz, weitergeleitet_am, anfragen(id, name, email, telefon, firma, berufsgruppe, produkte, nachricht, status, created_at)')
+      .select('id, notiz, weitergeleitet_am, anfragen(id, name, email, telefon, firma, berufsgruppe, produkte, nachricht, status, kunden_id, created_at)')
       .eq('user_profile_id', myProfileId)
       .order('weitergeleitet_am', { ascending: false });
     data = (rows || []).map(r => ({
@@ -606,6 +606,8 @@ function renderAnfragen(rows) {
               <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
               Weiterleiten
             </button>
+          ` : ''}
+          ${(userRole === 'admin' || userRole === 'partner') ? `
             ${a.kunden_id
               ? `<a class="btn btn-sm" style="background:#eef0f7;color:#3C4A7C;" href="kunden.html" onclick="event.stopPropagation()">Kundenprofil</a>`
               : `<button class="btn btn-sm" style="background:#eef0f7;color:#3C4A7C;" onclick="event.stopPropagation();location.href='kunden.html?from_anfrage=${a.id}'">
