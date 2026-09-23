@@ -458,7 +458,7 @@
       badge.textContent = count ?? '–';
 
       const { data: rows, error } = await sb.from('orders')
-        .select('id, created_at, partner_name, status')
+        .select('id, created_at, status, user_id, shop_items(titel)')
         .order('created_at', { ascending: false })
         .limit(3);
       if (error) throw error;
@@ -466,12 +466,26 @@
         el.innerHTML = '<div class="hl-empty">Keine Bestellungen vorhanden</div>';
         return;
       }
+
+      // Namen aus user_profiles nachladen
+      const uids = [...new Set(rows.map(o => o.user_id).filter(Boolean))];
+      let profiles = {};
+      if (uids.length) {
+        const { data: pd } = await sb.from('user_profiles')
+          .select('user_id, vorname, nachname, firma')
+          .in('user_id', uids);
+        (pd || []).forEach(p => { profiles[p.user_id] = p; });
+      }
+
       el.innerHTML = rows.map(o => {
-        const dot = o.status === 'abgeschlossen' ? 'green' : o.status === 'storniert' ? 'amber' : 'blue';
-        const label = o.partner_name || ('Bestellung #' + o.id);
+        const dot = o.status === 'approved' ? 'green' : o.status === 'rejected' ? 'amber' : 'blue';
+        const p = profiles[o.user_id];
+        const name = p
+          ? (p.firma || [p.vorname, p.nachname].filter(Boolean).join(' ') || 'Unbekannt')
+          : (o.shop_items?.titel || 'Bestellung #' + o.id);
         return `<div class="hl-item">
           <span class="hl-item-dot ${dot}"></span>
-          <span class="hl-item-name">${esc(label)}</span>
+          <span class="hl-item-name">${esc(name)}</span>
           <span class="hl-item-meta">${fmtDate(o.created_at)}</span>
         </div>`;
       }).join('');
