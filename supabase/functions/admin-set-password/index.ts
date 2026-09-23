@@ -44,15 +44,28 @@ Deno.serve(async (req) => {
     return json({ error: 'authUserId und password (min. 8 Zeichen) erforderlich' }, 400);
   }
 
-  // Passwort setzen + force_password_change in user_metadata (reist im JWT mit)
   const adminClient = createClient(SUPABASE_URL, SERVICE_KEY);
-  const { error: pwErr } = await adminClient.auth.admin.updateUserById(authUserId, {
-    password,
-    user_metadata: { force_password_change: true },
-  });
+
+  // Passwort setzen
+  const { error: pwErr } = await adminClient.auth.admin.updateUserById(authUserId, { password });
   if (pwErr) return json({ error: pwErr.message }, 400);
 
-  // Redundant: password_set in user_profiles ebenfalls zurücksetzen
+  // force_password_change direkt via REST setzen (zuverlässiger als SDK-Wrapper)
+  const metaRes = await fetch(`${SUPABASE_URL}/auth/v1/admin/users/${authUserId}`, {
+    method: 'PUT',
+    headers: {
+      'apikey': SERVICE_KEY,
+      'Authorization': `Bearer ${SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ user_metadata: { force_password_change: true } }),
+  });
+  if (!metaRes.ok) {
+    const metaErr = await metaRes.text();
+    return json({ error: `Passwort gesetzt, Metadaten-Update fehlgeschlagen: ${metaErr}` }, 400);
+  }
+
+  // password_set in user_profiles zurücksetzen
   await adminClient
     .from('user_profiles')
     .update({ password_set: false, updated_at: new Date().toISOString() })

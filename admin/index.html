@@ -299,8 +299,15 @@
       }
       authHandled = true;
       if (session) {
-        // Bereits eingeloggt (kein neuer Token) → direkt zum Dashboard
-        await checkMfaAndRedirect();
+        // getUser() liefert frische Serverdaten – JWT-Cache kann veraltet sein
+        const { data: { user: freshUser } } = await sb.auth.getUser();
+        const forceChange = freshUser?.user_metadata?.force_password_change === true;
+        const passwordSet = forceChange ? false : await claimProfile(session);
+        if (!passwordSet) {
+          showPwStep();
+        } else {
+          await checkMfaAndRedirect();
+        }
       } else {
         // Kein Token, kein Login → Login-Formular zeigen
         showLogin();
