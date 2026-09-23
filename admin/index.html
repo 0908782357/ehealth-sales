@@ -391,7 +391,7 @@
   async function sendOtp() {
     const email = document.getElementById('email-magic').value.trim();
     if (!email) return showMsg('Bitte E-Mail-Adresse eingeben.', 'error');
-    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: PORTAL_URL } });
+    const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false, emailRedirectTo: PORTAL_URL } });
     if (error) return showMsg(error.message, 'error');
     otpEmail = email;
     document.getElementById('otp-email-display').textContent = email;
