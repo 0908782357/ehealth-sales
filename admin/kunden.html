@@ -515,6 +515,8 @@ let allThemen = [];
 let kundeSelectedThemen = [];
 let prodThemenMap = {}; // produktname → [{id, name, farbe}]
 let currentKundeId = null;
+let currentRole = 'partner';
+let currentPartnerId = null;
 let isEditMode = false;
 let isCreateMode = false;
 let currentKarteTab = 0;
@@ -576,12 +578,21 @@ async function init() {
   _setHeaderUser(session.user.id);
 
   const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
-  const role = roleRow?.role || 'partner';
-  if (role !== 'admin') { window.location.href = 'dashboard.html'; return; }
-  document.getElementById('nav-group-admin').style.display = '';
+  currentRole = roleRow?.role || 'partner';
+  if (currentRole === 'admin') {
+    document.getElementById('nav-group-admin').style.display = '';
+  } else {
+    const { data: partnerRow } = await sb.from('partners').select('id').eq('user_id', session.user.id).maybeSingle();
+    currentPartnerId = partnerRow?.id || null;
+  }
+
+  let kundenQ = sb.from('kunden').select('*, anfragen(id, produkte, created_at, status)').order('created_at', { ascending: false });
+  if (currentRole !== 'admin' && currentPartnerId) {
+    kundenQ = kundenQ.eq('partner_id', currentPartnerId);
+  }
 
   const [kundenRes, prodRes, vcRes, bgRes, bundleRes] = await Promise.all([
-    sb.from('kunden').select('*, anfragen(id, produkte, created_at, status)').order('created_at', { ascending: false }),
+    kundenQ,
     sb.from('products').select('produkt, artikelnummer, preis_flat, abrechnungsart, preise, einkaufspreis_flat'),
     sb.from('verkaufschancen').select('*').order('created_at', { ascending: false }),
     sb.from('berufsgruppen').select('id, nr, name').order('nr', { ascending: true }),
@@ -1047,6 +1058,7 @@ async function saveKunde() {
     naechster_kontakt: document.getElementById('k-naechster-kontakt')?.value || null,
     produkte:        selectedProdukte,
     updated_at:      new Date().toISOString(),
+    ...(currentRole !== 'admin' && currentPartnerId ? { partner_id: currentPartnerId } : {}),
   };
 
   let kundeId = currentKundeId;
