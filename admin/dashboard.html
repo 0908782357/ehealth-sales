@@ -418,7 +418,7 @@
     const el = document.getElementById('hl-events-items');
     const badge = document.getElementById('hl-events-count');
     try {
-      let q = sb.from('events').select('id, titel, datum, ort, oeffentlich, status, partner_id')
+      let q = sb.from('events').select('id, titel, datum, format, oeffentlich, status, partner_id')
         .order('datum', { ascending: true });
       if (role !== 'admin') {
         q = q.gte('datum', new Date().toISOString().slice(0, 10)).eq('oeffentlich', true);
@@ -437,10 +437,11 @@
       el.innerHTML = show.map(e => {
         const past = e.datum < today;
         const dot = past ? 'amber' : 'green';
+        const fmt = { webinar:'Webinar', roundtable:'Roundtable', workshop:'Workshop', vortrag:'Vortrag' }[e.format] || e.format || '';
         return `<div class="hl-item">
           <span class="hl-item-dot ${dot}"></span>
           <span class="hl-item-name">${esc(e.titel)}</span>
-          <span class="hl-item-meta">${fmtDate(e.datum)}</span>
+          <span class="hl-item-meta">${fmtDate(e.datum)}${fmt ? ' · ' + fmt : ''}</span>
         </div>`;
       }).join('');
     } catch (err) {
