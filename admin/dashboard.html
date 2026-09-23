@@ -99,6 +99,65 @@
   }
   .role-admin   { background: #fef3c7; color: #92400e; }
   .role-partner { background: #dbeafe; color: #1e40af; }
+
+  /* Highlight cards */
+  .highlight-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .hl-card {
+    background: white; border-radius: 14px;
+    border: 1px solid var(--gray-200); box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .hl-card-hdr {
+    padding: 16px 20px 14px;
+    display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .hl-card-hdr-icon {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem; flex-shrink: 0;
+  }
+  .hl-icon-events  { background: #ede9fe; }
+  .hl-icon-orders  { background: #dbeafe; }
+  .hl-card-hdr-text { flex: 1; }
+  .hl-card-title { font-size: 0.85rem; font-weight: 700; color: var(--navy); }
+  .hl-card-sub   { font-size: 0.72rem; color: var(--gray-400); margin-top: 1px; }
+  .hl-badge {
+    background: var(--navy); color: white; border-radius: 20px;
+    padding: 3px 10px; font-size: 0.72rem; font-weight: 700;
+  }
+  .hl-items { flex: 1; padding: 10px 0; }
+  .hl-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 20px; border-bottom: 1px solid var(--gray-100);
+    font-size: 0.81rem;
+  }
+  .hl-item:last-child { border-bottom: none; }
+  .hl-item-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    background: var(--gray-200);
+  }
+  .hl-item-dot.green { background: var(--green); }
+  .hl-item-dot.amber { background: #f59e0b; }
+  .hl-item-dot.blue  { background: #3b82f6; }
+  .hl-item-name { flex: 1; color: var(--gray-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hl-item-meta { font-size: 0.72rem; color: var(--gray-400); flex-shrink: 0; }
+  .hl-empty { padding: 18px 20px; font-size: 0.8rem; color: var(--gray-400); }
+  .hl-footer {
+    padding: 11px 20px;
+    border-top: 1px solid var(--gray-200);
+    background: var(--gray-50);
+  }
+  .hl-footer a {
+    font-size: 0.8rem; font-weight: 600; color: var(--navy);
+    text-decoration: none; display: flex; align-items: center; gap: 5px;
+  }
+  .hl-footer a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
@@ -221,6 +280,50 @@
       </div>
     </div>
 
+    <!-- Highlight: Events + Bestellungen -->
+    <div class="highlight-row" id="highlight-row">
+      <!-- Events -->
+      <div class="hl-card">
+        <div class="hl-card-hdr">
+          <div class="hl-card-hdr-icon hl-icon-events">📅</div>
+          <div class="hl-card-hdr-text">
+            <div class="hl-card-title">Events</div>
+            <div class="hl-card-sub">Nächste Veranstaltungen</div>
+          </div>
+          <span class="hl-badge" id="hl-events-count">–</span>
+        </div>
+        <div class="hl-items" id="hl-events-items">
+          <div class="hl-empty">Wird geladen …</div>
+        </div>
+        <div class="hl-footer">
+          <a href="events.html">
+            Alle Events ansehen
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+      <!-- Bestellungen (nur Admin) -->
+      <div class="hl-card" id="hl-orders-card" style="display:none">
+        <div class="hl-card-hdr">
+          <div class="hl-card-hdr-icon hl-icon-orders">📦</div>
+          <div class="hl-card-hdr-text">
+            <div class="hl-card-title">Bestellungen</div>
+            <div class="hl-card-sub">Neueste Eingänge</div>
+          </div>
+          <span class="hl-badge" id="hl-orders-count">–</span>
+        </div>
+        <div class="hl-items" id="hl-orders-items">
+          <div class="hl-empty">Wird geladen …</div>
+        </div>
+        <div class="hl-footer">
+          <a href="orders.html">
+            Alle Bestellungen ansehen
+            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
     <div class="section-card">
       <h2>Schnellzugriff</h2>
       <div class="quick-links">
@@ -276,6 +379,13 @@
     const { data: partner } = await sb.from('partners').select('id, name').eq('user_id', user.id).maybeSingle();
     document.getElementById('partner-name').textContent = partner?.name || (role === 'admin' ? 'eHealth Sales GmbH' : '–');
 
+    // Highlight-Boxen laden
+    loadEventsHighlight(role, partner?.id);
+    if (role === 'admin') {
+      document.getElementById('hl-orders-card').style.display = '';
+      loadOrdersHighlight();
+    }
+
     // Produkt-Stats
     let prodQ = sb.from('products').select('published');
     if (role === 'admin') {
@@ -296,6 +406,83 @@
       document.getElementById('stat-products').textContent = pub;
       document.getElementById('stat-drafts').textContent   = draft;
     }
+  }
+
+  function fmtDate(str) {
+    if (!str) return '';
+    const d = new Date(str);
+    return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+  }
+
+  async function loadEventsHighlight(role, partnerId) {
+    const el = document.getElementById('hl-events-items');
+    const badge = document.getElementById('hl-events-count');
+    try {
+      let q = sb.from('events').select('id, titel, datum_von, ort, oeffentlich, partner_id')
+        .order('datum_von', { ascending: true });
+      if (role !== 'admin') {
+        q = q.gte('datum_von', new Date().toISOString()).eq('oeffentlich', true);
+      }
+      const { data, error } = await q.limit(50);
+      if (error) throw error;
+      const rows = data || [];
+      badge.textContent = rows.length;
+      if (rows.length === 0) {
+        el.innerHTML = '<div class="hl-empty">Keine Events eingetragen</div>';
+        return;
+      }
+      const today = new Date();
+      const upcoming = rows.filter(e => new Date(e.datum_von) >= today).slice(0, 3);
+      const show = upcoming.length ? upcoming : rows.slice(0, 3);
+      el.innerHTML = show.map(e => {
+        const past = new Date(e.datum_von) < today;
+        const dot = past ? 'amber' : 'green';
+        return `<div class="hl-item">
+          <span class="hl-item-dot ${dot}"></span>
+          <span class="hl-item-name">${esc(e.titel)}</span>
+          <span class="hl-item-meta">${fmtDate(e.datum_von)}</span>
+        </div>`;
+      }).join('');
+    } catch (err) {
+      el.innerHTML = '<div class="hl-empty">Events-Tabelle nicht verfügbar</div>';
+      badge.textContent = '–';
+    }
+  }
+
+  async function loadOrdersHighlight() {
+    const el = document.getElementById('hl-orders-items');
+    const badge = document.getElementById('hl-orders-count');
+    try {
+      const { count, error: cErr } = await sb.from('orders').select('*', { count: 'exact', head: true });
+      if (cErr) throw cErr;
+      badge.textContent = count ?? '–';
+
+      const { data: rows, error } = await sb.from('orders')
+        .select('id, created_at, partner_name, status')
+        .order('created_at', { ascending: false })
+        .limit(3);
+      if (error) throw error;
+      if (!rows || rows.length === 0) {
+        el.innerHTML = '<div class="hl-empty">Keine Bestellungen vorhanden</div>';
+        return;
+      }
+      el.innerHTML = rows.map(o => {
+        const dot = o.status === 'abgeschlossen' ? 'green' : o.status === 'storniert' ? 'amber' : 'blue';
+        const label = o.partner_name || ('Bestellung #' + o.id);
+        return `<div class="hl-item">
+          <span class="hl-item-dot ${dot}"></span>
+          <span class="hl-item-name">${esc(label)}</span>
+          <span class="hl-item-meta">${fmtDate(o.created_at)}</span>
+        </div>`;
+      }).join('');
+    } catch (err) {
+      el.innerHTML = '<div class="hl-empty">Bestellungen nicht verfügbar</div>';
+      badge.textContent = '–';
+    }
+  }
+
+  function esc(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   async function logout() {
