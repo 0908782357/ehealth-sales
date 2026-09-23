@@ -1,6 +1,9 @@
 -- Migration: RLS für Kunden-Bereich (Partner sehen nur eigene Kunden)
 -- Ausführen in Supabase SQL Editor
 
+-- ─── kunden: fehlende Spalten ergänzen ───────────────────────────────────────
+ALTER TABLE kunden ADD COLUMN IF NOT EXISTS partner_id uuid REFERENCES partners(id) ON DELETE SET NULL;
+
 -- ─── kunden ───────────────────────────────────────────────────────────────────
 ALTER TABLE kunden ENABLE ROW LEVEL SECURITY;
 

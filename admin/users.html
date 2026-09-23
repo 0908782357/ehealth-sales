@@ -75,6 +75,8 @@
   .btn-invite { background: #eef0f7; color: var(--navy); border: 1.5px solid var(--navy); }
   .btn-invite:hover { background: var(--navy); color: white; }
   .btn-invite:disabled { opacity: 0.5; cursor: default; }
+  .btn-temp-pw { background: #fff7ed; color: #c2410c; border: 1.5px solid #fed7aa; }
+  .btn-temp-pw:hover { background: #fed7aa; }
 
   /* Info box */
   .info-box {
@@ -369,6 +371,34 @@
   </div>
 </div>
 
+<!-- Temporäres Passwort Modal -->
+<div class="modal-bg" id="tp-modal-bg">
+  <div class="modal" style="max-width:440px;">
+    <h2>🔑 Temporäres Passwort</h2>
+    <p style="font-size:0.83rem;color:#64748b;margin-bottom:20px;line-height:1.5;" id="tp-subtitle">
+      Der Nutzer wird beim nächsten Login aufgefordert, ein eigenes Passwort zu setzen.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="form-group">
+        <label>Temporäres Passwort</label>
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="tp-pw" placeholder="Min. 8 Zeichen" style="flex:1;border:1.5px solid var(--gray-200);border-radius:9px;padding:9px 12px;font-size:0.9rem;font-family:monospace;outline:none;" autocomplete="off">
+          <button class="btn btn-edit btn-sm" type="button" onclick="generateTempPw()" style="white-space:nowrap;">Generieren</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Passwort bestätigen</label>
+        <input type="text" id="tp-pw-confirm" placeholder="Wiederholen" style="border:1.5px solid var(--gray-200);border-radius:9px;padding:9px 12px;font-size:0.9rem;font-family:monospace;outline:none;" autocomplete="off">
+      </div>
+    </div>
+    <div class="msg" id="tp-msg"></div>
+    <div class="modal-actions">
+      <button class="btn btn-edit" onclick="closePwModal()">Abbrechen</button>
+      <button class="btn btn-primary" id="tp-save-btn" onclick="saveTempPassword()">Passwort setzen</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const sb = supabase.createClient(
     'https://focysklymhmcfwgxdtuk.supabase.co',
@@ -460,6 +490,7 @@
         <td>
           <div class="actions">
             ${!isActive ? `<button class="btn btn-sm btn-invite" onclick="sendInvite('${u.email.replace(/'/g,"\\'")}','${u.id}')">✉ Einladung</button>` : ''}
+            ${u.user_id ? `<button class="btn btn-sm btn-temp-pw" onclick="openPwModal('${u.user_id}','${(u.email||'').replace(/'/g,"\\'")}')">🔑 Passwort</button>` : ''}
             <button class="btn btn-sm btn-edit" onclick="openModal('${u.id}')">Bearbeiten</button>
             <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}','${(u.email||'').replace(/'/g,"\\'")}')">Löschen</button>
           </div>
@@ -577,6 +608,81 @@
       setTimeout(() => loadUsers(), 3000);
     }
   }
+
+  // ── Temporäres Passwort ──────────────────────────────────────────────────────
+
+  let currentAuthUserId = null;
+
+  function openPwModal(authUserId, email) {
+    currentAuthUserId = authUserId;
+    document.getElementById('tp-subtitle').textContent =
+      `Temporäres Passwort für ${email}. Der Nutzer wird beim nächsten Login zur Passwort-Änderung aufgefordert.`;
+    document.getElementById('tp-pw').value = '';
+    document.getElementById('tp-pw-confirm').value = '';
+    document.getElementById('tp-msg').className = 'msg';
+    const btn = document.getElementById('tp-save-btn');
+    btn.disabled = false; btn.textContent = 'Passwort setzen';
+    document.getElementById('tp-modal-bg').classList.add('open');
+    setTimeout(() => document.getElementById('tp-pw').focus(), 50);
+  }
+
+  function closePwModal() {
+    document.getElementById('tp-modal-bg').classList.remove('open');
+    currentAuthUserId = null;
+  }
+
+  function generateTempPw() {
+    const chars = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#';
+    let pw = '';
+    for (let i = 0; i < 12; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+    document.getElementById('tp-pw').value = pw;
+    document.getElementById('tp-pw-confirm').value = pw;
+  }
+
+  async function saveTempPassword() {
+    if (!currentAuthUserId) return;
+    const pw = document.getElementById('tp-pw').value;
+    const pwConfirm = document.getElementById('tp-pw-confirm').value;
+    const msg = document.getElementById('tp-msg');
+    msg.className = 'msg';
+
+    if (pw.length < 8) { msg.textContent = 'Mindestens 8 Zeichen erforderlich.'; msg.className = 'msg error'; return; }
+    if (pw !== pwConfirm) { msg.textContent = 'Passwörter stimmen nicht überein.'; msg.className = 'msg error'; return; }
+
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { msg.textContent = 'Sitzung abgelaufen – bitte neu einloggen.'; msg.className = 'msg error'; return; }
+
+    const btn = document.getElementById('tp-save-btn');
+    btn.disabled = true; btn.textContent = 'Wird gesetzt…';
+
+    try {
+      const res = await fetch('https://focysklymhmcfwgxdtuk.supabase.co/functions/v1/admin-set-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ authUserId: currentAuthUserId, password: pw }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        msg.textContent = data.error || 'Fehler beim Setzen des Passworts.';
+        msg.className = 'msg error';
+        btn.disabled = false; btn.textContent = 'Passwort setzen';
+        return;
+      }
+      msg.textContent = `✓ Passwort gesetzt! Dem Nutzer mitteilen: ${pw}`;
+      msg.className = 'msg success';
+      btn.disabled = false; btn.textContent = 'Passwort setzen';
+      setTimeout(() => { closePwModal(); loadUsers(); }, 5000);
+    } catch (e) {
+      msg.textContent = 'Netzwerkfehler: ' + e.message;
+      msg.className = 'msg error';
+      btn.disabled = false; btn.textContent = 'Passwort setzen';
+    }
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
 
   async function deleteUser(id, email) {
     if (!confirm(`Nutzer „${email}" wirklich löschen? Der Supabase-Auth-Account bleibt bestehen.`)) return;

@@ -374,8 +374,13 @@
     if (!email || !password) return showMsg('Bitte E-Mail und Passwort eingeben.', 'error');
     const { data, error } = await sb.auth.signInWithPassword({ email, password });
     if (error) return showMsg(error.message, 'error');
-    await claimProfile(data.session);
-    await checkMfaAndRedirect();
+    const passwordSet = await claimProfile(data.session);
+    // Temporäres Passwort: Nutzer muss eigenes Passwort wählen
+    if (!passwordSet) {
+      showPwStep();
+    } else {
+      await checkMfaAndRedirect();
+    }
   }
 
   let otpEmail = '';
