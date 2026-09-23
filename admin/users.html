@@ -113,6 +113,12 @@
 
   .actions { display: flex; gap: 6px; }
   .empty { padding: 48px; text-align: center; color: var(--gray-400); font-size: 0.85rem; }
+  .modal-danger-zone { margin-top: 16px; padding: 14px 16px; background: #fff5f5; border: 1px solid #fecaca; border-radius: 8px; }
+  .modal-danger-zone .dz-label { font-size: 0.7rem; font-weight: 700; color: #b91c1c; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
+  .modal-danger-zone .dz-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .modal-status-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+  .btn-activate { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; font-size: 0.78rem; padding: 4px 12px; border-radius: 6px; cursor: pointer; }
+  .btn-deactivate { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; font-size: 0.78rem; padding: 4px 12px; border-radius: 6px; cursor: pointer; }
 
   /* Modal */
   .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: none; align-items: flex-start; justify-content: center; padding: 24px; overflow-y: auto; }
@@ -363,10 +369,26 @@
       </div>
     </div>
 
+    <!-- Status-Sektion (nur beim Bearbeiten) -->
+    <div id="modal-status-section" style="display:none">
+      <hr class="form-divider">
+      <div class="section-label">Status</div>
+      <div id="modal-status-display" class="modal-status-row"></div>
+    </div>
+
     <div class="msg" id="modal-msg"></div>
     <div class="modal-actions">
       <button class="btn btn-edit" onclick="closeModal()">Abbrechen</button>
       <button class="btn btn-primary" onclick="saveUser()">Speichern</button>
+    </div>
+
+    <!-- Gefahrenbereich (nur beim Bearbeiten) -->
+    <div id="modal-danger-zone" class="modal-danger-zone" style="display:none">
+      <div class="dz-label">Aktionen</div>
+      <div class="dz-actions">
+        <button class="btn btn-sm btn-temp-pw" id="modal-pw-btn" onclick="openPwModalFromEdit()">🔑 Temporäres Passwort</button>
+        <button class="btn btn-sm btn-danger" id="modal-del-btn" onclick="deleteUserFromEdit()">Nutzer löschen</button>
+      </div>
     </div>
   </div>
 </div>
@@ -490,9 +512,7 @@
         <td>
           <div class="actions">
             ${!isActive ? `<button class="btn btn-sm btn-invite" onclick="sendInvite('${u.email.replace(/'/g,"\\'")}','${u.id}')">✉ Einladung</button>` : ''}
-            ${u.email ? `<button class="btn btn-sm btn-temp-pw" onclick="openPwModal('${(u.user_id||'').replace(/'/g,"\\'")}','${(u.email||'').replace(/'/g,"\\'")}')">🔑 Passwort</button>` : ''}
             <button class="btn btn-sm btn-edit" onclick="openModal('${u.id}')">Bearbeiten</button>
-            <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}','${(u.email||'').replace(/'/g,"\\'")}')">Löschen</button>
           </div>
         </td>
       </tr>`;
@@ -524,12 +544,29 @@
       if (id === currentUserId) {
         rolleSelect.title = 'Deine eigene Rolle kann hier nicht geändert werden.';
       }
+      // Status-Sektion
+      const isActive = !!u.user_id && !!u.password_set;
+      const statusDisplay = document.getElementById('modal-status-display');
+      if (isActive) {
+        statusDisplay.innerHTML = `<span class="badge badge-active">✓ Aktiv</span>
+          <button class="btn-deactivate" onclick="setUserActive(false)">Deaktivieren</button>`;
+      } else if (u.user_id) {
+        statusDisplay.innerHTML = `<span class="badge badge-pending">⏳ Ausstehend</span>
+          <button class="btn-activate" onclick="setUserActive(true)">Auf Aktiv setzen</button>`;
+      } else {
+        statusDisplay.innerHTML = `<span class="badge badge-pending">⏳ Ausstehend</span>
+          <span style="font-size:0.77rem;color:#64748b;">Kein Auth-Account verknüpft — Einladung senden oder Temp-Passwort vergeben.</span>`;
+      }
+      document.getElementById('modal-status-section').style.display = '';
+      document.getElementById('modal-danger-zone').style.display = '';
     } else {
       ['f-vorname','f-nachname','f-email','f-firma','f-telefon','f-strasse','f-plz','f-ort','f-notizen'].forEach(id => {
         document.getElementById(id).value = '';
       });
       document.getElementById('f-rolle').value = 'partner';
       document.getElementById('f-tier').value  = 'standard';
+      document.getElementById('modal-status-section').style.display = 'none';
+      document.getElementById('modal-danger-zone').style.display = 'none';
     }
     toggleTierGroup();
     document.getElementById('modal-bg').classList.add('open');
@@ -539,6 +576,31 @@
   function closeModal() {
     document.getElementById('modal-bg').classList.remove('open');
     document.getElementById('f-rolle').disabled = false;
+  }
+
+  async function setUserActive(active) {
+    const { error } = await sb.from('user_profiles')
+      .update({ password_set: active, updated_at: new Date().toISOString() })
+      .eq('id', currentId);
+    if (error) { showMsg(error.message, 'error'); return; }
+    const u = allUsers.find(x => x.id === currentId);
+    if (u) u.password_set = active;
+    showMsg(active ? '✓ Status auf Aktiv gesetzt.' : 'Status auf Ausstehend gesetzt.', 'success');
+    setTimeout(() => { closeModal(); loadUsers(); }, 700);
+  }
+
+  function openPwModalFromEdit() {
+    const u = allUsers.find(x => x.id === currentId);
+    if (!u) return;
+    closeModal();
+    openPwModal(u.user_id || '', u.email);
+  }
+
+  function deleteUserFromEdit() {
+    const u = allUsers.find(x => x.id === currentId);
+    if (!u) return;
+    closeModal();
+    deleteUser(u.id, u.email || '');
   }
 
   async function saveUser() {
