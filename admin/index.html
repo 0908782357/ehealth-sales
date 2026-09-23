@@ -278,8 +278,11 @@
   }
 
   // Magic Link (implicit): Hash-Token wird von Supabase automatisch verarbeitet → SIGNED_IN
+  let authHandled = false;
+
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session) {
+      authHandled = true;
       const passwordSet = await claimProfile(session);
       if (fromMagicLink && !passwordSet) {
         showPwStep();
@@ -287,8 +290,14 @@
         await checkMfaAndRedirect();
       }
     } else if (event === 'INITIAL_SESSION') {
+      if (fromMagicLink) {
+        // Invite-/Magic-Link im Hash: SDK verarbeitet gerade den Token → auf SIGNED_IN warten.
+        // Alten Session-Cache NICHT sofort weiterleiten, sonst wird der neue Token ignoriert.
+        return;
+      }
+      authHandled = true;
       if (session) {
-        // Bereits eingeloggt → direkt zum Dashboard (mit MFA-Check)
+        // Bereits eingeloggt (kein neuer Token) → direkt zum Dashboard
         await checkMfaAndRedirect();
       } else {
         // Kein Token, kein Login → Login-Formular zeigen
@@ -297,8 +306,8 @@
     }
   });
 
-  // Fallback: nach 3 Sekunden Login zeigen, falls kein Auth-Event eintrifft
-  setTimeout(showLogin, 3000);
+  // Fallback: Login zeigen wenn kein Auth-Event eintrifft (z.B. abgelaufener/ungültiger Token)
+  setTimeout(() => { if (!authHandled) showLogin(); }, 4000);
 
   async function setInitialPassword() {
     const pw        = document.getElementById('new-pw').value;
