@@ -418,10 +418,10 @@
     const el = document.getElementById('hl-events-items');
     const badge = document.getElementById('hl-events-count');
     try {
-      let q = sb.from('events').select('id, titel, datum_von, ort, oeffentlich, partner_id')
-        .order('datum_von', { ascending: true });
+      let q = sb.from('events').select('id, titel, datum, ort, oeffentlich, status, partner_id')
+        .order('datum', { ascending: true });
       if (role !== 'admin') {
-        q = q.gte('datum_von', new Date().toISOString()).eq('oeffentlich', true);
+        q = q.gte('datum', new Date().toISOString().slice(0, 10)).eq('oeffentlich', true);
       }
       const { data, error } = await q.limit(50);
       if (error) throw error;
@@ -431,16 +431,16 @@
         el.innerHTML = '<div class="hl-empty">Keine Events eingetragen</div>';
         return;
       }
-      const today = new Date();
-      const upcoming = rows.filter(e => new Date(e.datum_von) >= today).slice(0, 3);
-      const show = upcoming.length ? upcoming : rows.slice(0, 3);
+      const today = new Date().toISOString().slice(0, 10);
+      const upcoming = rows.filter(e => e.datum >= today).slice(0, 3);
+      const show = upcoming.length ? upcoming : rows.slice(-3).reverse();
       el.innerHTML = show.map(e => {
-        const past = new Date(e.datum_von) < today;
+        const past = e.datum < today;
         const dot = past ? 'amber' : 'green';
         return `<div class="hl-item">
           <span class="hl-item-dot ${dot}"></span>
           <span class="hl-item-name">${esc(e.titel)}</span>
-          <span class="hl-item-meta">${fmtDate(e.datum_von)}</span>
+          <span class="hl-item-meta">${fmtDate(e.datum)}</span>
         </div>`;
       }).join('');
     } catch (err) {
