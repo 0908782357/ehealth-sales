@@ -851,8 +851,13 @@
   async function loadProducts() {
     let q = sb.from('products').select('*, product_themen(thema_id, themengebiete(name, farbe))').order('nr', { ascending: true });
     if (userRole !== 'admin') {
-      if (myPartnerId) q = q.eq('partner_id', myPartnerId);
-      else { allProducts = []; renderTable([]); return; }
+      if (myPartnerId) {
+        q = q.eq('partner_id', myPartnerId);
+      } else if (myFirma) {
+        q = q.eq('unternehmen', myFirma);
+      } else {
+        allProducts = []; renderTable([]); return;
+      }
     }
     const { data, error } = await q;
     if (error) { console.error(error); return; }
