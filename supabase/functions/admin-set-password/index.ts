@@ -38,13 +38,30 @@ Deno.serve(async (req) => {
   if (roleRow?.role !== 'admin') return json({ error: 'Forbidden' }, 403);
 
   // Body parsen
-  const body = await req.json().catch(() => ({})) as { authUserId?: string; password?: string };
-  const { authUserId, password } = body;
-  if (!authUserId || !password || password.length < 8) {
-    return json({ error: 'authUserId und password (min. 8 Zeichen) erforderlich' }, 400);
+  const body = await req.json().catch(() => ({})) as { authUserId?: string; email?: string; password?: string };
+  const { password, email } = body;
+  let { authUserId } = body;
+
+  if (!password || password.length < 8) {
+    return json({ error: 'password (min. 8 Zeichen) erforderlich' }, 400);
   }
 
   const adminClient = createClient(SUPABASE_URL, SERVICE_KEY);
+
+  // Auth-User-ID ermitteln: entweder direkt übergeben oder per Email suchen
+  if (!authUserId) {
+    if (!email) return json({ error: 'authUserId oder email erforderlich' }, 400);
+    const { data: listData, error: listErr } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+    if (listErr) return json({ error: listErr.message }, 400);
+    // deno-lint-ignore no-explicit-any
+    const found = (listData?.users as any[])?.find((u) =>
+      u.email?.toLowerCase() === email.toLowerCase()
+    );
+    if (!found) {
+      return json({ error: `Kein Auth-Account für ${email} gefunden. Bitte zuerst Einladung senden.` }, 404);
+    }
+    authUserId = found.id;
+  }
 
   // Passwort setzen
   const { error: pwErr } = await adminClient.auth.admin.updateUserById(authUserId, { password });
@@ -71,5 +88,5 @@ Deno.serve(async (req) => {
     .update({ password_set: false, updated_at: new Date().toISOString() })
     .eq('user_id', authUserId);
 
-  return json({ success: true });
+  return json({ success: true, authUserId });
 });

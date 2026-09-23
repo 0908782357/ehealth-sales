@@ -490,7 +490,7 @@
         <td>
           <div class="actions">
             ${!isActive ? `<button class="btn btn-sm btn-invite" onclick="sendInvite('${u.email.replace(/'/g,"\\'")}','${u.id}')">✉ Einladung</button>` : ''}
-            ${u.user_id ? `<button class="btn btn-sm btn-temp-pw" onclick="openPwModal('${u.user_id}','${(u.email||'').replace(/'/g,"\\'")}')">🔑 Passwort</button>` : ''}
+            ${u.email ? `<button class="btn btn-sm btn-temp-pw" onclick="openPwModal('${(u.user_id||'').replace(/'/g,"\\'")}','${(u.email||'').replace(/'/g,"\\'")}')">🔑 Passwort</button>` : ''}
             <button class="btn btn-sm btn-edit" onclick="openModal('${u.id}')">Bearbeiten</button>
             <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}','${(u.email||'').replace(/'/g,"\\'")}')">Löschen</button>
           </div>
@@ -612,9 +612,11 @@
   // ── Temporäres Passwort ──────────────────────────────────────────────────────
 
   let currentAuthUserId = null;
+  let currentPwEmail = null;
 
   function openPwModal(authUserId, email) {
-    currentAuthUserId = authUserId;
+    currentAuthUserId = authUserId || null;
+    currentPwEmail = email;
     document.getElementById('tp-subtitle').textContent =
       `Temporäres Passwort für ${email}. Der Nutzer wird beim nächsten Login zur Passwort-Änderung aufgefordert.`;
     document.getElementById('tp-pw').value = '';
@@ -629,6 +631,7 @@
   function closePwModal() {
     document.getElementById('tp-modal-bg').classList.remove('open');
     currentAuthUserId = null;
+    currentPwEmail = null;
   }
 
   function generateTempPw() {
@@ -640,7 +643,7 @@
   }
 
   async function saveTempPassword() {
-    if (!currentAuthUserId) return;
+    if (!currentPwEmail) return;
     const pw = document.getElementById('tp-pw').value;
     const pwConfirm = document.getElementById('tp-pw-confirm').value;
     const msg = document.getElementById('tp-msg');
@@ -662,7 +665,7 @@
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({ authUserId: currentAuthUserId, password: pw }),
+        body: JSON.stringify({ authUserId: currentAuthUserId, email: currentPwEmail, password: pw }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
