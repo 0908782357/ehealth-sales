@@ -283,7 +283,9 @@
   sb.auth.onAuthStateChange(async (event, session) => {
     if (event === 'SIGNED_IN' && session) {
       authHandled = true;
-      const passwordSet = await claimProfile(session);
+      // force_password_change im JWT → Admin hat temporäres Passwort gesetzt
+      const forceChange = session.user?.user_metadata?.force_password_change === true;
+      const passwordSet = forceChange ? false : await claimProfile(session);
       if (!passwordSet) {
         showPwStep();
       } else {
@@ -322,7 +324,7 @@
       msg.textContent = 'Passwörter stimmen nicht überein.';
       msg.className = 'msg error'; return;
     }
-    const { error } = await sb.auth.updateUser({ password: pw });
+    const { error } = await sb.auth.updateUser({ password: pw, data: { force_password_change: null } });
     if (error) { msg.textContent = error.message; msg.className = 'msg error'; return; }
     // Profil als aktiv markieren
     const { data: { session: s } } = await sb.auth.getSession();

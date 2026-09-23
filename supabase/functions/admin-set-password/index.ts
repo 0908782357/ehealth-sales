@@ -44,12 +44,15 @@ Deno.serve(async (req) => {
     return json({ error: 'authUserId und password (min. 8 Zeichen) erforderlich' }, 400);
   }
 
-  // Passwort via Admin-Client setzen
+  // Passwort setzen + force_password_change in user_metadata (reist im JWT mit)
   const adminClient = createClient(SUPABASE_URL, SERVICE_KEY);
-  const { error: pwErr } = await adminClient.auth.admin.updateUserById(authUserId, { password });
+  const { error: pwErr } = await adminClient.auth.admin.updateUserById(authUserId, {
+    password,
+    user_metadata: { force_password_change: true },
+  });
   if (pwErr) return json({ error: pwErr.message }, 400);
 
-  // password_set zurücksetzen → Nutzer wird beim nächsten Login zur Passwort-Änderung aufgefordert
+  // Redundant: password_set in user_profiles ebenfalls zurücksetzen
   await adminClient
     .from('user_profiles')
     .update({ password_set: false, updated_at: new Date().toISOString() })
