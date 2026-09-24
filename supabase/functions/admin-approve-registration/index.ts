@@ -58,6 +58,12 @@ Deno.serve(async (req) => {
   if (createErr) return json({ error: 'Auth-User-Anlage fehlgeschlagen: ' + createErr.message }, 400);
   const userId = newUser.user.id;
 
+  // Cleanup-Helfer: löscht den soeben angelegten Auth-User bei Fehlern in nachgelagerten Schritten
+  const rollback = async (reason: string) => {
+    await adminClient.auth.admin.deleteUser(userId);
+    return json({ error: reason }, 400);
+  };
+
   // user_profiles anlegen
   const { error: profileErr } = await adminClient.from('user_profiles').insert({
     user_id: userId,
@@ -70,10 +76,11 @@ Deno.serve(async (req) => {
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   });
-  if (profileErr) return json({ error: 'user_profiles INSERT fehlgeschlagen: ' + profileErr.message }, 400);
+  if (profileErr) return rollback('user_profiles INSERT fehlgeschlagen: ' + profileErr.message);
 
   // user_roles anlegen
-  await adminClient.from('user_roles').insert({ user_id: userId, role: 'kunde' });
+  const { error: rolesErr } = await adminClient.from('user_roles').insert({ user_id: userId, role: 'kunde' });
+  if (rolesErr) return rollback('user_roles INSERT fehlgeschlagen: ' + rolesErr.message);
 
   // kunden anlegen
   const { data: kunde, error: kundenErr } = await adminClient.from('kunden').insert({
@@ -81,7 +88,7 @@ Deno.serve(async (req) => {
     firma: reg.firma,
     email: reg.email,
   }).select('id').maybeSingle();
-  if (kundenErr) return json({ error: 'kunden INSERT fehlgeschlagen: ' + kundenErr.message }, 400);
+  if (kundenErr) return rollback('kunden INSERT fehlgeschlagen: ' + kundenErr.message);
   const kundenId = kunde?.id;
 
   // Magic-Link generieren
@@ -89,10 +96,13 @@ Deno.serve(async (req) => {
     type: 'magiclink',
     email: reg.email,
   });
-  const magicLink = linkData?.properties?.action_link ?? '';
+  if (linkErr || !linkData?.properties?.action_link) {
+    return rollback('Magic-Link-Generierung fehlgeschlagen: ' + (linkErr?.message ?? 'kein Link'));
+  }
+  const magicLink = linkData.properties.action_link;
 
   // Genehmigungs-E-Mail senden
-  await fetch('https://api.resend.com/emails', {
+  const emailRes = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${RESEND_KEY}`,
@@ -110,6 +120,10 @@ Deno.serve(async (req) => {
              <p>Mit freundlichen Grüßen<br>Ihr eHealth Sales Team</p>`,
     }),
   });
+  if (!emailRes.ok) {
+    const emailBody = await emailRes.text().catch(() => '');
+    return rollback('E-Mail-Versand fehlgeschlagen: ' + emailBody);
+  }
 
   // Registrierung auf genehmigt setzen
   await adminClient.from('registrierungen').update({ status: 'genehmigt' }).eq('id', registrierungId);

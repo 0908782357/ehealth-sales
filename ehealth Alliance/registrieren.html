@@ -116,7 +116,7 @@
 
   async function init() {
     const [bgRes, prodRes] = await Promise.all([
-      sb.from('berufsgruppen').select('id, name').eq('aktiv', true).order('name'),
+      sb.from('berufsgruppen').select('id, name').order('name'),
       sb.from('products').select('id, produkt').eq('published', true).order('produkt'),
     ]);
     const bgSel = document.getElementById('f-berufsgruppe');

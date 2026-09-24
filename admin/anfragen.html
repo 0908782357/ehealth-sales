@@ -1085,7 +1085,7 @@ init();
         </div>
         ${isPending ? `<div class="reg-actions">
           <button class="btn btn-primary btn-sm" onclick="approveReg('${r.id}', this)">✓ Genehmigen</button>
-          <button class="btn btn-danger btn-sm" onclick="openAblehnenModal('${r.id}', '${esc(r.vorname)}', '${esc(r.nachname)}', '${esc(r.email)}')">✗ Ablehnen</button>
+          <button class="btn btn-danger btn-sm" onclick="openAblehnenModal('${r.id}')">✗ Ablehnen</button>
         </div>` : ''}
       </div>`;
     }).join('');
@@ -1109,8 +1109,10 @@ init();
   }
 
   let ablehnenRegId = '', ablehnenVorname = '', ablehnenNachname = '', ablehnenEmail = '';
-  function openAblehnenModal(regId, vorname, nachname, email) {
-    ablehnenRegId = regId; ablehnenVorname = vorname; ablehnenNachname = nachname; ablehnenEmail = email;
+  function openAblehnenModal(regId) {
+    const r = allRegs.find(x => x.id === regId);
+    if (!r) return;
+    ablehnenRegId = regId; ablehnenVorname = r.vorname; ablehnenNachname = r.nachname; ablehnenEmail = r.email;
     document.getElementById('ablehnen-grund').value = '';
     document.getElementById('ablehnen-overlay').classList.add('open');
   }
