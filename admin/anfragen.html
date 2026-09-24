@@ -192,6 +192,52 @@
   .role-admin    { background: #fef3c7; color: #92400e; }
   .role-partner  { background: #dbeafe; color: #1e40af; }
   .role-kunde    { background: #f3f4f6; color: #374151; }
+
+  /* Danger-Button */
+  .btn-danger { background: #fee2e2; color: #991b1b; }
+  .btn-danger:hover { background: #fecaca; }
+
+  /* Status pills (Registrierungen) */
+  .status-aktiv   { background: #d1fae5; color: #065f46; }
+  .status-inaktiv { background: #fee2e2; color: #991b1b; }
+
+  /* Tab-Navigation */
+  .tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 2px solid var(--gray-200); }
+  .tab-btn {
+    padding: 9px 18px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    border: none; background: none; color: var(--gray-500); border-bottom: 2px solid transparent;
+    margin-bottom: -2px; font-family: inherit; transition: all 0.15s;
+  }
+  .tab-btn:hover { color: var(--navy); }
+  .tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
+  .tab-badge {
+    display: inline-block; background: var(--green); color: white;
+    border-radius: 10px; font-size: 0.68rem; font-weight: 800;
+    padding: 1px 7px; margin-left: 6px; vertical-align: middle;
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* Registrierungs-Karten */
+  .reg-card {
+    background: white; border-radius: 14px; border: 1.5px solid var(--gray-200);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.04); padding: 20px 22px; margin-bottom: 14px;
+  }
+  .reg-card.done { opacity: 0.6; }
+  .reg-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+  .reg-name { font-weight: 700; font-size: 1rem; color: var(--navy); }
+  .reg-meta { font-size: 0.8rem; color: var(--gray-500); margin-top: 3px; }
+  .reg-body { font-size: 0.83rem; color: var(--gray-700); line-height: 1.6; margin-bottom: 14px; }
+  .reg-actions { display: flex; gap: 8px; }
+
+  /* Ablehnen-Modal */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; }
+  .overlay.open { display: flex; }
+  .overlay .modal { background: white; border-radius: 16px; padding: 28px; width: 100%; max-width: 440px; box-shadow: 0 8px 40px rgba(0,0,0,0.18); overflow: visible; }
+  .overlay .modal h3 { font-family: Montserrat,sans-serif; font-size: 1rem; font-weight: 800; color: var(--navy); margin-bottom: 14px; }
+  .overlay .modal textarea { width: 100%; padding: 10px 12px; border: 1.5px solid var(--gray-200); border-radius: 9px; font-size: 0.85rem; font-family: inherit; resize: vertical; min-height: 80px; outline: none; }
+  .overlay .modal textarea:focus { border-color: var(--navy); }
+  .overlay .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
 </style>
 </head>
 <body>
@@ -248,11 +294,11 @@
       </div>
     </div>
 
-    <a class="nav-link active" href="anfragen.html">
+    <a class="nav-link active" id="nav-link-anfragen" href="anfragen.html">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
       Anfragecenter
     </a>
-    <a class="nav-link" href="kunden.html">
+    <a class="nav-link" id="nav-link-kunden-mgmt" href="kunden.html">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       Kunden
     </a>
@@ -274,9 +320,13 @@
       Community
     </a>
 
-    <a class="nav-link" href="rechner.html">
+    <a class="nav-link" id="nav-link-rechner" href="rechner.html">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
       TI-Rechner
+    </a>
+    <a class="nav-link" id="nav-link-support" href="support.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+      Support
     </a>
 
     <div class="nav-group" id="nav-group-account">
@@ -290,7 +340,7 @@
       </div>
     </div>
 
-    <a class="nav-link" href="../index.html">
+    <a class="nav-link" id="nav-link-website" href="../index.html">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
       Zur Website
     </a>
@@ -315,9 +365,36 @@
       </select>
     </div>
 
-    <div class="spinner" id="spinner">Anfragen werden geladen…</div>
-    <div class="anfragen-list" id="anfragen-list"></div>
-    <div class="empty" id="empty" style="display:none">Keine Anfragen gefunden.</div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-anfragen" onclick="switchTab('anfragen')">Anfragen</button>
+      <button class="tab-btn" id="tab-registrierungen" onclick="switchTab('registrierungen')" style="display:none">
+        Registrierungen <span class="tab-badge" id="reg-badge" style="display:none">0</span>
+      </button>
+    </div>
+
+    <div class="tab-panel active" id="panel-anfragen">
+      <div class="spinner" id="spinner">Anfragen werden geladen…</div>
+      <div class="anfragen-list" id="anfragen-list"></div>
+      <div class="empty" id="empty" style="display:none">Keine Anfragen gefunden.</div>
+    </div>
+
+    <div class="tab-panel" id="panel-registrierungen">
+      <div id="reg-spinner" style="color:var(--gray-400);font-size:0.85rem;padding:20px 0;">Wird geladen…</div>
+      <div id="reg-list"></div>
+    </div>
+
+    <!-- Ablehnen-Modal -->
+    <div class="overlay" id="ablehnen-overlay">
+      <div class="modal">
+        <h3>Registrierung ablehnen</h3>
+        <p style="font-size:0.83rem;color:var(--gray-500);margin-bottom:12px;">Optional: Begründung für den Antragsteller</p>
+        <textarea id="ablehnen-grund" placeholder="Ablehnungsgrund (optional)…"></textarea>
+        <div class="modal-actions">
+          <button class="btn btn-edit btn-sm" onclick="closeAblehnenModal()">Abbrechen</button>
+          <button class="btn btn-danger btn-sm" onclick="confirmAblehnen()">Ablehnen bestätigen</button>
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -440,13 +517,17 @@ async function init() {
 
   const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
   userRole = roleRow?.role || 'partner';
+  const supportLink = document.getElementById('nav-link-support');
+  if (supportLink) supportLink.href = userRole === 'admin' ? 'support.html' : 'tickets.html';
 
   if (userRole === 'kunde') { window.location.href = 'dashboard.html'; return; }
 
   if (userRole === 'admin') {
     document.getElementById('nav-group-admin').style.display = '';
     document.getElementById('filter-status').style.display = '';
+    document.getElementById('tab-registrierungen').style.display = '';
     await loadPartners();
+    loadRegistrierungen();
   } else {
     // Partner: eigenes user_profiles.id ermitteln
     const { data: prof } = await sb.from('user_profiles').select('id').eq('user_id', session.user.id).maybeSingle();
@@ -946,6 +1027,121 @@ async function submitWeiterleitung() {
 }
 
 init();
+
+  function showMsg(text, type) {
+    const existing = document.querySelector('.msg');
+    if (existing) { existing.textContent = text; existing.className = 'msg ' + type; setTimeout(() => { existing.className = 'msg'; }, 4000); }
+    else { console.log('[' + type + '] ' + text); }
+  }
+  function fmtDate(ts) {
+    if (!ts) return '–';
+    return new Date(ts).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+
+  function switchTab(tab) {
+    document.getElementById('panel-anfragen').classList.toggle('active', tab === 'anfragen');
+    document.getElementById('panel-registrierungen').classList.toggle('active', tab === 'registrierungen');
+    document.getElementById('tab-anfragen').classList.toggle('active', tab === 'anfragen');
+    document.getElementById('tab-registrierungen').classList.toggle('active', tab === 'registrierungen');
+  }
+
+  let allRegs = [];
+  async function loadRegistrierungen() {
+    const spinner = document.getElementById('reg-spinner');
+    const { data, error } = await sb.from('registrierungen')
+      .select('id, vorname, nachname, email, firma, anliegen, status, erstellt_am, berufsgruppen(name), products(produkt)')
+      .order('erstellt_am', { ascending: false });
+    spinner.style.display = 'none';
+    if (error) { document.getElementById('reg-list').innerHTML = '<p style="color:#ef4444">Fehler: ' + esc(error.message) + '</p>'; return; }
+    allRegs = data || [];
+    const pending = allRegs.filter(r => r.status === 'ausstehend').length;
+    const badge = document.getElementById('reg-badge');
+    if (pending > 0) { badge.textContent = pending; badge.style.display = ''; }
+    renderRegistrierungen();
+  }
+
+  function renderRegistrierungen() {
+    const container = document.getElementById('reg-list');
+    if (!allRegs.length) { container.innerHTML = '<p style="color:var(--gray-400);font-size:0.85rem;padding:20px 0;">Keine Registrierungsanfragen vorhanden.</p>'; return; }
+    container.innerHTML = allRegs.map(r => {
+      const isPending = r.status === 'ausstehend';
+      const statusBadge = isPending
+        ? '<span class="status-pill" style="background:#fef3c7;color:#92400e">⏳ Ausstehend</span>'
+        : r.status === 'genehmigt'
+          ? '<span class="status-pill status-aktiv">✓ Genehmigt</span>'
+          : '<span class="status-pill status-inaktiv">✗ Abgelehnt</span>';
+      return `<div class="reg-card ${isPending ? '' : 'done'}">
+        <div class="reg-card-head">
+          <div>
+            <div class="reg-name">${esc(r.vorname)} ${esc(r.nachname)}</div>
+            <div class="reg-meta">${esc(r.email)} · ${esc(r.firma)} · ${fmtDate(r.erstellt_am)}</div>
+          </div>
+          ${statusBadge}
+        </div>
+        <div class="reg-body">
+          <strong>Berufsgruppe:</strong> ${esc(r.berufsgruppen?.name || '–')}<br>
+          <strong>Produkt:</strong> ${esc(r.products?.produkt || '–')}<br>
+          <strong>Anliegen:</strong> ${esc(r.anliegen || '–')}
+        </div>
+        ${isPending ? `<div class="reg-actions">
+          <button class="btn btn-primary btn-sm" onclick="approveReg('${r.id}', this)">✓ Genehmigen</button>
+          <button class="btn btn-danger btn-sm" onclick="openAblehnenModal('${r.id}')">✗ Ablehnen</button>
+        </div>` : ''}
+      </div>`;
+    }).join('');
+  }
+
+  async function approveReg(regId, btn) {
+    btn.disabled = true; btn.textContent = 'Wird genehmigt…';
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/admin-approve-registration', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({ registrierungId: regId }),
+    });
+    const result = await res.json();
+    if (!res.ok || result.error) {
+      alert('Fehler: ' + (result.error || 'Unbekannter Fehler'));
+      btn.disabled = false; btn.textContent = '✓ Genehmigen'; return;
+    }
+    showMsg('Registrierung genehmigt. Einladungs-E-Mail wurde versendet.', 'success');
+    loadRegistrierungen();
+  }
+
+  let ablehnenRegId = '', ablehnenVorname = '', ablehnenNachname = '', ablehnenEmail = '';
+  function openAblehnenModal(regId) {
+    const r = allRegs.find(x => x.id === regId);
+    if (!r) return;
+    ablehnenRegId = regId; ablehnenVorname = r.vorname; ablehnenNachname = r.nachname; ablehnenEmail = r.email;
+    document.getElementById('ablehnen-grund').value = '';
+    document.getElementById('ablehnen-overlay').classList.add('open');
+  }
+  function closeAblehnenModal() { document.getElementById('ablehnen-overlay').classList.remove('open'); }
+
+  async function confirmAblehnen() {
+    const grund = document.getElementById('ablehnen-grund').value.trim();
+    await sb.from('registrierungen').update({ status: 'abgelehnt', ablehnungsgrund: grund || null }).eq('id', ablehnenRegId);
+
+    // E-Mail an Endkunden
+    const { data: { session } } = await sb.auth.getSession();
+    await fetch(SUPABASE_URL + '/functions/v1/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({
+        to: ablehnenEmail,
+        subject: 'Ihre Registrierungsanfrage bei eHealth Sales',
+        html: `<p>Sehr geehrte/r ${ablehnenVorname} ${ablehnenNachname},</p>
+               <p>leider konnten wir Ihre Registrierungsanfrage zum eHealth Sales Kundenportal nicht genehmigen.</p>
+               ${grund ? `<p><strong>Begründung:</strong> ${esc(grund)}</p>` : ''}
+               <p>Bei Fragen stehen wir Ihnen gerne zur Verfügung.</p>
+               <p>Mit freundlichen Grüßen<br>Ihr eHealth Sales Team</p>`,
+      }),
+    });
+
+    closeAblehnenModal();
+    showMsg('Registrierung abgelehnt.', 'success');
+    loadRegistrierungen();
+  }
 
   async function _setHeaderUser(userId) {
     const [profileRes, roleRes] = await Promise.all([
