@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
   // Registrierung laden
   const { data: reg, error: regErr } = await adminClient
     .from('registrierungen')
-    .select('id, vorname, nachname, email, firma, berufsgruppe_id, produkt_id, status')
+    .select('id, vorname, nachname, email, firma, berufsgruppe_id, produkt_id, anliegen, status')
     .eq('id', registrierungId)
     .maybeSingle();
   if (regErr || !reg) return json({ error: 'Registrierung nicht gefunden' }, 404);
@@ -90,6 +90,18 @@ Deno.serve(async (req) => {
   }).select('id').maybeSingle();
   if (kundenErr) return rollback('kunden INSERT fehlgeschlagen: ' + kundenErr.message);
   const kundenId = kunde?.id;
+
+  // Support-Ticket aus dem Registrierungs-Anliegen anlegen
+  if (reg.anliegen?.trim()) {
+    await adminClient.from('support_tickets').insert({
+      titel: `Erstanfrage: ${reg.firma}`,
+      beschreibung: reg.anliegen,
+      user_id: userId,
+      kunden_id: kundenId ?? null,
+      produkt_id: reg.produkt_id ?? null,
+      status: 'offen',
+    });
+  }
 
   // Magic-Link generieren
   const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
