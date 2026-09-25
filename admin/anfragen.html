@@ -1049,7 +1049,7 @@ init();
   async function loadRegistrierungen() {
     const spinner = document.getElementById('reg-spinner');
     const { data, error } = await sb.from('registrierungen')
-      .select('id, vorname, nachname, email, firma, anliegen, status, erstellt_am, berufsgruppen(name), products(produkt)')
+      .select('id, vorname, nachname, email, firma, anliegen, typ, partner_status, status, erstellt_am, berufsgruppen(name), products(produkt)')
       .order('erstellt_am', { ascending: false });
     spinner.style.display = 'none';
     if (error) { document.getElementById('reg-list').innerHTML = '<p style="color:#ef4444">Fehler: ' + esc(error.message) + '</p>'; return; }
@@ -1060,29 +1060,37 @@ init();
     renderRegistrierungen();
   }
 
+  const TIER_LABELS = { standard: 'Standard', premium: 'Premium', strategisch: 'Strategisch' };
+
   function renderRegistrierungen() {
     const container = document.getElementById('reg-list');
     if (!allRegs.length) { container.innerHTML = '<p style="color:var(--gray-400);font-size:0.85rem;padding:20px 0;">Keine Registrierungsanfragen vorhanden.</p>'; return; }
     container.innerHTML = allRegs.map(r => {
       const isPending = r.status === 'ausstehend';
+      const isPartner = r.typ === 'partner';
       const statusBadge = isPending
         ? '<span class="status-pill" style="background:#fef3c7;color:#92400e">⏳ Ausstehend</span>'
         : r.status === 'genehmigt'
           ? '<span class="status-pill status-aktiv">✓ Genehmigt</span>'
           : '<span class="status-pill status-inaktiv">✗ Abgelehnt</span>';
+      const typBadge = isPartner
+        ? '<span class="role-badge role-partner" style="margin-right:6px;">Partner</span>'
+        : '<span class="role-badge role-kunde" style="margin-right:6px;">Kunde</span>';
+      const bodyFields = isPartner
+        ? `<strong>Partnerstatus:</strong> ${esc(TIER_LABELS[r.partner_status] || r.partner_status || '–')}<br>
+           <strong>Anliegen:</strong> ${esc(r.anliegen || '–')}`
+        : `<strong>Berufsgruppe:</strong> ${esc(r.berufsgruppen?.name || '–')}<br>
+           <strong>Produkt:</strong> ${esc(r.products?.produkt || '–')}<br>
+           <strong>Anliegen:</strong> ${esc(r.anliegen || '–')}`;
       return `<div class="reg-card ${isPending ? '' : 'done'}">
         <div class="reg-card-head">
           <div>
-            <div class="reg-name">${esc(r.vorname)} ${esc(r.nachname)}</div>
+            <div class="reg-name">${typBadge}${esc(r.vorname)} ${esc(r.nachname)}</div>
             <div class="reg-meta">${esc(r.email)} · ${esc(r.firma)} · ${fmtDate(r.erstellt_am)}</div>
           </div>
           ${statusBadge}
         </div>
-        <div class="reg-body">
-          <strong>Berufsgruppe:</strong> ${esc(r.berufsgruppen?.name || '–')}<br>
-          <strong>Produkt:</strong> ${esc(r.products?.produkt || '–')}<br>
-          <strong>Anliegen:</strong> ${esc(r.anliegen || '–')}
-        </div>
+        <div class="reg-body">${bodyFields}</div>
         ${isPending ? `<div class="reg-actions">
           <button class="btn btn-primary btn-sm" onclick="approveReg('${r.id}', this)">✓ Genehmigen</button>
           <button class="btn btn-danger btn-sm" onclick="openAblehnenModal('${r.id}')">✗ Ablehnen</button>
@@ -1093,8 +1101,10 @@ init();
 
   async function approveReg(regId, btn) {
     btn.disabled = true; btn.textContent = 'Wird genehmigt…';
+    const reg = allRegs.find(r => r.id === regId);
+    const endpoint = reg?.typ === 'partner' ? 'admin-approve-partner' : 'admin-approve-registration';
     const { data: { session } } = await sb.auth.getSession();
-    const res = await fetch(SUPABASE_URL + '/functions/v1/admin-approve-registration', {
+    const res = await fetch(SUPABASE_URL + '/functions/v1/' + endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
       body: JSON.stringify({ registrierungId: regId }),
