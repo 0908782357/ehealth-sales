@@ -280,6 +280,7 @@
     currentSession = session;
     _setHeaderUser(session.user.id);
     const { data: roleRow } = await sb.from('user_roles').select('role, partner_tier').eq('user_id', session.user.id).maybeSingle();
+    await window.initPerms(sb);
     if (enforcePage(roleRow?.role || 'partner', roleRow?.partner_tier || null, 'support') === 'hidden') return;
     if (roleRow?.role !== 'admin') { window.location.href = 'tickets.html'; return; }
     document.getElementById('nav-group-admin').style.display = '';

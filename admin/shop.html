@@ -576,6 +576,7 @@
     const { data: roleRow } = await sb.from('user_roles').select('role, partner_tier').eq('user_id', session.user.id).maybeSingle();
     userRole = roleRow?.role || 'partner';
     userTier = roleRow?.partner_tier || null;
+    await window.initPerms(sb);
     pagePerm = enforcePage(userRole, userTier, 'shop');
 
     if (pagePerm !== 'edit') { const bc = document.getElementById('btn-create'); if (bc) bc.style.display = 'none'; }

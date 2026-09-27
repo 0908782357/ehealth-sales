@@ -333,6 +333,9 @@
 
     const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', currentUserId).maybeSingle();
     userRole = roleRow?.role || 'kunde';
+    userTier = roleRow?.partner_tier || null;
+    await window.initPerms(sb);
+    applyNavPerms(userRole, userTier);
 
     if (userRole === 'admin') { window.location.href = 'support.html'; return; }
 

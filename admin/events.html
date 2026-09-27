@@ -409,6 +409,7 @@ async function init() {
   ]);
   userRole = roleRes.data?.role || 'partner';
   userTier = roleRes.data?.partner_tier || null;
+  await window.initPerms(sb);
   pagePerm = enforcePage(userRole, userTier, 'events');
   currentPartnerId = partnerRes.data?.id || null;
   const supportLink = document.getElementById('nav-link-support');

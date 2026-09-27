@@ -388,6 +388,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const { data: roleRow } = await sb.from('user_roles').select('role, partner_tier').eq('user_id', session.user.id).maybeSingle();
     _userTier = roleRow?.partner_tier || null;
+    await window.initPerms(sb);
     pagePerm = enforcePage(roleRow?.role || 'partner', _userTier, 'produktfinder');
     if (!roleRow || roleRow.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
     document.getElementById('nav-group-admin').style.display = '';
