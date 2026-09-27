@@ -1,4 +1,4 @@
-// Deploy: npx supabase functions deploy admin-approve-registration --project-ref focysklymhmcfwgxdtuk
+// Deploy: npx supabase functions deploy admin-approve-partner --project-ref focysklymhmcfwgxdtuk
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
@@ -44,11 +44,12 @@ Deno.serve(async (req) => {
   // Registrierung laden
   const { data: reg, error: regErr } = await adminClient
     .from('registrierungen')
-    .select('id, vorname, nachname, email, firma, berufsgruppe_id, produkt_id, anliegen, status')
+    .select('id, vorname, nachname, email, firma, partner_status, anliegen, status, typ')
     .eq('id', registrierungId)
     .maybeSingle();
   if (regErr || !reg) return json({ error: 'Registrierung nicht gefunden' }, 404);
   if (reg.status !== 'ausstehend') return json({ error: 'Registrierung hat nicht den Status "ausstehend"' }, 409);
+  if (reg.typ !== 'partner') return json({ error: 'Registrierung ist keine Partneranfrage' }, 400);
 
   // Auth-Account anlegen – oder bestehenden wiederverwenden wenn nur das Profil gelöscht wurde
   let userId: string;
@@ -61,11 +62,13 @@ Deno.serve(async (req) => {
     if (!createErr.message.toLowerCase().includes('already')) {
       return json({ error: 'Auth-User-Anlage fehlgeschlagen: ' + createErr.message }, 400);
     }
+    // Auth-User existiert noch – prüfen ob bereits ein aktives Profil vorhanden ist
     const { data: existingProfile } = await adminClient
       .from('user_profiles').select('user_id').eq('email', reg.email).maybeSingle();
     if (existingProfile) {
       return json({ error: 'Es existiert bereits ein aktiver Account mit dieser E-Mail-Adresse.' }, 409);
     }
+    // Kein Profil → Auth-User-ID ermitteln und wiederverwenden
     const { data: userList } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
     const existing = userList?.users?.find((u: { email?: string; id: string }) => u.email === reg.email);
     if (!existing) return json({ error: 'Interner Fehler: Auth-User nicht auffindbar.' }, 500);
@@ -74,8 +77,8 @@ Deno.serve(async (req) => {
     userId = newUser.user.id;
   }
 
-  // Cleanup-Helfer: löscht den soeben angelegten Auth-User bei Fehlern in nachgelagerten Schritten
   const rollback = async (reason: string) => {
+    // Rollback nur wenn wir den User selbst angelegt haben (kein pre-existing user)
     if (!createErr) await adminClient.auth.admin.deleteUser(userId);
     return json({ error: reason }, 400);
   };
@@ -87,37 +90,20 @@ Deno.serve(async (req) => {
     vorname: reg.vorname,
     nachname: reg.nachname,
     firma: reg.firma,
-    rolle: 'kunde',
+    rolle: 'partner',
     password_set: false,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   });
   if (profileErr) return rollback('user_profiles INSERT fehlgeschlagen: ' + profileErr.message);
 
-  // user_roles anlegen
-  const { error: rolesErr } = await adminClient.from('user_roles').insert({ user_id: userId, role: 'kunde' });
+  // user_roles anlegen (mit partner_tier)
+  const { error: rolesErr } = await adminClient.from('user_roles').insert({
+    user_id: userId,
+    role: 'partner',
+    partner_tier: reg.partner_status ?? null,
+  });
   if (rolesErr) return rollback('user_roles INSERT fehlgeschlagen: ' + rolesErr.message);
-
-  // kunden anlegen
-  const { data: kunde, error: kundenErr } = await adminClient.from('kunden').insert({
-    name: reg.vorname + ' ' + reg.nachname,
-    firma: reg.firma,
-    email: reg.email,
-  }).select('id').maybeSingle();
-  if (kundenErr) return rollback('kunden INSERT fehlgeschlagen: ' + kundenErr.message);
-  const kundenId = kunde?.id;
-
-  // Support-Ticket aus dem Registrierungs-Anliegen anlegen
-  if (reg.anliegen?.trim()) {
-    await adminClient.from('support_tickets').insert({
-      titel: `Erstanfrage: ${reg.firma}`,
-      beschreibung: reg.anliegen,
-      user_id: userId,
-      kunden_id: kundenId ?? null,
-      produkt_id: reg.produkt_id ?? null,
-      status: 'offen',
-    });
-  }
 
   // Magic-Link generieren
   const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
@@ -129,6 +115,9 @@ Deno.serve(async (req) => {
   }
   const magicLink = linkData.properties.action_link;
 
+  const tierLabels: Record<string, string> = { standard: 'Standard', premium: 'Premium', strategisch: 'Strategisch' };
+  const tierLabel = tierLabels[reg.partner_status ?? ''] ?? reg.partner_status ?? '';
+
   // Genehmigungs-E-Mail senden
   const emailRes = await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -139,9 +128,10 @@ Deno.serve(async (req) => {
     body: JSON.stringify({
       from: FROM,
       to: [reg.email],
-      subject: 'Ihr Zugang zum eHealth Sales Kundenportal wurde freigeschaltet',
+      subject: 'Ihr Partnerzugang zum eHealth Sales Portal wurde freigeschaltet',
       html: `<p>Sehr geehrte/r ${esc(reg.vorname)} ${esc(reg.nachname)},</p>
-             <p>Ihr Zugang zum eHealth Sales Kundenportal wurde freigeschaltet.</p>
+             <p>wir freuen uns, Ihnen mitteilen zu können, dass Ihre Partneranfrage genehmigt wurde.</p>
+             ${tierLabel ? `<p>Ihr Partnerstatus: <strong>${esc(tierLabel)}</strong></p>` : ''}
              <p>Klicken Sie auf den folgenden Link, um sich einzuloggen und Ihr Passwort zu setzen:</p>
              <p><a href="${magicLink}" style="background:#3C4A7C;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">Jetzt einloggen</a></p>
              <p>Der Link ist 24 Stunden gültig.</p>
@@ -156,5 +146,5 @@ Deno.serve(async (req) => {
   // Registrierung auf genehmigt setzen
   await adminClient.from('registrierungen').update({ status: 'genehmigt' }).eq('id', registrierungId);
 
-  return json({ success: true, kundenId, userId });
+  return json({ success: true, userId });
 });
