@@ -397,6 +397,39 @@
         </div>
       </div>
     </div>
+
+    <!-- Antworten-Modal -->
+    <div class="overlay" id="antworten-overlay">
+      <div class="modal" style="max-width:500px;">
+        <h3 id="antworten-title">Antwort senden</h3>
+        <p style="font-size:0.83rem;color:var(--gray-500);margin-bottom:14px;" id="antworten-to"></p>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:0.72rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;display:block;">Betreff</label>
+          <input type="text" id="antworten-betreff" style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-200);border-radius:9px;font-size:0.85rem;font-family:inherit;outline:none;" onfocus="this.style.borderColor='var(--navy)'" onblur="this.style.borderColor='var(--gray-200)'">
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.72rem;font-weight:700;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;display:block;">Nachricht</label>
+          <textarea id="antworten-text" style="width:100%;padding:10px 12px;border:1.5px solid var(--gray-200);border-radius:9px;font-size:0.85rem;font-family:inherit;resize:vertical;min-height:130px;outline:none;" onfocus="this.style.borderColor='var(--navy)'" onblur="this.style.borderColor='var(--gray-200)'"></textarea>
+        </div>
+        <div id="antworten-msg" style="display:none;padding:8px 12px;border-radius:8px;font-size:0.82rem;margin-bottom:10px;"></div>
+        <div class="modal-actions">
+          <button class="btn btn-edit btn-sm" onclick="closeAntwortenModal()">Abbrechen</button>
+          <button class="btn btn-primary btn-sm" id="antworten-send-btn" onclick="sendAntwort()">✉ Senden</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Löschen-Bestätigungs-Modal -->
+    <div class="overlay" id="delete-reg-overlay">
+      <div class="modal" style="max-width:420px;">
+        <h3>Anfrage löschen?</h3>
+        <p style="font-size:0.83rem;color:var(--gray-500);margin-bottom:18px;line-height:1.5;" id="delete-reg-info"></p>
+        <div class="modal-actions">
+          <button class="btn btn-edit btn-sm" onclick="closeDeleteRegModal()">Abbrechen</button>
+          <button class="btn btn-danger btn-sm" onclick="confirmDeleteReg()">Endgültig löschen</button>
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -1094,10 +1127,19 @@ init();
           ${statusBadge}
         </div>
         <div class="reg-body">${bodyFields}</div>
-        ${isPending ? `<div class="reg-actions">
+        <div class="reg-actions">
+          ${isPending ? `
           <button class="btn btn-primary btn-sm" onclick="approveReg('${r.id}', this)">✓ Genehmigen</button>
-          <button class="btn btn-danger btn-sm" onclick="openAblehnenModal('${r.id}')">✗ Ablehnen</button>
-        </div>` : ''}
+          <button class="btn btn-danger btn-sm" onclick="openAblehnenModal('${r.id}')">✗ Ablehnen</button>` : ''}
+          <button class="btn btn-antworten btn-sm" onclick="openAntwortenModal('${r.id}')">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+            Antworten
+          </button>
+          <button class="btn btn-edit btn-sm" onclick="openDeleteRegModal('${r.id}')">
+            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            Löschen
+          </button>
+        </div>
       </div>`;
     }).join('');
   }
@@ -1153,6 +1195,80 @@ init();
 
     closeAblehnenModal();
     showMsg('Registrierung abgelehnt.', 'success');
+    await loadRegistrierungen();
+  }
+
+  // ── Antworten ──────────────────────────────────────────────────────────────
+  let antwortenRegId = '', antwortenEmail = '';
+  function openAntwortenModal(regId) {
+    const r = allRegs.find(x => x.id === regId);
+    if (!r) return;
+    antwortenRegId = regId;
+    antwortenEmail = r.email;
+    document.getElementById('antworten-title').textContent = 'Antwort an ' + r.vorname + ' ' + r.nachname;
+    document.getElementById('antworten-to').textContent = 'An: ' + r.email;
+    const subjDefault = r.typ === 'partner'
+      ? 'Re: Ihre Partneranfrage bei eHealth Alliance'
+      : 'Re: Ihre Anfrage bei eHealth Alliance';
+    document.getElementById('antworten-betreff').value = subjDefault;
+    document.getElementById('antworten-text').value =
+      'Sehr geehrte/r ' + r.vorname + ' ' + r.nachname + ',\n\n\n\nMit freundlichen Grüßen\nIhr eHealth Alliance Team';
+    const msgEl = document.getElementById('antworten-msg');
+    msgEl.style.display = 'none';
+    const btn = document.getElementById('antworten-send-btn');
+    btn.disabled = false; btn.textContent = '✉ Senden';
+    document.getElementById('antworten-overlay').classList.add('open');
+  }
+  function closeAntwortenModal() { document.getElementById('antworten-overlay').classList.remove('open'); }
+
+  async function sendAntwort() {
+    const betreff = document.getElementById('antworten-betreff').value.trim();
+    const text = document.getElementById('antworten-text').value.trim();
+    const msgEl = document.getElementById('antworten-msg');
+    if (!betreff || !text) {
+      msgEl.textContent = 'Bitte Betreff und Nachricht ausfüllen.';
+      msgEl.style.cssText = 'display:block;background:#fee2e2;color:#991b1b;padding:8px 12px;border-radius:8px;font-size:0.82rem;margin-bottom:10px;';
+      return;
+    }
+    const btn = document.getElementById('antworten-send-btn');
+    btn.disabled = true; btn.textContent = 'Wird gesendet…';
+    const { data: { session } } = await sb.auth.getSession();
+    const res = await fetch(SUPABASE_URL + '/functions/v1/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+      body: JSON.stringify({
+        to: antwortenEmail,
+        subject: betreff,
+        html: esc(text).replace(/\n/g, '<br>'),
+      }),
+    });
+    if (!res.ok) {
+      msgEl.textContent = 'Fehler beim Senden. Bitte erneut versuchen.';
+      msgEl.style.cssText = 'display:block;background:#fee2e2;color:#991b1b;padding:8px 12px;border-radius:8px;font-size:0.82rem;margin-bottom:10px;';
+      btn.disabled = false; btn.textContent = '✉ Senden'; return;
+    }
+    msgEl.textContent = 'E-Mail erfolgreich gesendet!';
+    msgEl.style.cssText = 'display:block;background:#d1fae5;color:#065f46;padding:8px 12px;border-radius:8px;font-size:0.82rem;margin-bottom:10px;';
+    setTimeout(() => closeAntwortenModal(), 1500);
+  }
+
+  // ── Löschen ────────────────────────────────────────────────────────────────
+  let deleteRegId = '';
+  function openDeleteRegModal(regId) {
+    const r = allRegs.find(x => x.id === regId);
+    if (!r) return;
+    deleteRegId = regId;
+    document.getElementById('delete-reg-info').textContent =
+      'Anfrage von ' + r.vorname + ' ' + r.nachname + ' (' + r.email + ') endgültig löschen? Diese Aktion kann nicht rückgängig gemacht werden.';
+    document.getElementById('delete-reg-overlay').classList.add('open');
+  }
+  function closeDeleteRegModal() { document.getElementById('delete-reg-overlay').classList.remove('open'); }
+
+  async function confirmDeleteReg() {
+    const { error } = await sb.from('registrierungen').delete().eq('id', deleteRegId);
+    if (error) { alert('Fehler: ' + error.message); return; }
+    closeDeleteRegModal();
+    showMsg('Anfrage gelöscht.', 'success');
     await loadRegistrierungen();
   }
 
