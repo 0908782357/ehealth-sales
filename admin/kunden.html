@@ -455,10 +455,12 @@
           <div class="karte-tabs">
             <button class="karte-tab active" id="ktab-btn-0" onclick="switchKarteTab(0)">Übersicht</button>
             <button class="karte-tab" id="ktab-btn-1" onclick="switchKarteTab(1)">Vertrieb</button>
+            <button class="karte-tab" id="ktab-btn-2" onclick="switchKarteTab(2)">Support</button>
           </div>
           <!-- Tab bodies -->
           <div class="karte-body" id="ktab-0"><!-- dynamisch --></div>
           <div class="karte-body" id="ktab-1" style="display:none"><!-- dynamisch --></div>
+          <div class="karte-body" id="ktab-2" style="display:none"><!-- dynamisch --></div>
         </div>
       </div>
     </div>
@@ -809,16 +811,19 @@ function renderKarteHeader(prefill, fromAnfrageId) {
 
 // ─── Karte Tabs ───────────────────────────────────────────────────────────────
 function renderKarteTabs() {
-  document.getElementById('ktab-btn-0').classList.toggle('active', currentKarteTab === 0);
-  document.getElementById('ktab-btn-1').classList.toggle('active', currentKarteTab === 1);
-  document.getElementById('ktab-0').style.display = currentKarteTab === 0 ? '' : 'none';
-  document.getElementById('ktab-1').style.display = currentKarteTab === 1 ? '' : 'none';
+  [0, 1, 2].forEach(i => {
+    const btn  = document.getElementById('ktab-btn-' + i);
+    const body = document.getElementById('ktab-' + i);
+    if (btn)  btn.classList.toggle('active', currentKarteTab === i);
+    if (body) body.style.display = currentKarteTab === i ? '' : 'none';
+  });
 }
 
 function switchKarteTab(tab) {
   currentKarteTab = tab;
   renderKarteTabs();
   if (tab === 1 && currentKundeId) renderKarteTab1();
+  if (tab === 2 && currentKundeId) renderKarteTab2();
 }
 
 // ─── Kunden-Interessen Chips ──────────────────────────────────────────────────
@@ -1315,6 +1320,67 @@ async function deleteAktivitaet(id) {
   if (error) return;
   aktivitaeten = aktivitaeten.filter(x => x.id !== id);
   renderKarteTab0();
+}
+
+// ─── Tab 2: Support ───────────────────────────────────────────────────────────
+const TICKET_STATUS_LABEL = { offen: 'Offen', in_bearbeitung: 'In Bearbeitung', wartend: 'Wartend', geloest: 'Gelöst', geschlossen: 'Geschlossen' };
+const TICKET_STATUS_STYLE = {
+  offen:          'background:#fef3c7;color:#92400e;',
+  in_bearbeitung: 'background:#dbeafe;color:#1e40af;',
+  wartend:        'background:#fae8ff;color:#7e22ce;',
+  geloest:        'background:#d1fae5;color:#065f46;',
+  geschlossen:    'background:var(--gray-100);color:var(--gray-500);',
+};
+
+async function renderKarteTab2() {
+  const el = document.getElementById('ktab-2');
+  if (!el || !currentKundeId) return;
+  el.innerHTML = '<div class="spinner" style="padding:30px;">Lade Tickets…</div>';
+
+  const { data: tickets, error } = await sb
+    .from('support_tickets')
+    .select('id, titel, status, created_at, products(produkt)')
+    .eq('kunden_id', currentKundeId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    el.innerHTML = `<p style="color:var(--red);padding:16px;">Fehler: ${esc(error.message)}</p>`;
+    return;
+  }
+  if (!tickets || !tickets.length) {
+    el.innerHTML = '<p style="color:var(--gray-400);font-size:0.82rem;padding:16px 0;">Keine Support-Tickets vorhanden.</p>';
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="ks-section">
+      <div class="ks-title">${tickets.length} Ticket${tickets.length !== 1 ? 's' : ''}</div>
+      <table class="aktiv-table" style="table-layout:auto;">
+        <thead>
+          <tr>
+            <th>Titel</th>
+            <th>Produkt</th>
+            <th>Status</th>
+            <th>Datum</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tickets.map(t => {
+            const st = t.status || 'offen';
+            const stStyle = TICKET_STATUS_STYLE[st] || TICKET_STATUS_STYLE.offen;
+            const stLabel = TICKET_STATUS_LABEL[st] || st;
+            return `<tr>
+              <td class="aktiv-td-text" style="max-width:200px;" title="${esc(t.titel)}">${esc(t.titel)}</td>
+              <td style="color:var(--gray-500);font-size:0.78rem;white-space:nowrap;">${esc(t.products?.produkt || '–')}</td>
+              <td style="white-space:nowrap;"><span style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:0.72rem;font-weight:700;${stStyle}">${stLabel}</span></td>
+              <td style="color:var(--gray-400);font-size:0.72rem;white-space:nowrap;">${fmt(t.created_at)}</td>
+              <td style="white-space:nowrap;"><a href="support.html?ticket=${esc(t.id)}" style="font-size:0.75rem;color:var(--navy);font-weight:600;">→ Öffnen</a></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
 }
 
 // ─── Tab 1: Vertrieb ──────────────────────────────────────────────────────────
