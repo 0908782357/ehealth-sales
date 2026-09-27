@@ -123,6 +123,7 @@ Deno.serve(async (req) => {
   const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
     type: 'magiclink',
     email: reg.email,
+    options: { redirectTo: 'https://ehealth-sales.de/admin/set-password.html' },
   });
   if (linkErr || !linkData?.properties?.action_link) {
     return rollback('Magic-Link-Generierung fehlgeschlagen: ' + (linkErr?.message ?? 'kein Link'));
