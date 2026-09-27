@@ -15,7 +15,7 @@ DROP POLICY IF EXISTS "Kunde: eigener Kundendatensatz" ON public.kunden;
 CREATE POLICY "Kunde: eigener Kundendatensatz"
   ON public.kunden FOR SELECT
   TO authenticated
-  USING (email = (SELECT email FROM auth.users WHERE id = auth.uid()));
+  USING (email = auth.email());
 
 -- admin/sql/migration_registrierungen_tickets.sql
 -- Registrierungen von Endkunden (öffentliches Formular → Admin-Genehmigung)
