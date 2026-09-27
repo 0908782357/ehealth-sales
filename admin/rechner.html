@@ -478,7 +478,7 @@ async function init() {
   const { data: ur } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
   const role = ur?.role || 'kunde';
   const supportLinkR = document.getElementById('nav-link-support');
-  if (supportLinkR) supportLinkR.href = role === 'admin' ? 'support.html' : 'tickets.html';
+  if (supportLinkR && role !== 'admin') supportLinkR.style.display = 'none';
   if (role === 'kunde') {
     ['nav-group-produkte','nav-link-anfragen','nav-link-kunden-mgmt','nav-link-rechner','nav-link-website'].forEach(id => {
       const el = document.getElementById(id); if (el) el.style.display = 'none';

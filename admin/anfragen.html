@@ -553,7 +553,7 @@ async function init() {
   const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
   userRole = roleRow?.role || 'partner';
   const supportLink = document.getElementById('nav-link-support');
-  if (supportLink) supportLink.href = userRole === 'admin' ? 'support.html' : 'tickets.html';
+  if (supportLink && userRole !== 'admin') supportLink.style.display = 'none';
 
   if (userRole === 'kunde') { window.location.href = 'dashboard.html'; return; }
 

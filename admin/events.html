@@ -407,7 +407,7 @@ async function init() {
   userRole = roleRes.data?.role || 'partner';
   currentPartnerId = partnerRes.data?.id || null;
   const supportLink = document.getElementById('nav-link-support');
-  if (supportLink) supportLink.href = userRole === 'admin' ? 'support.html' : 'tickets.html';
+  if (supportLink && userRole !== 'admin') supportLink.style.display = 'none';
   if (userRole === 'kunde') {
     ['nav-group-produkte','nav-link-anfragen','nav-link-kunden-mgmt','nav-link-rechner','nav-link-website'].forEach(id => {
       const el = document.getElementById(id); if (el) el.style.display = 'none';

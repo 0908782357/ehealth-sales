@@ -509,7 +509,7 @@
       if (adminGroup) adminGroup.style.display = 'none';
     }
     const supportLink = document.getElementById('nav-link-support');
-    if (supportLink) supportLink.href = role === 'admin' ? 'support.html' : 'tickets.html';
+    if (supportLink && role !== 'admin') supportLink.style.display = 'none';
   }
 
   async function _setHeaderUser(userId) {

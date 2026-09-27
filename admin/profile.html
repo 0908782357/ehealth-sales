@@ -803,7 +803,7 @@
 
   async function setupNavRole(roleArg) {
     const supportLink = document.getElementById('nav-link-support');
-    if (supportLink) supportLink.href = roleArg === 'admin' ? 'support.html' : 'tickets.html';
+    if (supportLink && roleArg !== 'admin') supportLink.style.display = 'none';
     if (roleArg === 'kunde') {
       ['nav-group-produkte','nav-link-anfragen','nav-link-kunden-mgmt','nav-link-rechner','nav-link-website'].forEach(id => {
         const el = document.getElementById(id); if (el) el.style.display = 'none';
