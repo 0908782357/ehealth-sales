@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
              <p>Klicken Sie auf den folgenden Link, um sich einzuloggen und Ihr Passwort zu setzen:</p>
              <p><a href="${magicLink}" style="background:#3C4A7C;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">Jetzt einloggen</a></p>
              <p>Der Link ist 24 Stunden gültig.</p>
-             <p>Mit freundlichen Grüßen<br>Ihr eHealth Sales Team</p>`,
+             <p>Mit freundlichen Grüßen<br>Ihr eHealth Alliance Team</p>`,
     }),
   });
   if (!emailRes.ok) {
