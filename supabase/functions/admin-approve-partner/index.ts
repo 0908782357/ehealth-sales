@@ -83,8 +83,8 @@ Deno.serve(async (req) => {
     return json({ error: reason }, 400);
   };
 
-  // user_profiles anlegen
-  const { error: profileErr } = await adminClient.from('user_profiles').insert({
+  // user_profiles anlegen (upsert für den Fall dass ein Restdatensatz existiert)
+  const { error: profileErr } = await adminClient.from('user_profiles').upsert({
     user_id: userId,
     email: reg.email,
     vorname: reg.vorname,
@@ -92,18 +92,17 @@ Deno.serve(async (req) => {
     firma: reg.firma,
     rolle: 'partner',
     password_set: false,
-    created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  });
-  if (profileErr) return rollback('user_profiles INSERT fehlgeschlagen: ' + profileErr.message);
+  }, { onConflict: 'user_id' });
+  if (profileErr) return rollback('user_profiles upsert fehlgeschlagen: ' + profileErr.message);
 
-  // user_roles anlegen (mit partner_tier)
-  const { error: rolesErr } = await adminClient.from('user_roles').insert({
+  // user_roles anlegen (upsert für den Fall dass ein Restdatensatz existiert)
+  const { error: rolesErr } = await adminClient.from('user_roles').upsert({
     user_id: userId,
     role: 'partner',
     partner_tier: reg.partner_status ?? null,
-  });
-  if (rolesErr) return rollback('user_roles INSERT fehlgeschlagen: ' + rolesErr.message);
+  }, { onConflict: 'user_id' });
+  if (rolesErr) return rollback('user_roles upsert fehlgeschlagen: ' + rolesErr.message);
 
   // Magic-Link generieren
   const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({

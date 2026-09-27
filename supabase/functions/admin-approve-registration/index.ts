@@ -80,8 +80,8 @@ Deno.serve(async (req) => {
     return json({ error: reason }, 400);
   };
 
-  // user_profiles anlegen
-  const { error: profileErr } = await adminClient.from('user_profiles').insert({
+  // user_profiles anlegen (upsert für den Fall dass ein Restdatensatz existiert)
+  const { error: profileErr } = await adminClient.from('user_profiles').upsert({
     user_id: userId,
     email: reg.email,
     vorname: reg.vorname,
@@ -89,14 +89,15 @@ Deno.serve(async (req) => {
     firma: reg.firma,
     rolle: 'kunde',
     password_set: false,
-    created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  });
-  if (profileErr) return rollback('user_profiles INSERT fehlgeschlagen: ' + profileErr.message);
+  }, { onConflict: 'user_id' });
+  if (profileErr) return rollback('user_profiles upsert fehlgeschlagen: ' + profileErr.message);
 
-  // user_roles anlegen
-  const { error: rolesErr } = await adminClient.from('user_roles').insert({ user_id: userId, role: 'kunde' });
-  if (rolesErr) return rollback('user_roles INSERT fehlgeschlagen: ' + rolesErr.message);
+  // user_roles anlegen (upsert für den Fall dass ein Restdatensatz existiert)
+  const { error: rolesErr } = await adminClient.from('user_roles').upsert(
+    { user_id: userId, role: 'kunde' }, { onConflict: 'user_id' }
+  );
+  if (rolesErr) return rollback('user_roles upsert fehlgeschlagen: ' + rolesErr.message);
 
   // kunden anlegen
   const { data: kunde, error: kundenErr } = await adminClient.from('kunden').insert({
