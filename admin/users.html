@@ -153,6 +153,46 @@
   .role-admin    { background: #fef3c7; color: #92400e; }
   .role-partner  { background: #dbeafe; color: #1e40af; }
   .role-kunde    { background: #f3f4f6; color: #374151; }
+
+  /* ── Tabs ─────────────────────────────────────────────────────────── */
+  .tab-nav {
+    display: flex; gap: 2px; margin-bottom: 24px;
+    border-bottom: 2px solid var(--gray-200);
+  }
+  .tab-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 9px 18px; border: none; background: none;
+    font-size: 0.85rem; font-weight: 600; color: var(--gray-500);
+    cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px;
+    transition: all 0.15s; border-radius: 6px 6px 0 0; font-family: inherit;
+  }
+  .tab-btn:hover { color: var(--navy); background: var(--gray-50); }
+  .tab-btn.active { color: var(--navy); border-bottom-color: var(--navy); }
+  .tab-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+  /* ── Rechtestruktur ───────────────────────────────────────────────── */
+  .rights-wrap { background: white; border-radius: 16px; border: 1.5px solid var(--gray-200); overflow: hidden; }
+  .rights-table { width: 100%; border-collapse: collapse; }
+  .rights-table th {
+    background: var(--gray-50); padding: 11px 16px; text-align: left;
+    font-size: 0.72rem; font-weight: 700; color: var(--gray-500);
+    text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--gray-200);
+  }
+  .rights-table th.th-role { text-align: center; width: 110px; }
+  .rights-table td { padding: 11px 16px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; font-size: 0.85rem; }
+  .rights-table tr:last-child td { border-bottom: none; }
+  .rights-table tr.cat-row td {
+    background: var(--gray-50); font-size: 0.65rem; font-weight: 700;
+    color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 7px 16px; border-bottom: 1px solid var(--gray-200);
+  }
+  .rights-table td.td-check { text-align: center; }
+  .rights-cb { width: 17px; height: 17px; cursor: pointer; accent-color: var(--navy); }
+  .perm-on  { color: #16a34a; font-size: 1rem; font-weight: 700; }
+  .perm-off { color: var(--gray-300); font-size: 1rem; font-weight: 700; }
+  .perm-lock { font-size: 0.65rem; color: var(--gray-300); margin-left: 2px; vertical-align: middle; }
+  .rights-footer { display: flex; align-items: center; justify-content: flex-end; gap: 14px; margin-top: 20px; }
+  .rights-saved { font-size: 0.82rem; color: #16a34a; display: none; }
 </style>
 </head>
 <body>
@@ -267,36 +307,78 @@
   <main class="main">
     <div class="page-header">
       <div>
-        <h1>Nutzer</h1>
+        <h1>Nutzer &amp; Rechte</h1>
       </div>
-      <button class="btn btn-primary" onclick="openModal()">+ Nutzer anlegen</button>
+      <button class="btn btn-primary" id="btn-add-user" onclick="openModal()">+ Nutzer anlegen</button>
     </div>
-    <p class="page-sub">Profil- und Zugangsverwaltung für alle Portal-Nutzer.</p>
+    <p class="page-sub">Profil-, Zugangs- und Rechteverwaltung für alle Portal-Nutzer.</p>
 
-    <div class="info-box">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      <p>
-        <strong>Einladungs-Workflow:</strong> Profil anlegen → <strong>„✉ Einladung"</strong> klicken → Nutzer erhält eine E-Mail mit Zugangslink zu <em>ehealth-sales.de</em>.
-        Nach dem ersten Login wird das Profil <strong>automatisch verknüpft</strong> und die Rolle zugewiesen. Der Button erscheint nur bei noch nicht aktivierten Nutzern.
-      </p>
+    <div class="tab-nav">
+      <button class="tab-btn active" id="tab-btn-nutzer" onclick="switchTab('nutzer')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Nutzer
+      </button>
+      <button class="tab-btn" id="tab-btn-rechte" onclick="switchTab('rechte')">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        Rechtestruktur
+      </button>
     </div>
 
-    <div class="table-wrap">
-      <table class="data-table" id="users-table">
-        <thead>
-          <tr>
-            <th>Name & E-Mail</th>
-            <th>Firma</th>
-            <th>Kontakt</th>
-            <th>Rolle</th>
-            <th>Status</th>
-            <th>Aktionen</th>
-          </tr>
-        </thead>
-        <tbody id="users-tbody">
-          <tr><td colspan="6" class="empty">Laden…</td></tr>
-        </tbody>
-      </table>
+    <!-- Tab 1: Nutzer -->
+    <div id="tab-nutzer">
+      <div class="info-box">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <p>
+          <strong>Einladungs-Workflow:</strong> Profil anlegen → <strong>„✉ Einladung"</strong> klicken → Nutzer erhält eine E-Mail mit Zugangslink zu <em>ehealth-sales.de</em>.
+          Nach dem ersten Login wird das Profil <strong>automatisch verknüpft</strong> und die Rolle zugewiesen. Der Button erscheint nur bei noch nicht aktivierten Nutzern.
+        </p>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table" id="users-table">
+          <thead>
+            <tr>
+              <th>Name &amp; E-Mail</th>
+              <th>Firma</th>
+              <th>Kontakt</th>
+              <th>Rolle</th>
+              <th>Status</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr><td colspan="6" class="empty">Laden…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 2: Rechtestruktur -->
+    <div id="tab-rechte" style="display:none">
+      <div class="info-box">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <p>
+          Legt fest, welche Bereiche die jeweilige Rolle im Portal sehen und nutzen darf.
+          Felder mit <strong>🔒</strong> sind systemseitig festgelegt. Gespeicherte Änderungen gelten ab dem nächsten Seitenaufruf.
+        </p>
+      </div>
+      <div class="rights-wrap">
+        <table class="rights-table">
+          <thead>
+            <tr>
+              <th>Bereich / Funktion</th>
+              <th class="th-role">Kunde</th>
+              <th class="th-role">Partner</th>
+              <th class="th-role">Admin</th>
+            </tr>
+          </thead>
+          <tbody id="rights-tbody"></tbody>
+        </table>
+      </div>
+      <div class="rights-footer">
+        <span class="rights-saved" id="rights-saved-msg">✓ Gespeichert</span>
+        <button class="btn btn-primary" onclick="savePermissions()">Änderungen speichern</button>
+      </div>
     </div>
   </main>
 </div>
@@ -770,6 +852,76 @@
   async function logout() { await sb.auth.signOut(); window.location.href = 'index.html'; }
 
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  // ── Tabs ──────────────────────────────────────────────────────────────────
+  function switchTab(tab) {
+    ['nutzer','rechte'].forEach(t => {
+      document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none';
+      document.getElementById('tab-btn-' + t).classList.toggle('active', t === tab);
+    });
+    document.getElementById('btn-add-user').style.display = tab === 'nutzer' ? '' : 'none';
+    if (tab === 'rechte') renderRightsMatrix();
+  }
+
+  // ── Rechtestruktur ─────────────────────────────────────────────────────────
+  const PERM_DEFS = [
+    { id: 'dashboard',     label: 'Dashboard',                cat: 'Allgemein',     kFixed: true,  pFixed: true,  kDef: true,  pDef: true  },
+    { id: 'profil',        label: 'Mein Konto',               cat: 'Allgemein',     kFixed: true,  pFixed: true,  kDef: true,  pDef: true  },
+    { id: 'events',        label: 'Events',                   cat: 'Inhalte',       kFixed: false, pFixed: false, kDef: true,  pDef: true  },
+    { id: 'shop',          label: 'Shop',                     cat: 'Inhalte',       kFixed: false, pFixed: false, kDef: true,  pDef: true  },
+    { id: 'community',     label: 'Community',                cat: 'Inhalte',       kFixed: false, pFixed: false, kDef: true,  pDef: true  },
+    { id: 'tickets',       label: 'Tickets (eigene)',         cat: 'Kommunikation', kFixed: false, pFixed: false, kDef: true,  pDef: true  },
+    { id: 'anfragen',      label: 'Anfragecenter',            cat: 'Kommunikation', kFixed: true,  pFixed: false, kDef: false, pDef: true  },
+    { id: 'support',       label: 'Support-Tool (Admin)',     cat: 'Kommunikation', kFixed: true,  pFixed: true,  kDef: false, pDef: false },
+    { id: 'tirechner',     label: 'TI-Rechner',               cat: 'Tools',         kFixed: true,  pFixed: false, kDef: false, pDef: true  },
+    { id: 'produktfinder', label: 'Produktfinder',            cat: 'Tools',         kFixed: true,  pFixed: false, kDef: false, pDef: true  },
+    { id: 'kunden_mgmt',   label: 'Kunden-Management',        cat: 'Verwaltung',    kFixed: true,  pFixed: true,  kDef: false, pDef: false },
+    { id: 'verwaltung',    label: 'Nutzer, Bestellungen …',   cat: 'Verwaltung',    kFixed: true,  pFixed: true,  kDef: false, pDef: false },
+  ];
+  const PERM_KEY = 'alliance_role_permissions';
+
+  function loadPermissions() {
+    try { return JSON.parse(localStorage.getItem(PERM_KEY) || '{}'); } catch { return {}; }
+  }
+
+  function renderRightsMatrix() {
+    const stored = loadPermissions();
+    const tbody = document.getElementById('rights-tbody');
+    let lastCat = '', rows = '';
+    PERM_DEFS.forEach(p => {
+      if (p.cat !== lastCat) {
+        lastCat = p.cat;
+        rows += `<tr class="cat-row"><td colspan="4">${p.cat}</td></tr>`;
+      }
+      const kVal = stored[p.id]?.kunde !== undefined ? stored[p.id].kunde : p.kDef;
+      const pVal = stored[p.id]?.partner !== undefined ? stored[p.id].partner : p.pDef;
+      const cell = (fixed, def, val, role) => fixed
+        ? `<td class="td-check"><span class="${def ? 'perm-on' : 'perm-off'}">${def ? '✓' : '–'}</span><span class="perm-lock">🔒</span></td>`
+        : `<td class="td-check"><input type="checkbox" class="rights-cb" id="perm-${role}-${p.id}" ${val ? 'checked' : ''}></td>`;
+      rows += `<tr>
+        <td>${p.label}</td>
+        ${cell(p.kFixed, p.kDef, kVal, 'k')}
+        ${cell(p.pFixed, p.pDef, pVal, 'p')}
+        <td class="td-check"><span class="perm-on">✓</span></td>
+      </tr>`;
+    });
+    tbody.innerHTML = rows;
+  }
+
+  function savePermissions() {
+    const stored = loadPermissions();
+    PERM_DEFS.forEach(p => {
+      if (!p.kFixed || !p.pFixed) {
+        if (!stored[p.id]) stored[p.id] = {};
+        if (!p.kFixed) { const cb = document.getElementById('perm-k-' + p.id); if (cb) stored[p.id].kunde = cb.checked; }
+        if (!p.pFixed) { const cb = document.getElementById('perm-p-' + p.id); if (cb) stored[p.id].partner = cb.checked; }
+      }
+    });
+    try { localStorage.setItem(PERM_KEY, JSON.stringify(stored)); } catch {}
+    const msg = document.getElementById('rights-saved-msg');
+    msg.style.display = '';
+    setTimeout(() => { msg.style.display = 'none'; }, 2500);
+  }
 
   init();
 
