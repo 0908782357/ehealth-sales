@@ -867,13 +867,13 @@
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
   // ── Tabs ──────────────────────────────────────────────────────────────────
-  function switchTab(tab) {
+  async function switchTab(tab) {
     ['nutzer','rechte'].forEach(t => {
       document.getElementById('tab-' + t).style.display = t === tab ? '' : 'none';
       document.getElementById('tab-btn-' + t).classList.toggle('active', t === tab);
     });
     document.getElementById('btn-add-user').style.display = tab === 'nutzer' ? '' : 'none';
-    if (tab === 'rechte') renderRightsMatrix();
+    if (tab === 'rechte') await renderRightsMatrix();
   }
 
   // ── Rechtestruktur ─────────────────────────────────────────────────────────
@@ -895,17 +895,28 @@
     { id: 'kunden_mgmt',   label: 'Kunden-Management',      cat: 'Verwaltung',    kFixed:'hidden', sFixed:'hidden', prFixed:'hidden', stFixed:'hidden' },
     { id: 'verwaltung',    label: 'Nutzer, Bestellungen …', cat: 'Verwaltung',    kFixed:'hidden', sFixed:'hidden', prFixed:'hidden', stFixed:'hidden' },
   ];
-  const PERM_KEY = 'alliance_role_permissions';
   const PERM_LABELS = { hidden: 'Nicht sichtbar', read: 'Lesen', edit: 'Editierbar' };
   const ROLES = ['k','s','pr','st'];
   const ROLE_KEYS = { k:'kunde', s:'standard', pr:'premium', st:'strategisch' };
 
-  function loadPermissions() {
-    try { return JSON.parse(localStorage.getItem(PERM_KEY) || '{}'); } catch { return {}; }
+  async function loadPermissions() {
+    try {
+      const { data } = await sb.from('portal_permissions')
+        .select('perm_id, kunde, standard, premium, strategisch');
+      if (!data || data.length === 0) return {};
+      const stored = {};
+      data.forEach(row => {
+        stored[row.perm_id] = {
+          kunde: row.kunde, standard: row.standard,
+          premium: row.premium, strategisch: row.strategisch,
+        };
+      });
+      return stored;
+    } catch { return {}; }
   }
 
-  function renderRightsMatrix() {
-    const stored = loadPermissions();
+  async function renderRightsMatrix() {
+    const stored = await loadPermissions();
     const tbody = document.getElementById('rights-tbody');
     let lastCat = '', rows = '';
     PERM_DEFS.forEach(p => {
@@ -933,18 +944,24 @@
     tbody.innerHTML = rows;
   }
 
-  function savePermissions() {
-    const stored = loadPermissions();
+  async function savePermissions() {
+    const rows = [];
     PERM_DEFS.forEach(p => {
+      const row = { perm_id: p.id };
+      let hasAny = false;
       ROLES.forEach(r => {
         if (p[r + 'Fixed'] !== undefined) return;
         const el = document.getElementById('perm-' + r + '-' + p.id);
-        if (!el) return;
-        if (!stored[p.id]) stored[p.id] = {};
-        stored[p.id][ROLE_KEYS[r]] = el.value;
+        if (el) { row[ROLE_KEYS[r]] = el.value; hasAny = true; }
       });
+      if (hasAny) rows.push(row);
     });
-    try { localStorage.setItem(PERM_KEY, JSON.stringify(stored)); } catch {}
+    if (rows.length > 0) {
+      const { error } = await sb.from('portal_permissions').upsert(rows, { onConflict: 'perm_id' });
+      if (error) { console.error('Fehler beim Speichern:', error); return; }
+    }
+    // Cache löschen → alle Seiten laden Berechtigungen beim nächsten Aufruf neu
+    sessionStorage.removeItem('_perm_data');
     const msg = document.getElementById('rights-saved-msg');
     msg.style.display = '';
     setTimeout(() => { msg.style.display = 'none'; }, 2500);

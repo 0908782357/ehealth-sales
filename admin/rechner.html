@@ -478,6 +478,7 @@ async function init() {
 
   const { data: ur } = await sb.from('user_roles').select('role, partner_tier').eq('user_id', session.user.id).maybeSingle();
   const _tier = ur?.partner_tier || null;
+  await window.initPerms(sb);
   if (enforcePage(ur?.role || 'partner', _tier, 'tirechner') === 'hidden') return;
   const role = ur?.role || 'kunde';
   const supportLinkR = document.getElementById('nav-link-support');

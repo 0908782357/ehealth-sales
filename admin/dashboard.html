@@ -562,6 +562,7 @@
       badge.style.display = '';
     }
     // Berechtigungs-Nav-Hiding via perm.js
+    await window.initPerms(sb);
     try { sessionStorage.setItem('_perm_ctx', JSON.stringify({ role: role, tier: tier || null })); } catch (e) {}
     if (typeof window.applyNavPerms === 'function') window.applyNavPerms(role, tier);
   }

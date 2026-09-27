@@ -2,16 +2,17 @@
 // <script src="perm.js"> vor dem Seiten-Script einbinden.
 //
 // API:
+//   initPerms(sb)                            → lädt Berechtigungen von Supabase (einmal pro Session)
 //   getPagePerm(role, tier, permId)          → 'hidden'|'read'|'edit'
 //   permAtLeast(role, tier, permId, minLvl)  → boolean
 //   enforcePage(role, tier, permId)          → redirect bei 'hidden', gibt Perm zurück
 //   applyNavPerms(role, tier)                → versteckt [data-perm]-Links ohne Zugriff
 (function () {
-  var KEY      = 'alliance_role_permissions';
   var CTX_KEY  = '_perm_ctx';
+  var DATA_KEY = '_perm_data';  // sessionStorage: von Supabase geladene Berechtigungen
   var LEVELS   = { hidden: 0, read: 1, edit: 2 };
 
-  // Muss mit PERM_DEFS in users.html synchron bleiben
+  // Fallback-Defaults (solange DB noch nicht geladen) — muss mit PERM_DEFS in users.html synchron bleiben
   var DEFS = [
     { id: 'dashboard',     kFixed:'read',   sFixed:'read',   prFixed:'read',   stFixed:'read'   },
     { id: 'profil',        kFixed:'edit',   sFixed:'edit',   prFixed:'edit',   stFixed:'edit'   },
@@ -28,9 +29,36 @@
     { id: 'verwaltung',    kFixed:'hidden', sFixed:'hidden', prFixed:'hidden', stFixed:'hidden' },
   ];
 
+  // Gibt gecachte DB-Berechtigungen zurück (oder {} falls noch nicht geladen)
   function getStored() {
-    try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch { return {}; }
+    try { return JSON.parse(sessionStorage.getItem(DATA_KEY) || '{}'); } catch { return {}; }
   }
+
+  // Lädt Berechtigungen einmalig von Supabase und cached in sessionStorage
+  window.initPerms = async function (sb) {
+    if (sessionStorage.getItem(DATA_KEY) !== null) return; // bereits gecached
+    try {
+      var result = await sb.from('portal_permissions')
+        .select('perm_id, kunde, standard, premium, strategisch');
+      var data = result.data;
+      if (!data || data.length === 0) {
+        sessionStorage.setItem(DATA_KEY, '{}');
+        return;
+      }
+      var stored = {};
+      data.forEach(function (row) {
+        stored[row.perm_id] = {
+          kunde:        row.kunde,
+          standard:     row.standard,
+          premium:      row.premium,
+          strategisch:  row.strategisch,
+        };
+      });
+      sessionStorage.setItem(DATA_KEY, JSON.stringify(stored));
+    } catch (e) {
+      sessionStorage.setItem(DATA_KEY, '{}'); // Fehlerfall: leeres Objekt → Fallback auf DEFS
+    }
+  };
 
   window.getPagePerm = function (role, tier, permId) {
     if (role === 'admin') return 'edit';
@@ -55,12 +83,11 @@
     return LEVELS[window.getPagePerm(role, tier, permId)] >= LEVELS[minLevel];
   };
 
-  // Versteckt alle [data-perm]-Nav-Links, auf die der Nutzer keinen Zugriff hat
+  // Versteckt alle [data-perm]-Nav-Links ohne Zugriff
   window.applyNavPerms = function (role, tier) {
     document.querySelectorAll('[data-perm]').forEach(function (el) {
       var p = el.getAttribute('data-perm');
       if (window.getPagePerm(role, tier, p) === 'hidden') {
-        // Parent-Container mitausblenden wenn er dadurch leer wird
         el.style.display = 'none';
         var parent = el.parentElement;
         if (parent && parent.classList.contains('nav-subgroup')) {
@@ -71,21 +98,22 @@
     });
   };
 
-  // Leitet bei 'hidden' zu dashboard um; speichert Kontext für auto-apply
+  // Leitet bei 'hidden' um; speichert Kontext für auto-apply
   window.enforcePage = function (role, tier, permId) {
     var perm = window.getPagePerm(role, tier, permId);
     if (perm === 'hidden') { window.location.href = 'dashboard.html'; return perm; }
-    // Kontext cachen für andere Seiten (z. B. dashboard)
     try { sessionStorage.setItem(CTX_KEY, JSON.stringify({ role: role, tier: tier || null })); } catch (e) {}
     window.applyNavPerms(role, tier);
     return perm;
   };
 
-  // Auf Seiten ohne explizites enforcePage (z. B. dashboard): gespeicherten Kontext nutzen
+  // Auto-apply wenn BEIDE Contexts gecached sind (für Seiten ohne explizites initPerms/enforcePage)
   document.addEventListener('DOMContentLoaded', function () {
     try {
       var ctx = JSON.parse(sessionStorage.getItem(CTX_KEY) || 'null');
-      if (ctx && ctx.role) window.applyNavPerms(ctx.role, ctx.tier);
+      if (ctx && ctx.role && sessionStorage.getItem(DATA_KEY) !== null) {
+        window.applyNavPerms(ctx.role, ctx.tier);
+      }
     } catch (e) {}
   });
 })();
