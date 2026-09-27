@@ -2,7 +2,7 @@ const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') ?? '';
 const FROM = 'Anfragecenter <anfragecenter@ehealth-sales.de>';
 
 const cors = {
-  'Access-Control-Allow-Origin': 'https://ehealth-sales.de',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
