@@ -1048,15 +1048,16 @@ init();
   let allRegs = [];
   async function loadRegistrierungen() {
     const spinner = document.getElementById('reg-spinner');
+    if (spinner) spinner.style.display = '';
     const { data, error } = await sb.from('registrierungen')
       .select('id, vorname, nachname, email, firma, anliegen, typ, partner_status, status, erstellt_am, berufsgruppen(name), products(produkt)')
       .order('erstellt_am', { ascending: false });
-    spinner.style.display = 'none';
+    if (spinner) spinner.style.display = 'none';
     if (error) { document.getElementById('reg-list').innerHTML = '<p style="color:#ef4444">Fehler: ' + esc(error.message) + '</p>'; return; }
     allRegs = data || [];
     const pending = allRegs.filter(r => r.status === 'ausstehend').length;
     const badge = document.getElementById('reg-badge');
-    if (pending > 0) { badge.textContent = pending; badge.style.display = ''; }
+    if (badge) { badge.textContent = pending; badge.style.display = pending > 0 ? '' : 'none'; }
     renderRegistrierungen();
   }
 
@@ -1115,7 +1116,7 @@ init();
       btn.disabled = false; btn.textContent = '✓ Genehmigen'; return;
     }
     showMsg('Registrierung genehmigt. Einladungs-E-Mail wurde versendet.', 'success');
-    loadRegistrierungen();
+    await loadRegistrierungen();
   }
 
   let ablehnenRegId = '', ablehnenVorname = '', ablehnenNachname = '', ablehnenEmail = '';
@@ -1150,7 +1151,7 @@ init();
 
     closeAblehnenModal();
     showMsg('Registrierung abgelehnt.', 'success');
-    loadRegistrierungen();
+    await loadRegistrierungen();
   }
 
   async function _setHeaderUser(userId) {
