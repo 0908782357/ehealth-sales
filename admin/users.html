@@ -178,19 +178,30 @@
     font-size: 0.72rem; font-weight: 700; color: var(--gray-500);
     text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--gray-200);
   }
-  .rights-table th.th-role { text-align: center; width: 110px; }
-  .rights-table td { padding: 11px 16px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; font-size: 0.85rem; }
+  .rights-table th.th-role { text-align: center; width: 90px; }
+  .rights-table td { padding: 10px 14px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; font-size: 0.85rem; }
   .rights-table tr:last-child td { border-bottom: none; }
   .rights-table tr.cat-row td {
     background: var(--gray-50); font-size: 0.65rem; font-weight: 700;
     color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.1em;
-    padding: 7px 16px; border-bottom: 1px solid var(--gray-200);
+    padding: 7px 14px; border-bottom: 1px solid var(--gray-200);
   }
-  .rights-table td.td-check { text-align: center; }
-  .rights-cb { width: 17px; height: 17px; cursor: pointer; accent-color: var(--navy); }
-  .perm-on  { color: #16a34a; font-size: 1rem; font-weight: 700; }
-  .perm-off { color: var(--gray-300); font-size: 1rem; font-weight: 700; }
-  .perm-lock { font-size: 0.65rem; color: var(--gray-300); margin-left: 2px; vertical-align: middle; }
+  .rights-table td.td-check { text-align: center; padding: 8px 6px; }
+  .perm-lock { font-size: 0.6rem; color: var(--gray-300); margin-left: 2px; vertical-align: middle; }
+  .perm-label { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; }
+  .perm-label.perm-hidden { color: var(--gray-300); }
+  .perm-label.perm-read   { color: var(--navy); }
+  .perm-label.perm-edit   { color: #16a34a; }
+  .perm-select {
+    border: 1.5px solid var(--gray-200); border-radius: 6px;
+    padding: 3px 5px; font-size: 0.7rem; font-weight: 700;
+    font-family: inherit; cursor: pointer; outline: none;
+    background: white; transition: border 0.15s; width: 100%;
+  }
+  .perm-select:focus { border-color: var(--navy); }
+  .perm-select[data-val="hidden"] { color: var(--gray-400); background: var(--gray-50); border-color: var(--gray-200); }
+  .perm-select[data-val="read"]   { color: var(--navy);     background: #eef0f7;        border-color: #c7d0ec; }
+  .perm-select[data-val="edit"]   { color: #16a34a;         background: #f0fdf4;        border-color: #86efac; }
   .rights-footer { display: flex; align-items: center; justify-content: flex-end; gap: 14px; margin-top: 20px; }
   .rights-saved { font-size: 0.82rem; color: #16a34a; display: none; }
 </style>
@@ -368,7 +379,9 @@
             <tr>
               <th>Bereich / Funktion</th>
               <th class="th-role">Kunde</th>
-              <th class="th-role">Partner</th>
+              <th class="th-role">Standard</th>
+              <th class="th-role">Premium</th>
+              <th class="th-role">Strategisch</th>
               <th class="th-role">Admin</th>
             </tr>
           </thead>
@@ -864,21 +877,28 @@
   }
 
   // ── Rechtestruktur ─────────────────────────────────────────────────────────
+  // kFixed / sFixed / prFixed / stFixed = gesperrter Wert ('hidden'|'read'|'edit')
+  // kDef   / sDef   / prDef   / stDef   = konfigurierbarer Standardwert
   const PERM_DEFS = [
-    { id: 'dashboard',     label: 'Dashboard',                cat: 'Allgemein',     kFixed: true,  pFixed: true,  kDef: true,  pDef: true  },
-    { id: 'profil',        label: 'Mein Konto',               cat: 'Allgemein',     kFixed: true,  pFixed: true,  kDef: true,  pDef: true  },
-    { id: 'events',        label: 'Events',                   cat: 'Inhalte',       kFixed: false, pFixed: false, kDef: true,  pDef: true  },
-    { id: 'shop',          label: 'Shop',                     cat: 'Inhalte',       kFixed: false, pFixed: false, kDef: true,  pDef: true  },
-    { id: 'community',     label: 'Community',                cat: 'Inhalte',       kFixed: false, pFixed: false, kDef: true,  pDef: true  },
-    { id: 'tickets',       label: 'Tickets (eigene)',         cat: 'Kommunikation', kFixed: false, pFixed: false, kDef: true,  pDef: true  },
-    { id: 'anfragen',      label: 'Anfragecenter',            cat: 'Kommunikation', kFixed: true,  pFixed: false, kDef: false, pDef: true  },
-    { id: 'support',       label: 'Support-Tool (Admin)',     cat: 'Kommunikation', kFixed: true,  pFixed: true,  kDef: false, pDef: false },
-    { id: 'tirechner',     label: 'TI-Rechner',               cat: 'Tools',         kFixed: true,  pFixed: false, kDef: false, pDef: true  },
-    { id: 'produktfinder', label: 'Produktfinder',            cat: 'Tools',         kFixed: true,  pFixed: false, kDef: false, pDef: true  },
-    { id: 'kunden_mgmt',   label: 'Kunden-Management',        cat: 'Verwaltung',    kFixed: true,  pFixed: true,  kDef: false, pDef: false },
-    { id: 'verwaltung',    label: 'Nutzer, Bestellungen …',   cat: 'Verwaltung',    kFixed: true,  pFixed: true,  kDef: false, pDef: false },
+    //                                                                     Kunde             Standard          Premium           Strategisch
+    { id: 'dashboard',     label: 'Dashboard',              cat: 'Allgemein',     kFixed:'read',   sFixed:'read',   prFixed:'read',   stFixed:'read'   },
+    { id: 'profil',        label: 'Mein Konto',             cat: 'Allgemein',     kFixed:'edit',   sFixed:'edit',   prFixed:'edit',   stFixed:'edit'   },
+    { id: 'events',        label: 'Events',                 cat: 'Inhalte',       kDef:'read',     sDef:'read',     prDef:'read',     stDef:'edit'     },
+    { id: 'shop',          label: 'Shop',                   cat: 'Inhalte',       kDef:'read',     sDef:'read',     prDef:'read',     stDef:'edit'     },
+    { id: 'produkte',      label: 'Eigene Produkte',        cat: 'Inhalte',       kFixed:'hidden', sFixed:'hidden', prDef:'read',     stDef:'edit'     },
+    { id: 'community',     label: 'Community',              cat: 'Inhalte',       kDef:'read',     sDef:'read',     prDef:'edit',     stDef:'edit'     },
+    { id: 'tickets',       label: 'Tickets (eigene)',       cat: 'Kommunikation', kDef:'edit',     sDef:'edit',     prDef:'edit',     stDef:'edit'     },
+    { id: 'anfragen',      label: 'Anfragecenter',          cat: 'Kommunikation', kFixed:'hidden', sDef:'read',     prDef:'edit',     stDef:'edit'     },
+    { id: 'support',       label: 'Support-Tool (Admin)',   cat: 'Kommunikation', kFixed:'hidden', sFixed:'hidden', prFixed:'hidden', stFixed:'hidden' },
+    { id: 'tirechner',     label: 'TI-Rechner',             cat: 'Tools',         kFixed:'hidden', sDef:'read',     prDef:'read',     stDef:'edit'     },
+    { id: 'produktfinder', label: 'Produktfinder',          cat: 'Tools',         kFixed:'hidden', sDef:'read',     prDef:'edit',     stDef:'edit'     },
+    { id: 'kunden_mgmt',   label: 'Kunden-Management',      cat: 'Verwaltung',    kFixed:'hidden', sFixed:'hidden', prFixed:'hidden', stFixed:'hidden' },
+    { id: 'verwaltung',    label: 'Nutzer, Bestellungen …', cat: 'Verwaltung',    kFixed:'hidden', sFixed:'hidden', prFixed:'hidden', stFixed:'hidden' },
   ];
   const PERM_KEY = 'alliance_role_permissions';
+  const PERM_LABELS = { hidden: 'Nicht sichtbar', read: 'Lesen', edit: 'Editierbar' };
+  const ROLES = ['k','s','pr','st'];
+  const ROLE_KEYS = { k:'kunde', s:'standard', pr:'premium', st:'strategisch' };
 
   function loadPermissions() {
     try { return JSON.parse(localStorage.getItem(PERM_KEY) || '{}'); } catch { return {}; }
@@ -891,19 +911,24 @@
     PERM_DEFS.forEach(p => {
       if (p.cat !== lastCat) {
         lastCat = p.cat;
-        rows += `<tr class="cat-row"><td colspan="4">${p.cat}</td></tr>`;
+        rows += `<tr class="cat-row"><td colspan="6">${p.cat}</td></tr>`;
       }
-      const kVal = stored[p.id]?.kunde !== undefined ? stored[p.id].kunde : p.kDef;
-      const pVal = stored[p.id]?.partner !== undefined ? stored[p.id].partner : p.pDef;
-      const cell = (fixed, def, val, role) => fixed
-        ? `<td class="td-check"><span class="${def ? 'perm-on' : 'perm-off'}">${def ? '✓' : '–'}</span><span class="perm-lock">🔒</span></td>`
-        : `<td class="td-check"><input type="checkbox" class="rights-cb" id="perm-${role}-${p.id}" ${val ? 'checked' : ''}></td>`;
-      rows += `<tr>
-        <td>${p.label}</td>
-        ${cell(p.kFixed, p.kDef, kVal, 'k')}
-        ${cell(p.pFixed, p.pDef, pVal, 'p')}
-        <td class="td-check"><span class="perm-on">✓</span></td>
-      </tr>`;
+      const cells = ROLES.map(r => {
+        const fixedKey = r + 'Fixed';
+        const defKey   = r + 'Def';
+        const storeKey = ROLE_KEYS[r];
+        if (p[fixedKey] !== undefined) {
+          const v = p[fixedKey];
+          return `<td class="td-check"><span class="perm-label perm-${v}">${PERM_LABELS[v]}</span> <span class="perm-lock">🔒</span></td>`;
+        }
+        const val = stored[p.id]?.[storeKey] ?? p[defKey] ?? 'hidden';
+        return `<td class="td-check"><select class="perm-select" id="perm-${r}-${p.id}" data-val="${val}" onchange="this.dataset.val=this.value">
+          <option value="hidden"${val==='hidden'?' selected':''}>Nicht sichtbar</option>
+          <option value="read"${val==='read'?' selected':''}>Lesen</option>
+          <option value="edit"${val==='edit'?' selected':''}>Editierbar</option>
+        </select></td>`;
+      }).join('');
+      rows += `<tr><td>${p.label}</td>${cells}<td class="td-check"><span class="perm-label perm-edit">Editierbar</span></td></tr>`;
     });
     tbody.innerHTML = rows;
   }
@@ -911,11 +936,13 @@
   function savePermissions() {
     const stored = loadPermissions();
     PERM_DEFS.forEach(p => {
-      if (!p.kFixed || !p.pFixed) {
+      ROLES.forEach(r => {
+        if (p[r + 'Fixed'] !== undefined) return;
+        const el = document.getElementById('perm-' + r + '-' + p.id);
+        if (!el) return;
         if (!stored[p.id]) stored[p.id] = {};
-        if (!p.kFixed) { const cb = document.getElementById('perm-k-' + p.id); if (cb) stored[p.id].kunde = cb.checked; }
-        if (!p.pFixed) { const cb = document.getElementById('perm-p-' + p.id); if (cb) stored[p.id].partner = cb.checked; }
-      }
+        stored[p.id][ROLE_KEYS[r]] = el.value;
+      });
     });
     try { localStorage.setItem(PERM_KEY, JSON.stringify(stored)); } catch {}
     const msg = document.getElementById('rights-saved-msg');
