@@ -276,6 +276,9 @@
     setupNavRole('admin').catch(console.warn);
     await loadPartners();
     await loadTickets();
+
+    const ticketParam = new URLSearchParams(location.search).get('ticket');
+    if (ticketParam) selectTicket(ticketParam);
   }
 
   async function loadPartners() {
