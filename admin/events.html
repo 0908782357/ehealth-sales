@@ -376,6 +376,17 @@
   </div>
 </div>
 
+<!-- Teilnehmerliste-Modal -->
+<div class="modal-bg" id="tnr-modal-bg">
+  <div class="modal" style="max-width:620px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h2 id="tnr-modal-title" style="margin-bottom:0;">Teilnehmerliste</h2>
+      <button class="btn btn-sm btn-secondary" onclick="closeTeilnehmerModal()">Schließen</button>
+    </div>
+    <div id="tnr-modal-content"><p class="empty">Lade…</p></div>
+  </div>
+</div>
+
 <script>
 const SUPA_URL = 'https://focysklymhmcfwgxdtuk.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
@@ -394,6 +405,8 @@ let allAnmeldungen = [];
 let editEventId = null;
 let evSelectedThemen = [];
 let activeTab = 0;
+let anmeldungenCountMap = {};   // event_id → Anzahl angemeldeter Teilnehmer
+let userAnmeldungenMap = {};    // event_id → { id, status } für den aktuellen User
 
 function toggleNavGroup(h) { h.closest('.nav-group').classList.toggle('open'); }
 
@@ -436,10 +449,11 @@ async function init() {
   const params = new URLSearchParams(window.location.search);
   const eventParam = params.get('event');
 
-  await Promise.all([loadThemen(), loadEvents(), loadMeineAnmeldungen()]);
+  await loadThemen();
+  await Promise.all([loadEvents(), loadMeineAnmeldungen()]);
+  renderEventList();  // finales Rendern nachdem user registrations + counts bekannt sind
 
   if (eventParam) {
-    // Direkt zur Anmeldungs-Ansicht scrollen / Tab wechseln
     switchTab(1);
     scrollToEvent(eventParam);
   }
@@ -453,17 +467,39 @@ async function loadThemen() {
 }
 
 async function loadEvents() {
-  let query = sb.from('events')
-    .select(`*, event_themen(thema_id), event_anmeldungen(id, status)`)
+  // Alle Events für alle Rollen – Partner/Kunden können sich für fremde Events anmelden
+  const { data } = await sb.from('events')
+    .select(`*, event_themen(thema_id)`)
     .order('datum', { ascending: false });
-
-  if (userRole !== 'admin' && currentPartnerId) {
-    query = query.eq('partner_id', currentPartnerId);
-  }
-
-  const { data } = await query;
   allEvents = data || [];
-  renderEventList();
+  await loadAnmeldungenCounts();
+}
+
+async function loadAnmeldungenCounts() {
+  if (!allEvents.length) { anmeldungenCountMap = {}; return; }
+  const ids = allEvents.map(e => e.id);
+  const { data } = await sb.from('event_anmeldungen')
+    .select('event_id, status')
+    .in('event_id', ids)
+    .neq('status', 'storniert');
+  anmeldungenCountMap = {};
+  (data || []).forEach(a => {
+    if (a.status === 'angemeldet') {
+      anmeldungenCountMap[a.event_id] = (anmeldungenCountMap[a.event_id] || 0) + 1;
+    }
+  });
+}
+
+function buildUserAnmeldungenMap() {
+  userAnmeldungenMap = {};
+  allAnmeldungen.forEach(a => {
+    const eid = a.events?.id;
+    if (eid) userAnmeldungenMap[eid] = { id: a.id, status: a.status };
+  });
+}
+
+function isCreator(e) {
+  return userRole === 'admin' || (currentPartnerId && e.partner_id === currentPartnerId);
 }
 
 async function loadMeineAnmeldungen() {
@@ -473,6 +509,7 @@ async function loadMeineAnmeldungen() {
     .neq('status', 'storniert')
     .order('angemeldet_am', { ascending: false });
   allAnmeldungen = data || [];
+  buildUserAnmeldungenMap();
   renderMeineAnmeldungen();
 }
 
@@ -506,8 +543,35 @@ function renderEventList() {
   }
 
   tbody.innerHTML = events.map(e => {
-    const anmCount = e.event_anmeldungen?.filter(a => a.status === 'angemeldet').length ?? 0;
+    const count    = anmeldungenCountMap[e.id] || 0;
+    const creator  = isCreator(e);
+    const userAnm  = userAnmeldungenMap[e.id];
     const themenHtml = (e.event_themen || []).map(et => themaChip(et.thema_id, true)).join('');
+
+    // Teilnehmer-Zelle: klickbar für Ersteller/Admin wenn Einträge vorhanden
+    const countCell = creator && count > 0
+      ? `<button style="background:none;border:none;cursor:pointer;color:var(--navy);font-weight:700;text-decoration:underline;font-family:inherit;font-size:inherit;padding:0;"
+                 onclick="openTeilnehmerModal('${e.id}')">${count}${e.max_teilnehmer ? ' / ' + e.max_teilnehmer : ''}</button>`
+      : `${count}${e.max_teilnehmer ? ' / ' + e.max_teilnehmer : ''}`;
+
+    // Aktionen: Ersteller → Bearbeiten/Löschen; Nicht-Ersteller → Anmelden/Abmelden
+    let actionsHtml = '';
+    if (creator && pagePerm === 'edit') {
+      actionsHtml = `<button class="btn btn-sm btn-secondary" onclick="openEventEdit('${e.id}')">Bearbeiten</button>
+        <button class="btn btn-sm" style="color:#ef4444;background:none;border:1.5px solid #fca5a5;"
+                onclick="deleteEvent('${e.id}')">Löschen</button>`;
+    } else if (!creator && e.status === 'geplant') {
+      if (userAnm?.status === 'angemeldet') {
+        actionsHtml = `<button class="btn btn-sm" style="color:#d97706;background:none;border:1.5px solid #fcd34d;"
+                onclick="storniereAnmeldung('${userAnm.id}', '${e.id}')">Abmelden</button>`;
+      } else if (userAnm?.status === 'warteliste') {
+        actionsHtml = `<span style="font-size:0.75rem;color:#d97706;font-weight:600;">⏳ Warteliste</span>`;
+      } else {
+        actionsHtml = `<button class="btn btn-sm btn-primary" data-eid="${e.id}"
+                onclick="anmeldenAusListe(this)">Anmelden</button>`;
+      }
+    }
+
     return `<tr>
       <td style="white-space:nowrap;">${e.datum ? new Date(e.datum).toLocaleDateString('de-DE') : '–'}<br>
         <small style="color:var(--gray-400);">${e.uhrzeit_start?.slice(0,5) || ''}</small></td>
@@ -515,17 +579,14 @@ function renderEventList() {
       <td><span class="format-badge">${FORMAT_LABEL[e.format] || e.format}</span></td>
       <td>${themenHtml || '–'}</td>
       ${userRole === 'admin' ? `<td><small>${esc(e.partner_id || '–')}</small></td>` : ''}
-      <td>${anmCount}${e.max_teilnehmer ? ' / ' + e.max_teilnehmer : ''}</td>
+      <td>${countCell}</td>
       <td><span class="status-badge status-${e.status}">${STATUS_LABEL[e.status] || e.status}</span></td>
       <td style="text-align:center;">
-        <input type="checkbox" ${e.oeffentlich ? 'checked' : ''} onchange="toggleOeffentlich('${e.id}', this.checked)"
-               style="width:15px;height:15px;accent-color:var(--navy);cursor:pointer;">
+        <input type="checkbox" ${e.oeffentlich ? 'checked' : ''} ${!creator ? 'disabled style="opacity:0.4;"' : 'style="cursor:pointer;"'}
+               onchange="toggleOeffentlich('${e.id}', this.checked)"
+               style="width:15px;height:15px;accent-color:var(--navy);">
       </td>
-      <td>
-        ${pagePerm === 'edit' ? `<button class="btn btn-sm btn-secondary" onclick="openEventEdit('${e.id}')">Bearbeiten</button>
-        <button class="btn btn-sm" style="color:#ef4444;background:none;border:1.5px solid #fca5a5;"
-                onclick="deleteEvent('${e.id}')">Löschen</button>` : ''}
-      </td>
+      <td style="white-space:nowrap;">${actionsHtml}</td>
     </tr>`;
   }).join('');
 }
@@ -556,7 +617,7 @@ function renderMeineAnmeldungen() {
               : ''}
         </div>
         <button class="btn btn-sm" style="color:#ef4444;background:none;border:1.5px solid #fca5a5;flex-shrink:0;"
-                onclick="storniereAnmeldung('${a.id}', '${esc(e?.titel || '')}')">Stornieren</button>
+                onclick="storniereAnmeldung('${a.id}', '${e?.id || ''}')">Stornieren</button>
       </div>
     </div>`;
   }).join('');
@@ -683,7 +744,8 @@ async function saveEvent() {
   }
 
   closeEventModal();
-  await loadEvents();
+  await Promise.all([loadEvents(), loadMeineAnmeldungen()]);
+  renderEventList();
 }
 
 async function toggleOeffentlich(id, oeffentlich) {
@@ -697,13 +759,24 @@ async function deleteEvent(id) {
   if (!confirm(`Event "${e?.titel}" wirklich löschen? Alle Anmeldungen werden ebenfalls gelöscht.`)) return;
   const { error } = await sb.from('events').delete().eq('id', id);
   if (error) { alert(error.message); return; }
-  await loadEvents();
+  await Promise.all([loadEvents(), loadMeineAnmeldungen()]);
+  renderEventList();
 }
 
-async function storniereAnmeldung(anmId, titel) {
+// Anmelden-Button in der Tabellenliste (via data-eid Attribut)
+function anmeldenAusListe(btn) {
+  const e = allEvents.find(x => x.id === btn.dataset.eid);
+  if (!e) return;
+  anmeldenFuerEvent(e.id, e.titel, e.max_teilnehmer || 0, anmeldungenCountMap[e.id] || 0);
+}
+
+async function storniereAnmeldung(anmId, eventId) {
+  const e = allEvents.find(x => x.id === eventId);
+  const titel = e?.titel || eventId;
   if (!confirm(`Anmeldung für "${titel}" stornieren?`)) return;
   await sb.from('event_anmeldungen').update({ status: 'storniert' }).eq('id', anmId);
-  await loadMeineAnmeldungen();
+  await Promise.all([loadEvents(), loadMeineAnmeldungen()]);
+  renderEventList();
 }
 
 function scrollToEvent(eventId) {
@@ -728,6 +801,7 @@ async function anmeldenFuerEvent(eventId, titel, maxTn, aktuelleAnzahl) {
   });
   if (error) { alert(error.message); return; }
   await Promise.all([loadEvents(), loadMeineAnmeldungen()]);
+  renderEventList();
   if (status === 'warteliste') {
     alert(`Du wurdest auf die Warteliste für "${titel}" gesetzt.`);
   } else {
@@ -757,6 +831,63 @@ async function _setHeaderUser(userId) {
     badge.style.display = '';
   }
 }
+
+async function openTeilnehmerModal(eventId) {
+  const event = allEvents.find(e => e.id === eventId);
+  const el = document.getElementById('tnr-modal-title');
+  el.textContent = `Teilnehmer: ${event?.titel || ''}`;
+  document.getElementById('tnr-modal-content').innerHTML = '<p class="empty">Lade…</p>';
+  document.getElementById('tnr-modal-bg').classList.add('open');
+
+  // Anmeldungen für dieses Event laden
+  const { data: regs } = await sb.from('event_anmeldungen')
+    .select('id, user_id, status, angemeldet_am')
+    .eq('event_id', eventId)
+    .neq('status', 'storniert')
+    .order('angemeldet_am');
+
+  if (!regs?.length) {
+    document.getElementById('tnr-modal-content').innerHTML = '<p class="empty">Keine Anmeldungen vorhanden.</p>';
+    return;
+  }
+
+  // Profile der angemeldeten Nutzer laden
+  const uids = regs.map(r => r.user_id);
+  const { data: profiles } = await sb.from('user_profiles')
+    .select('user_id, vorname, nachname, email')
+    .in('user_id', uids);
+  const pm = {};
+  (profiles || []).forEach(p => { pm[p.user_id] = p; });
+
+  const STATUS_MAP = { angemeldet: '✅ Angemeldet', warteliste: '⏳ Warteliste' };
+
+  document.getElementById('tnr-modal-content').innerHTML = `
+    <p style="font-size:0.82rem;color:var(--gray-400);margin-bottom:12px;">${regs.length} Einträge</p>
+    <table style="width:100%;border-collapse:collapse;font-size:0.83rem;">
+      <thead><tr>
+        <th style="padding:8px 12px;text-align:left;font-size:0.7rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.04em;border-bottom:1.5px solid var(--gray-200);">Name</th>
+        <th style="padding:8px 12px;text-align:left;font-size:0.7rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.04em;border-bottom:1.5px solid var(--gray-200);">E-Mail</th>
+        <th style="padding:8px 12px;text-align:left;font-size:0.7rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.04em;border-bottom:1.5px solid var(--gray-200);">Status</th>
+        <th style="padding:8px 12px;text-align:left;font-size:0.7rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.04em;border-bottom:1.5px solid var(--gray-200);">Angemeldet am</th>
+      </tr></thead>
+      <tbody>
+        ${regs.map(r => {
+          const p = pm[r.user_id];
+          const name  = p ? [p.vorname, p.nachname].filter(Boolean).join(' ') || '–' : '–';
+          const email = p?.email || '–';
+          const date  = r.angemeldet_am ? new Date(r.angemeldet_am).toLocaleDateString('de-DE') : '–';
+          return `<tr>
+            <td style="padding:10px 12px;border-top:1px solid var(--gray-100);font-weight:600;">${esc(name)}</td>
+            <td style="padding:10px 12px;border-top:1px solid var(--gray-100);color:var(--gray-500);">${esc(email)}</td>
+            <td style="padding:10px 12px;border-top:1px solid var(--gray-100);">${STATUS_MAP[r.status] || r.status}</td>
+            <td style="padding:10px 12px;border-top:1px solid var(--gray-100);color:var(--gray-400);">${date}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+function closeTeilnehmerModal() { document.getElementById('tnr-modal-bg').classList.remove('open'); }
 
 init();
 </script>
