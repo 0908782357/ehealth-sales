@@ -236,10 +236,17 @@
   const SUPABASE_URL  = 'https://focysklymhmcfwgxdtuk.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
 
-  // Hash VOR createClient() prüfen – der SDK löscht den Hash beim Initialisieren
-  const fromMagicLink = window.location.hash.includes('access_token');
+  // Hash/Code VOR createClient() prüfen – der SDK löscht den Hash beim Initialisieren
+  // Supabase neuere Projekte senden Einladungs-/Magic-Links als PKCE (?code=) statt als Hash (#access_token)
+  const _urlCode = new URLSearchParams(window.location.search).get('code');
+  const fromMagicLink = window.location.hash.includes('access_token') || !!_urlCode;
 
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { flowType: 'implicit' } });
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { flowType: 'pkce' } });
+
+  // PKCE-Code einlösen (Einladungslinks neuerer Supabase-Projekte) → löst SIGNED_IN aus
+  if (_urlCode) {
+    sb.auth.exchangeCodeForSession(_urlCode).catch(() => {});
+  }
 
   const PORTAL_URL = 'https://ehealth-sales.de/admin/index.html';
 
