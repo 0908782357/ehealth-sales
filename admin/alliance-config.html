@@ -398,6 +398,16 @@ function renderTierCard(t) {
           onkeydown="if(event.key==='Enter')addBullet('${t.slug}')">
         <button class="btn btn-secondary btn-sm" onclick="addBullet('${t.slug}')">+</button>
       </div>
+      <div style="margin-top:10px;">
+        <label style="font-size:0.72rem;font-weight:700;color:var(--gray-500);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:4px;">Jahresbeitrag</label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="preis-${t.slug}" value="${t.preis != null ? t.preis : ''}"
+            min="0" step="10" placeholder="leer = auf Anfrage"
+            style="flex:1;border:1.5px solid var(--gray-200);border-radius:9px;padding:7px 10px;font-size:0.9rem;font-family:inherit;outline:none;transition:border .15s;"
+            onfocus="this.style.borderColor='var(--navy)'" onblur="this.style.borderColor='var(--gray-200)';saveTier('${t.slug}')">
+          <span style="font-size:0.82rem;color:var(--gray-500);white-space:nowrap;">€ / Jahr</span>
+        </div>
+      </div>
       <div class="tier-save-row">
         <span class="tier-save-msg" id="save-msg-${t.slug}">Gespeichert ✓</span>
         <button class="btn btn-primary btn-sm" onclick="saveTier('${t.slug}')">Speichern</button>
@@ -445,8 +455,11 @@ function addBullet(slug) {
 async function saveTier(slug) {
   const t = getTier(slug);
   if (!t) return;
+  const preisEl = document.getElementById('preis-' + slug);
+  const preisVal = preisEl && preisEl.value !== '' ? (parseInt(preisEl.value) || null) : null;
+  t.preis = preisVal;
   const { error } = await sb.from('alliance_tiers')
-    .update({ features: t.features }).eq('slug', slug);
+    .update({ features: t.features, preis: preisVal }).eq('slug', slug);
   if (error) { showMsg('Fehler beim Speichern: ' + error.message, 'error'); return; }
   const msg = document.getElementById('save-msg-' + slug);
   if (msg) { msg.classList.add('show'); setTimeout(() => msg.classList.remove('show'), 2000); }
