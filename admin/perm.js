@@ -1,12 +1,15 @@
 // Alliance Portal — Seitenberechtigungen
-// Einbinden mit <script src="perm.js"></script> vor dem Seiten-Script.
-// Stellt bereit:
-//   getPagePerm(role, tier, permId)  → 'hidden' | 'read' | 'edit'
-//   permAtLeast(role, tier, permId, minLevel)  → boolean
-//   enforcePage(role, tier, permId)  → redirectet bei 'hidden', gibt Perm zurück
+// <script src="perm.js"> vor dem Seiten-Script einbinden.
+//
+// API:
+//   getPagePerm(role, tier, permId)          → 'hidden'|'read'|'edit'
+//   permAtLeast(role, tier, permId, minLvl)  → boolean
+//   enforcePage(role, tier, permId)          → redirect bei 'hidden', gibt Perm zurück
+//   applyNavPerms(role, tier)                → versteckt [data-perm]-Links ohne Zugriff
 (function () {
-  var KEY = 'alliance_role_permissions';
-  var LEVELS = { hidden: 0, read: 1, edit: 2 };
+  var KEY      = 'alliance_role_permissions';
+  var CTX_KEY  = '_perm_ctx';
+  var LEVELS   = { hidden: 0, read: 1, edit: 2 };
 
   // Muss mit PERM_DEFS in users.html synchron bleiben
   var DEFS = [
@@ -44,18 +47,45 @@
       else                          { fixedKey = 'sFixed';  defKey = 'sDef';  roleKey = 'standard'; }
     }
     if (def[fixedKey] !== undefined) return def[fixedKey];
-    var stored_val = stored[permId] && stored[permId][roleKey];
-    return stored_val !== undefined ? stored_val : (def[defKey] || 'hidden');
+    var v = stored[permId] && stored[permId][roleKey];
+    return v !== undefined ? v : (def[defKey] || 'hidden');
   };
 
   window.permAtLeast = function (role, tier, permId, minLevel) {
     return LEVELS[window.getPagePerm(role, tier, permId)] >= LEVELS[minLevel];
   };
 
-  // Leitet bei 'hidden' zu dashboard um, gibt sonst 'read' | 'edit' zurück
+  // Versteckt alle [data-perm]-Nav-Links, auf die der Nutzer keinen Zugriff hat
+  window.applyNavPerms = function (role, tier) {
+    document.querySelectorAll('[data-perm]').forEach(function (el) {
+      var p = el.getAttribute('data-perm');
+      if (window.getPagePerm(role, tier, p) === 'hidden') {
+        // Parent-Container mitausblenden wenn er dadurch leer wird
+        el.style.display = 'none';
+        var parent = el.parentElement;
+        if (parent && parent.classList.contains('nav-subgroup')) {
+          var visible = parent.querySelectorAll('a[data-perm]:not([style*="none"]), a.nav-link:not([data-perm]):not([style*="none"])');
+          if (visible.length === 0) parent.style.display = 'none';
+        }
+      }
+    });
+  };
+
+  // Leitet bei 'hidden' zu dashboard um; speichert Kontext für auto-apply
   window.enforcePage = function (role, tier, permId) {
     var perm = window.getPagePerm(role, tier, permId);
-    if (perm === 'hidden') { window.location.href = 'dashboard.html'; }
+    if (perm === 'hidden') { window.location.href = 'dashboard.html'; return perm; }
+    // Kontext cachen für andere Seiten (z. B. dashboard)
+    try { sessionStorage.setItem(CTX_KEY, JSON.stringify({ role: role, tier: tier || null })); } catch (e) {}
+    window.applyNavPerms(role, tier);
     return perm;
   };
+
+  // Auf Seiten ohne explizites enforcePage (z. B. dashboard): gespeicherten Kontext nutzen
+  document.addEventListener('DOMContentLoaded', function () {
+    try {
+      var ctx = JSON.parse(sessionStorage.getItem(CTX_KEY) || 'null');
+      if (ctx && ctx.role) window.applyNavPerms(ctx.role, ctx.tier);
+    } catch (e) {}
+  });
 })();
