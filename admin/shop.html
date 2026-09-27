@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alliance Portal – Shop</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="perm.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -557,6 +558,8 @@
   let bundleItemsByBundleId = {};
   let currentId = null;
   let userRole = 'partner';
+  let userTier = null;
+  let pagePerm = 'edit';
   let myPartnerId = null;
   let myFirma = '';
   let filterTopicVal = '';
@@ -570,9 +573,12 @@
     if (!session) { window.location.href = 'index.html'; return; }
     _setHeaderUser(session.user.id);
 
-    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+    const { data: roleRow } = await sb.from('user_roles').select('role, partner_tier').eq('user_id', session.user.id).maybeSingle();
     userRole = roleRow?.role || 'partner';
+    userTier = roleRow?.partner_tier || null;
+    pagePerm = enforcePage(userRole, userTier, 'shop');
 
+    if (pagePerm !== 'edit') { const bc = document.getElementById('btn-create'); if (bc) bc.style.display = 'none'; }
     if (userRole === 'admin') {
       document.getElementById('nav-group-admin').style.display = '';
     }

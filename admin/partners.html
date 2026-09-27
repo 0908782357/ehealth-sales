@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alliance Portal – Kundenverwaltung</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="perm.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -369,7 +370,9 @@
 <script>
   const SUPABASE_URL = 'https://focysklymhmcfwgxdtuk.supabase.co';
   const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
-  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let pagePerm = 'edit';
+let _userTier = null;
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   const FINDER_BASE = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')
     ? window.location.origin
@@ -383,7 +386,9 @@
     if (!session) { window.location.href = 'index.html'; return; }
     _setHeaderUser(session.user.id);
 
-    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+    const { data: roleRow } = await sb.from('user_roles').select('role, partner_tier').eq('user_id', session.user.id).maybeSingle();
+    _userTier = roleRow?.partner_tier || null;
+    pagePerm = enforcePage(roleRow?.role || 'partner', _userTier, 'produktfinder');
     if (!roleRow || roleRow.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
     document.getElementById('nav-group-admin').style.display = '';
     setupNavRole('admin').catch(console.warn);

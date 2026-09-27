@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alliance Portal – Supportverwaltung</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="perm.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -278,7 +279,8 @@
     if (!session) { window.location.href = 'index.html'; return; }
     currentSession = session;
     _setHeaderUser(session.user.id);
-    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+    const { data: roleRow } = await sb.from('user_roles').select('role, partner_tier').eq('user_id', session.user.id).maybeSingle();
+    if (enforcePage(roleRow?.role || 'partner', roleRow?.partner_tier || null, 'support') === 'hidden') return;
     if (roleRow?.role !== 'admin') { window.location.href = 'tickets.html'; return; }
     document.getElementById('nav-group-admin').style.display = '';
     setupNavRole('admin').catch(console.warn);

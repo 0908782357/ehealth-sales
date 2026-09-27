@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alliance Portal – TI-Finanzierungsrechner</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="perm.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -475,7 +476,9 @@ async function init() {
   if (!session) { location.href = 'login.html'; return; }
   _setHeaderUser(session.user.id);
 
-  const { data: ur } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+  const { data: ur } = await sb.from('user_roles').select('role, partner_tier').eq('user_id', session.user.id).maybeSingle();
+  const _tier = ur?.partner_tier || null;
+  if (enforcePage(ur?.role || 'partner', _tier, 'tirechner') === 'hidden') return;
   const role = ur?.role || 'kunde';
   const supportLinkR = document.getElementById('nav-link-support');
   if (supportLinkR) supportLinkR.href = role === 'admin' ? 'support.html' : 'tickets.html';

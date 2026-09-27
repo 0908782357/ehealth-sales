@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alliance Portal – Community</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="perm.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -421,7 +422,7 @@
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { flowType: 'implicit' } });
 
-  let currentUser = null, userRole = 'partner', currentProfile = null;
+  let currentUser = null, userRole = 'partner', userTier = null, pagePerm = 'edit', currentProfile = null;
   let allArticles = [], allChannels = [], allBoardPosts = [], boardFilter = '';
   let currentArticleId = null, currentChannelId = null, currentThreadId = null;
 
@@ -431,8 +432,10 @@
     if (!session) { window.location.href = 'index.html'; return; }
     currentUser = session.user;
     _setHeaderUser(currentUser.id);
-    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', currentUser.id).maybeSingle();
+    const { data: roleRow } = await sb.from('user_roles').select('role, partner_tier').eq('user_id', currentUser.id).maybeSingle();
     userRole = roleRow?.role || 'partner';
+    userTier = roleRow?.partner_tier || null;
+    pagePerm = enforcePage(userRole, userTier, 'community');
     const { data: profile } = await sb.from('user_profiles').select('vorname,nachname,firma').eq('user_id', currentUser.id).maybeSingle();
     currentProfile = profile;
     if (userRole === 'admin') {

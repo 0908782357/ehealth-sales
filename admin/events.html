@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alliance Portal – Events</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="perm.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -383,6 +384,8 @@ const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 function esc(s) { return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 let userRole = 'partner';
+let userTier = null;
+let pagePerm = 'edit';
 let currentUserId = null;
 let currentPartnerId = null;
 let allEvents = [];
@@ -401,10 +404,12 @@ async function init() {
   _setHeaderUser(session.user.id);
 
   const [roleRes, partnerRes] = await Promise.all([
-    sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle(),
+    sb.from('user_roles').select('role, partner_tier').eq('user_id', session.user.id).maybeSingle(),
     sb.from('partners').select('id').eq('user_id', session.user.id).maybeSingle()
   ]);
   userRole = roleRes.data?.role || 'partner';
+  userTier = roleRes.data?.partner_tier || null;
+  pagePerm = enforcePage(userRole, userTier, 'events');
   currentPartnerId = partnerRes.data?.id || null;
   const supportLink = document.getElementById('nav-link-support');
   if (supportLink) supportLink.href = userRole === 'admin' ? 'support.html' : 'tickets.html';
@@ -421,8 +426,8 @@ async function init() {
     document.getElementById('th-partner').style.display = '';
     document.getElementById('nav-group-admin').style.display = '';
   }
-  // Mitglieder ohne Partner-Zugang: "Neues Event" ausblenden
-  if (userRole !== 'admin' && !currentPartnerId) {
+  // Nur Editierberechtigung darf Events anlegen
+  if (pagePerm !== 'edit') {
     document.getElementById('btn-new-event').style.display = 'none';
   }
 
@@ -516,9 +521,9 @@ function renderEventList() {
                style="width:15px;height:15px;accent-color:var(--navy);cursor:pointer;">
       </td>
       <td>
-        <button class="btn btn-sm btn-secondary" onclick="openEventEdit('${e.id}')">Bearbeiten</button>
+        ${pagePerm === 'edit' ? `<button class="btn btn-sm btn-secondary" onclick="openEventEdit('${e.id}')">Bearbeiten</button>
         <button class="btn btn-sm" style="color:#ef4444;background:none;border:1.5px solid #fca5a5;"
-                onclick="deleteEvent('${e.id}')">Löschen</button>
+                onclick="deleteEvent('${e.id}')">Löschen</button>` : ''}
       </td>
     </tr>`;
   }).join('');

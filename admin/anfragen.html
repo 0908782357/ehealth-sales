@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alliance Portal – Anfragecenter</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="perm.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
@@ -505,6 +506,8 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, { auth: { flowType: 'implicit' } });
 
 let userRole = 'partner';
+let userTier = null;
+let pagePerm = 'edit';
 let myProfileId = null;
 let allAnfragen = [];
 let partners = [];
@@ -550,8 +553,10 @@ async function init() {
   if (!session) { window.location.href = 'index.html'; return; }
   _setHeaderUser(session.user.id);
 
-  const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+  const { data: roleRow } = await sb.from('user_roles').select('role, partner_tier').eq('user_id', session.user.id).maybeSingle();
   userRole = roleRow?.role || 'partner';
+  userTier = roleRow?.partner_tier || null;
+  pagePerm = enforcePage(userRole, userTier, 'anfragen');
   const supportLink = document.getElementById('nav-link-support');
   if (supportLink) supportLink.href = userRole === 'admin' ? 'support.html' : 'tickets.html';
 
