@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>eHS Portal – Mein Konto</title>
+<title>Alliance Portal – Mein Konto</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
 <style>
@@ -269,8 +269,8 @@
 
 <div class="topbar">
   <div class="topbar-brand">
-    <img src="../ehs-logo.jpg" alt="EHS" onerror="this.style.display='none'">
-    eHS Kunden Portal
+    <img src="../alliance-logo.png" alt="Alliance" onerror="this.style.display='none'">
+    Alliance Portal
     <span>/ Mein Konto</span>
   </div>
   <div class="topbar-right">
@@ -884,7 +884,7 @@
   async function startEnroll() {
     document.getElementById('mfa-action-area').style.display = 'none';
     document.getElementById('mfa-msg').className = 'msg';
-    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', issuer: 'eHS Portal' });
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', issuer: 'Alliance Portal' });
     if (error) { showMfaMsg('Fehler: ' + error.message, 'error'); document.getElementById('mfa-action-area').style.display = 'flex'; return; }
     mfaEnrollId = data.id;
     document.getElementById('mfa-qr-img').src = data.totp.qr_code;
