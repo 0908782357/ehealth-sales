@@ -51,16 +51,35 @@ Deno.serve(async (req) => {
   if (reg.status !== 'ausstehend') return json({ error: 'Registrierung hat nicht den Status "ausstehend"' }, 409);
   if (reg.typ !== 'partner') return json({ error: 'Registrierung ist keine Partneranfrage' }, 400);
 
-  // Auth-Account anlegen
+  // Auth-Account anlegen – oder bestehenden wiederverwenden wenn nur das Profil gelöscht wurde
+  let userId: string;
   const { data: newUser, error: createErr } = await adminClient.auth.admin.createUser({
     email: reg.email,
     email_confirm: true,
   });
-  if (createErr) return json({ error: 'Auth-User-Anlage fehlgeschlagen: ' + createErr.message }, 400);
-  const userId = newUser.user.id;
+
+  if (createErr) {
+    if (!createErr.message.toLowerCase().includes('already')) {
+      return json({ error: 'Auth-User-Anlage fehlgeschlagen: ' + createErr.message }, 400);
+    }
+    // Auth-User existiert noch – prüfen ob bereits ein aktives Profil vorhanden ist
+    const { data: existingProfile } = await adminClient
+      .from('user_profiles').select('user_id').eq('email', reg.email).maybeSingle();
+    if (existingProfile) {
+      return json({ error: 'Es existiert bereits ein aktiver Account mit dieser E-Mail-Adresse.' }, 409);
+    }
+    // Kein Profil → Auth-User-ID ermitteln und wiederverwenden
+    const { data: userList } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+    const existing = userList?.users?.find((u: { email?: string; id: string }) => u.email === reg.email);
+    if (!existing) return json({ error: 'Interner Fehler: Auth-User nicht auffindbar.' }, 500);
+    userId = existing.id;
+  } else {
+    userId = newUser.user.id;
+  }
 
   const rollback = async (reason: string) => {
-    await adminClient.auth.admin.deleteUser(userId);
+    // Rollback nur wenn wir den User selbst angelegt haben (kein pre-existing user)
+    if (!createErr) await adminClient.auth.admin.deleteUser(userId);
     return json({ error: reason }, 400);
   };
 
