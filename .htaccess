@@ -15,3 +15,23 @@
 <FilesMatch "\.php$">
     SetHandler application/x-httpd-php
 </FilesMatch>
+
+# Cache-Steuerung: HTML-Dateien immer beim Server prüfen (kein veralteter Stand)
+<IfModule mod_headers.c>
+    <FilesMatch "\.(html|htm)$">
+        Header set Cache-Control "no-cache, must-revalidate"
+        Header set Pragma "no-cache"
+    </FilesMatch>
+    # Bilder/Logos können lange gecacht bleiben
+    <FilesMatch "\.(jpg|jpeg|png|gif|svg|ico|woff|woff2|ttf)$">
+        Header set Cache-Control "max-age=2592000, public"
+    </FilesMatch>
+</IfModule>
+
+# Fallback ohne mod_headers (mod_expires)
+<IfModule mod_expires.c>
+    ExpiresActive On
+    <FilesMatch "\.(html|htm)$">
+        ExpiresDefault "access plus 0 seconds"
+    </FilesMatch>
+</IfModule>
