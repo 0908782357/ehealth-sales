@@ -107,13 +107,7 @@
     transition:all 0.15s; background:white; color:var(--gray-500); white-space:nowrap;
   }
   .thema-tab:hover { border-color:var(--gray-500); color:var(--gray-900); }
-  .thema-tab.active { color:white !important; border-color:transparent !important; }
-  .thema-tab[data-thema="security"].active  { background:#E53E3E; }
-  .thema-tab[data-thema="ti"].active        { background:#3C4A7C; }
-  .thema-tab[data-thema="it"].active        { background:#4299E1; }
-  .thema-tab[data-thema="modernwork"].active { background:#6DC52D; }
-  .thema-tab[data-thema="prozess"].active   { background:#ED8936; }
-  .thema-tab[data-thema="telemedizin"].active { background:#38B2AC; }
+  .thema-tab.active { background:var(--tab-color, var(--navy)); color:white !important; border-color:transparent !important; }
   .thema-tab.has-data::after { content:'•'; margin-left:4px; }
   /* Dot-Badges in der Tabelle */
   .topic-dot { display:inline-block; width:9px; height:9px; border-radius:50%; vertical-align:middle; margin-right:2px; }
@@ -328,12 +322,7 @@
 
       <div class="form-full">
         <div class="thema-tabs" id="thema-tabs">
-          <button type="button" class="thema-tab active" data-thema="security"    onclick="switchThema('security')">Cybersecurity</button>
-          <button type="button" class="thema-tab"        data-thema="ti"          onclick="switchThema('ti')">Telematik Infrastruktur</button>
-          <button type="button" class="thema-tab"        data-thema="it"          onclick="switchThema('it')">IT-Infrastruktur</button>
-          <button type="button" class="thema-tab"        data-thema="modernwork"  onclick="switchThema('modernwork')">Modern Work</button>
-          <button type="button" class="thema-tab"        data-thema="prozess"     onclick="switchThema('prozess')">Prozess Digitalisierung</button>
-          <button type="button" class="thema-tab"        data-thema="telemedizin" onclick="switchThema('telemedizin')">Telemedizin</button>
+          <!-- wird dynamisch aus themengebiete-Tabelle gerendert -->
         </div>
       </div>
 
@@ -426,7 +415,8 @@ const SUPA_URL = 'https://focysklymhmcfwgxdtuk.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-const THEMEN = [
+// Wird in init() aus themengebiete-Tabelle geladen; statischer Fallback falls DB nicht verfügbar
+let THEMEN = [
   { id: 'security',    label: 'Cybersecurity',           color: '#E53E3E' },
   { id: 'ti',         label: 'Telematik Infrastruktur', color: '#3C4A7C' },
   { id: 'it',         label: 'IT-Infrastruktur',        color: '#4299E1' },
@@ -434,6 +424,18 @@ const THEMEN = [
   { id: 'prozess',    label: 'Prozess Digitalisierung', color: '#ED8936' },
   { id: 'telemedizin',label: 'Telemedizin',              color: '#38B2AC' },
 ];
+
+function renderThemaTabs() {
+  const container = document.getElementById('thema-tabs');
+  if (!container) return;
+  const defaultId = THEMEN[0]?.id || '';
+  container.innerHTML = THEMEN.map((t, i) =>
+    `<button type="button" class="thema-tab${i === 0 ? ' active' : ''}"
+       data-thema="${escAttr(t.id)}"
+       style="--tab-color:${escAttr(t.color)}"
+       onclick="switchThema('${escAttr(t.id)}')">${escHtml(t.label)}</button>`
+  ).join('');
+}
 
 let userRole = null;
 let editId = null;
@@ -458,6 +460,20 @@ async function init() {
   document.getElementById('nav-group-admin').style.display = '';
   const supportLink = document.getElementById('nav-link-support');
   if (supportLink) supportLink.href = 'support.html';
+
+  // Themengebiete aus DB laden (Slug → label, farbe)
+  try {
+    const { data: tData } = await sb.from('themengebiete')
+      .select('slug, name, farbe')
+      .eq('aktiv', true)
+      .order('sortierung')
+      .order('name');
+    if (tData?.length) {
+      THEMEN = tData.map(t => ({ id: t.slug, label: t.name, color: t.farbe || '#94a3b8' }));
+    }
+  } catch(_) { /* Fallback auf statische THEMEN */ }
+  renderThemaTabs();
+  activeThema = THEMEN[0]?.id || 'security';
 
   await loadBerufsgruppen();
 }
@@ -579,7 +595,7 @@ async function loadIntoModal(id) {
 
   // Activate the first tab that has data, or default to 'security'
   const firstFilled = THEMEN.find(t => topicData[t.id] && (topicData[t.id].finanzierungsart || topicData[t.id].rechtsgrundlage));
-  switchThema(firstFilled ? firstFilled.id : 'security');
+  switchThema(firstFilled ? firstFilled.id : (THEMEN[0]?.id || 'security'));
   refreshTabDots();
 }
 
@@ -594,7 +610,7 @@ function clearModal() {
   document.getElementById('f-nr').value    = '';
   document.getElementById('f-gruppe').value = '';
   topicData = {};
-  activeThema = 'security';
+  activeThema = THEMEN[0]?.id || 'security';
   ['f-art','f-rechtsgrundlage','f-gesetzestext','f-geber','f-gueltig','f-betrag','f-bedingungen','f-auszahlung'].forEach(id => {
     document.getElementById(id).value = '';
   });
@@ -606,7 +622,7 @@ function clearModal() {
   document.getElementById('staffel-editor').style.display = '';
   document.getElementById('formel-info').style.display = 'none';
   document.querySelectorAll('.thema-tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.thema === 'security');
+    t.classList.toggle('active', t.dataset.thema === activeThema);
     t.classList.remove('has-data');
   });
   const msg = document.getElementById('modal-msg');
