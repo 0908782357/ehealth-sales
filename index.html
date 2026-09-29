@@ -3366,6 +3366,25 @@
     }
   };
 
+  // Mapping: TOPIC_HINWEISE key → DB thema key (only where they differ)
+  const THEMA_KEY_MAP = { it_infrastruktur: 'it', modern_work: 'modernwork', prozess_digital: 'prozess' };
+  // BG-specific gesetzestext loaded after BG selection (keyed by DB thema)
+  let currentBGTopics = {};
+
+  async function loadBGTopics(bgCol) {
+    currentBGTopics = {};
+    try {
+      const { data, error } = await _sb
+        .from('bg_topic_requirements')
+        .select('thema,gesetzestext,rechtsgrundlage')
+        .eq('berufsgruppe_id', bgCol)
+        .not('gesetzestext', 'is', null);
+      if (!error && data) {
+        data.forEach(row => { if (row.gesetzestext) currentBGTopics[row.thema] = row; });
+      }
+    } catch(e) { console.warn('loadBGTopics:', e); }
+  }
+
   function updateWiz1bGesetze() {
     const el = document.getElementById('wiz1b-gesetze');
     const hints = wizFilterPraeferenz
@@ -3375,8 +3394,10 @@
     el.innerHTML = '<div class="wiz1b-gesetze-title">Gesetzliche Hinweise</div>'
       + hints.map((h, i) => {
           const key = wizFilterPraeferenz.filter(k => TOPIC_HINWEISE[k])[i];
+          const dbKey = THEMA_KEY_MAP[key] || key;
+          const hasBGText = !!currentBGTopics[dbKey]?.gesetzestext;
           return `<div class="wiz1b-hint-row" onclick="openGesetzPopup('${key}')">
-            <span class="wiz1b-hint-text">${h.einzeiler}</span>
+            <span class="wiz1b-hint-text">${h.einzeiler}${hasBGText ? ' <span style="font-size:0.7em;background:#dbeafe;color:#1d4ed8;border-radius:4px;padding:1px 5px;margin-left:4px;">BG-spezifisch</span>' : ''}</span>
             <span class="wiz1b-hint-more">Mehr erfahren →</span>
           </div>`;
         }).join('');
@@ -3387,7 +3408,16 @@
     const h = TOPIC_HINWEISE[key];
     if (!h) return;
     document.getElementById('gesetz-popup-titel').textContent = h.titel;
-    document.getElementById('gesetz-popup-body').innerHTML = h.items.map(i =>
+    const dbKey = THEMA_KEY_MAP[key] || key;
+    const bgData = currentBGTopics[dbKey];
+    const items = [...h.items];
+    if (bgData?.gesetzestext) {
+      const bgTitel = bgData.rechtsgrundlage
+        ? `Gesetzlicher Rahmen Ihrer Berufsgruppe (${bgData.rechtsgrundlage})`
+        : 'Gesetzlicher Rahmen Ihrer Berufsgruppe';
+      items.push({ icon: '📋', titel: bgTitel, text: bgData.gesetzestext });
+    }
+    document.getElementById('gesetz-popup-body').innerHTML = items.map(i =>
       `<div class="gesetze-item"><span class="gesetze-icon">${i.icon}</span>
        <div><strong>${i.titel}</strong><span>${i.text}</span></div></div>`
     ).join('');
@@ -3710,7 +3740,7 @@
     summary.style.display = '';
   }
 
-  function selectBG(col, name) {
+  async function selectBG(col, name) {
     document.querySelectorAll('.bg-btn').forEach(b => b.classList.remove('selected'));
     if (event && event.target) event.target.classList.add('selected');
     wizBGCol = col;
@@ -3721,6 +3751,8 @@
     wizShowGesetze = false;
     document.getElementById('wiz-step1').classList.remove('active');
 
+    await loadBGTopics(col);
+
     const bgHatRechner = (col === 23 || !!BG_HAS_RECHNER[col]) && wizStep0TopicId === 'ti';
     if (!bgHatRechner) {
       // Kein Rechner oder anderes Thema → direkt zum Ergebnis
@@ -3730,6 +3762,7 @@
     // TI-Rechner vorhanden → Step 1b zeigen
     document.getElementById('wiz-step1b').classList.add('active');
     try { updateWizRechnerPanel(); } catch(e) { console.warn('updateWizRechnerPanel:', e); }
+    updateWiz1bGesetze();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
