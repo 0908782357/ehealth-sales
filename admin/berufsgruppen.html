@@ -352,6 +352,10 @@
         <label>Rechtsgrundlage</label>
         <input type="text" id="f-rechtsgrundlage" placeholder="z.B. § 378 SGB V">
       </div>
+      <div class="form-group form-full">
+        <label>Gesetzestext</label>
+        <textarea id="f-gesetzestext" style="min-height:120px;" placeholder="Volltext der relevanten gesetzlichen Regelung…"></textarea>
+      </div>
       <div class="form-group">
         <label>Fördergeber / Vertragspartner</label>
         <input type="text" id="f-geber" placeholder="z.B. KBV, GKV-SV">
@@ -481,7 +485,7 @@ async function loadBerufsgruppen() {
     const topicMap = {};
     try {
       const topicRes = await sb.from('bg_topic_requirements')
-        .select('berufsgruppe_id,thema,finanzierungsart,rechtsgrundlage,has_rechner,rechner_typ,rechner_config');
+        .select('berufsgruppe_id,thema,finanzierungsart,rechtsgrundlage,gesetzestext,has_rechner,rechner_typ,rechner_config');
       if (!topicRes.error && topicRes.data) {
         topicRes.data.forEach(r => {
           if (!topicMap[r.berufsgruppe_id]) topicMap[r.berufsgruppe_id] = [];
@@ -591,7 +595,7 @@ function clearModal() {
   document.getElementById('f-gruppe').value = '';
   topicData = {};
   activeThema = 'security';
-  ['f-art','f-rechtsgrundlage','f-geber','f-gueltig','f-betrag','f-bedingungen','f-auszahlung'].forEach(id => {
+  ['f-art','f-rechtsgrundlage','f-gesetzestext','f-geber','f-gueltig','f-betrag','f-bedingungen','f-auszahlung'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('f-has-rechner').checked = false;
@@ -655,6 +659,7 @@ function flushThemaToMemory() {
   const d = {
     finanzierungsart: document.getElementById('f-art').value.trim(),
     rechtsgrundlage:  document.getElementById('f-rechtsgrundlage').value.trim(),
+    gesetzestext:     document.getElementById('f-gesetzestext').value.trim(),
     foerdergeber:     document.getElementById('f-geber').value.trim(),
     gueltig_seit:     document.getElementById('f-gueltig').value.trim(),
     foerderbetrag:    document.getElementById('f-betrag').value.trim(),
@@ -673,6 +678,7 @@ function loadThemaIntoForm(themaId) {
   const d = topicData[themaId] || {};
   document.getElementById('f-art').value             = d.finanzierungsart || '';
   document.getElementById('f-rechtsgrundlage').value = d.rechtsgrundlage  || '';
+  document.getElementById('f-gesetzestext').value    = d.gesetzestext     || '';
   document.getElementById('f-geber').value           = d.foerdergeber     || '';
   document.getElementById('f-gueltig').value         = d.gueltig_seit     || '';
   document.getElementById('f-betrag').value          = d.foerderbetrag    || '';
@@ -768,6 +774,7 @@ async function saveBerufsgruppe() {
         thema:           t.id,
         finanzierungsart: topicData[t.id].finanzierungsart || null,
         rechtsgrundlage:  topicData[t.id].rechtsgrundlage  || null,
+        gesetzestext:     topicData[t.id].gesetzestext     || null,
         foerdergeber:     topicData[t.id].foerdergeber     || null,
         gueltig_seit:     topicData[t.id].gueltig_seit     || null,
         foerderbetrag:    topicData[t.id].foerderbetrag    || null,
