@@ -516,7 +516,7 @@ async function loadBerufsgruppen() {
       const activatedThemen = tiFromOld
         ? [{ id: 'ti' }]
         : topics
-            .filter(r => r.finanzierungsart || r.rechtsgrundlage || r.gesetzestext || r.foerderbetrag)
+            .filter(r => r.finanzierungsart)
             .map(r => THEMEN.find(t => t.id === r.thema) || { id: r.thema, color: '#94a3b8', label: r.thema });
       const hasRechner = bg.has_rechner || topics.some(t => t.has_rechner);
 
