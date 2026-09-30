@@ -501,7 +501,7 @@ async function loadBerufsgruppen() {
     const topicMap = {};
     try {
       const topicRes = await sb.from('bg_topic_requirements')
-        .select('berufsgruppe_id,thema,finanzierungsart,rechtsgrundlage,gesetzestext,has_rechner,rechner_typ,rechner_config');
+        .select('berufsgruppe_id,thema,finanzierungsart,rechtsgrundlage,gesetzestext,foerderbetrag,has_rechner,rechner_typ,rechner_config');
       if (!topicRes.error && topicRes.data) {
         topicRes.data.forEach(r => {
           if (!topicMap[r.berufsgruppe_id]) topicMap[r.berufsgruppe_id] = [];
@@ -515,7 +515,9 @@ async function loadBerufsgruppen() {
       const tiFromOld = !topics.length && bg.ti_finanzierungsart;
       const activatedThemen = tiFromOld
         ? [{ id: 'ti' }]
-        : THEMEN.filter(t => topics.find(r => r.thema === t.id && (r.finanzierungsart || r.rechtsgrundlage || r.gesetzestext)));
+        : topics
+            .filter(r => r.finanzierungsart || r.rechtsgrundlage || r.gesetzestext || r.foerderbetrag)
+            .map(r => THEMEN.find(t => t.id === r.thema) || { id: r.thema, color: '#94a3b8', label: r.thema });
       const hasRechner = bg.has_rechner || topics.some(t => t.has_rechner);
 
       const dots = activatedThemen.length
@@ -594,7 +596,7 @@ async function loadIntoModal(id) {
   }
 
   // Activate the first tab that has data, or default to 'security'
-  const firstFilled = THEMEN.find(t => topicData[t.id] && (topicData[t.id].finanzierungsart || topicData[t.id].rechtsgrundlage));
+  const firstFilled = THEMEN.find(t => topicData[t.id] && (topicData[t.id].finanzierungsart || topicData[t.id].rechtsgrundlage || topicData[t.id].gesetzestext || topicData[t.id].foerderbetrag));
   switchThema(firstFilled ? firstFilled.id : (THEMEN[0]?.id || 'security'));
   refreshTabDots();
 }
@@ -783,7 +785,7 @@ async function saveBerufsgruppe() {
     const upserts = THEMEN
       .filter(t => {
         const d = topicData[t.id];
-        return d && (d.finanzierungsart || d.rechtsgrundlage || d.foerderbetrag || d.bedingungen || d.auszahlung || d.has_rechner);
+        return d && (d.finanzierungsart || d.rechtsgrundlage || d.gesetzestext || d.foerderbetrag || d.bedingungen || d.auszahlung || d.has_rechner);
       })
       .map(t => ({
         berufsgruppe_id: bgId,
