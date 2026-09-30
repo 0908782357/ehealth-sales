@@ -730,6 +730,12 @@
     #reha-rechner-popup .rr-sub { color:#6b7280; font-size:0.78rem; margin:0 0 20px; }
     #wiz-step1b .wizard-back-btn { text-align: left; }
     #wiz-step1b .section-header { text-align: center; }
+    #wiz1b-gesetze { margin:24px auto 0; max-width:620px; text-align:left; }
+    .wiz1b-gesetze-title { font-weight:600; color:var(--navy); font-size:0.88rem; text-transform:uppercase; letter-spacing:.04em; margin-bottom:10px; }
+    .wiz1b-hint-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:10px 14px; border:1px solid #e2e8f0; border-radius:8px; margin-bottom:7px; cursor:pointer; background:#fff; transition:background .15s; }
+    .wiz1b-hint-row:hover { background:#f0f4ff; }
+    .wiz1b-hint-text { font-size:0.88rem; color:#374151; flex:1; }
+    .wiz1b-hint-more { font-size:0.8rem; color:var(--navy); white-space:nowrap; font-weight:500; }
     .filter-block { margin-bottom: 40px; }
     /* Reha-Finanzierungsrechner */
     .reha-rechner-card { background:#f0fdf4; border:1.5px solid #bbf7d0; border-radius:14px; padding:24px 28px; margin:0 auto 36px; text-align:left; max-width:640px; }
@@ -2170,6 +2176,8 @@
 
         </div>
 
+        <div id="wiz1b-gesetze" style="display:none;"></div>
+
         <div style="margin-top:40px;">
           <button class="btn btn-primary" onclick="applyFilters()">Ergebnis anzeigen →</button>
         </div>
@@ -3371,14 +3379,17 @@
   // BG-specific gesetzestext loaded after BG selection (keyed by DB thema)
   let currentBGTopics = {};
 
-  async function loadBGTopics(bgCol) {
+  async function loadBGTopics(bgNr) {
     currentBGTopics = {};
     try {
+      // bg_topic_requirements uses UUID FK; look up by nr first
+      const { data: bgRow } = await _sb
+        .from('berufsgruppen').select('id').eq('nr', bgNr).maybeSingle();
+      if (!bgRow?.id) return;
       const { data, error } = await _sb
         .from('bg_topic_requirements')
         .select('thema,gesetzestext,rechtsgrundlage')
-        .eq('berufsgruppe_id', bgCol)
-        .not('gesetzestext', 'is', null);
+        .eq('berufsgruppe_id', bgRow.id);
       if (!error && data) {
         data.forEach(row => { if (row.gesetzestext) currentBGTopics[row.thema] = row; });
       }
@@ -3387,6 +3398,7 @@
 
   function updateWiz1bGesetze() {
     const el = document.getElementById('wiz1b-gesetze');
+    if (!el) return;
     const hints = wizFilterPraeferenz
       .filter(k => TOPIC_HINWEISE[k])
       .map(k => TOPIC_HINWEISE[k]);
