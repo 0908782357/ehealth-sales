@@ -515,14 +515,14 @@ async function loadBerufsgruppen() {
       const tiFromOld = !topics.length && bg.ti_finanzierungsart;
       const activatedThemen = tiFromOld
         ? [{ id: 'ti' }]
-        : THEMEN.filter(t => topics.find(r => r.thema === t.id && (r.finanzierungsart || r.rechtsgrundlage)));
+        : THEMEN.filter(t => topics.find(r => r.thema === t.id && (r.finanzierungsart || r.rechtsgrundlage || r.gesetzestext)));
       const hasRechner = bg.has_rechner || topics.some(t => t.has_rechner);
 
       const dots = activatedThemen.length
         ? activatedThemen.map(t => {
             const def = THEMEN.find(d => d.id === t.id) || { color: '#94a3b8', label: t.id };
             return `<span class="topic-dot" style="background:${def.color}" title="${def.label}"></span>`;
-          }).join('') + `&nbsp;<span style="font-size:0.75rem;color:var(--gray-500);">${activatedThemen.length} Thema${activatedThemen.length !== 1 ? 'en' : ''}</span>`
+          }).join('') + `&nbsp;<span style="font-size:0.75rem;color:var(--gray-500);">${activatedThemen.length} ${activatedThemen.length !== 1 ? 'Themen' : 'Thema'}</span>`
         : '<span class="ti-empty">–</span>';
 
       return `<tr>
@@ -728,7 +728,7 @@ function switchThema(themaId) {
 function refreshTabDots() {
   document.querySelectorAll('.thema-tab').forEach(btn => {
     const t = topicData[btn.dataset.thema];
-    btn.classList.toggle('has-data', !!(t && (t.finanzierungsart || t.rechtsgrundlage || t.foerderbetrag)));
+    btn.classList.toggle('has-data', !!(t && (t.finanzierungsart || t.rechtsgrundlage || t.foerderbetrag || t.gesetzestext)));
   });
 }
 
