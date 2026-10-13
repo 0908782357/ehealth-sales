@@ -62,22 +62,12 @@ Deno.serve(async (req) => {
   const { id: userId } = await userRes.json();
   if (!userId) return json({ error: 'Unauthorized' }, 401);
 
-  // Subscription aus DB lesen
-  const subRes = await fetch(
-    `${SUPABASE_URL}/rest/v1/ti_alert_subscriptions?user_id=eq.${userId}&select=*`,
-    { headers: { Authorization: `Bearer ${SERVICE_KEY}`, apikey: SERVICE_KEY } },
-  );
-  const subs = await subRes.json();
-  const sub = Array.isArray(subs) ? subs[0] : null;
-
-  if (!sub?.active) return json({ ok: false, reason: 'no_active_subscription' });
-
   // Payload lesen
   const { type = 'disruption', email: testEmail, services = [], timestamp = '' } = await req.json().catch(() => ({}));
 
-  // Test-Mail: direkt senden, kein DB-Lookup, kein Rate-Limit
+  // Test-Mail: kein Subscription-Check, kein Rate-Limit – direkt an angegebene Adresse
   if (type === 'test') {
-    const to = testEmail || sub?.email;
+    const to = testEmail;
     if (!to) return json({ error: 'No email address' }, 400);
     const testHtml = emailWrapper(
       '#3C4A7C',
@@ -96,6 +86,16 @@ Deno.serve(async (req) => {
     const rb = await r.text();
     return new Response(rb, { status: r.status, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
+
+  // Subscription aus DB lesen (nur für disruption/recovery nötig)
+  const subRes = await fetch(
+    `${SUPABASE_URL}/rest/v1/ti_alert_subscriptions?user_id=eq.${userId}&select=*`,
+    { headers: { Authorization: `Bearer ${SERVICE_KEY}`, apikey: SERVICE_KEY } },
+  );
+  const subs = await subRes.json();
+  const sub = Array.isArray(subs) ? subs[0] : null;
+
+  if (!sub?.active) return json({ ok: false, reason: 'no_active_subscription' });
 
   // Rate-Limiting als Fallback (z.B. Seiten-Reload während aktiver Störung)
   // Entwarnung (recovery) ist immer erlaubt
