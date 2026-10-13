@@ -13,18 +13,33 @@ function json(body: unknown, status = 200) {
   });
 }
 
-async function infinityGet(path: string, token: string, cookie = '') {
+async function infinityGet(path: string, token: string) {
   const res = await fetch(`${INFINITY_BASE}${path}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...(cookie ? { Cookie: cookie } : {}),
-    },
+    headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     throw new Error(`${res.status}: ${body.slice(0, 200)}`);
   }
   return res.json();
+}
+
+async function refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | null> {
+  const params = new URLSearchParams();
+  params.set('client_id', 'portal');
+  params.set('grant_type', 'refresh_token');
+  params.set('refresh_token', refreshToken);
+
+  const res = await fetch(`${INFINITY_BASE}/oauth2/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString(),
+  });
+
+  if (!res.ok) return null;
+  const data = await res.json();
+  if (!data.access_token) return null;
+  return { accessToken: data.access_token, refreshToken: data.refresh_token ?? refreshToken };
 }
 
 Deno.serve(async (req) => {
@@ -34,7 +49,9 @@ Deno.serve(async (req) => {
   let body: Record<string, string>;
   try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
 
-  const { action, username, password, totp, infinityToken, partialToken } = body;
+  const { action, username, password, totp, infinityToken, infinityRefreshToken } = body;
+  const partialToken       = body.partialToken       ?? '';
+  const partialRefreshToken = body.partialRefreshToken ?? '';
 
   // ── LOGIN: step 1 (username + password) ──────────────────────────────────
   if (action === 'login') {
@@ -46,14 +63,13 @@ Deno.serve(async (req) => {
     });
     const data = await res.json();
     if (!res.ok) return json({ error: data.message ?? 'Login failed', details: data }, res.status);
-    const cookies = res.headers.get('set-cookie') ?? '';
     const needsTotp = data.isOnlyFirstFactorToken === true || !data.accessToken;
     return json({
       needsTotp,
-      partialToken: data.accessToken ?? data.token ?? null,
-      partialCookie: cookies,
-      fullToken: needsTotp ? null : (data.accessToken ?? data.token),
-      fullCookie: needsTotp ? null : cookies,
+      partialToken:        data.accessToken ?? data.token ?? null,
+      partialRefreshToken: data.refreshToken ?? null,
+      fullToken:           needsTotp ? null : (data.accessToken ?? data.token),
+      fullRefreshToken:    needsTotp ? null : data.refreshToken,
       _debug: { isOnlyFirstFactorToken: data.isOnlyFirstFactorToken, keys: Object.keys(data) },
     });
   }
@@ -61,57 +77,113 @@ Deno.serve(async (req) => {
   // ── LOGIN: step 2 (confirm with TOTP) ─────────────────────────────────────
   if (action === 'confirm') {
     if (!totp || !partialToken) return json({ error: 'totp and partialToken required' }, 400);
-    const incomingCookie = (body as Record<string, string>).sessionCookie ?? '';
     const res = await fetch(`${INFINITY_BASE}/login/bestaetigen`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${partialToken}`,
-        ...(incomingCookie ? { Cookie: incomingCookie } : {}),
       },
-      body: JSON.stringify({ totp }),
+      body: JSON.stringify({
+        totp,
+        ...(partialRefreshToken ? { refreshToken: partialRefreshToken } : {}),
+      }),
     });
     const data = await res.json();
     if (!res.ok) return json({ error: data.message ?? 'TOTP confirmation failed', details: data }, res.status);
-    const cookies = res.headers.get('set-cookie') ?? incomingCookie;
-    return json({ token: data.accessToken ?? data.token ?? null, sessionCookie: cookies });
+    return json({
+      token:        data.accessToken ?? data.token ?? null,
+      refreshToken: data.refreshToken ?? null,
+    });
   }
 
   // ── REALM DATA ────────────────────────────────────────────────────────────
   if (action === 'realm') {
     if (!infinityToken) return json({ error: 'infinityToken required' }, 400);
-    const sessionCookie = (body as Record<string, string>).sessionCookie ?? '';
-    try {
-      // Date range: last 30 days → today
+
+    let token        = infinityToken;
+    let newRefreshToken: string | null = null;
+
+    // Try to get data; if 401, refresh the access token once
+    const tryRealm = async (t: string) => {
       const to   = new Date().toISOString().slice(0, 10);
       const from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
       const results = await Promise.allSettled([
-        infinityGet('/benutzer-profil', infinityToken, sessionCookie),
-        infinityGet('/leistungserbringer', infinityToken, sessionCookie),
-        infinityGet(`/berichte/reseller?subjectType=KONNEKTOR&from=${from}&to=${to}`, infinityToken, sessionCookie),
-        infinityGet(`/berichte/reseller?subjectType=VPN&from=${from}&to=${to}`, infinityToken, sessionCookie),
-        infinityGet('/reseller-kontingente', infinityToken, sessionCookie),
-        infinityGet('/firmen', infinityToken, sessionCookie),
+        infinityGet('/benutzer-profil', t),
+        infinityGet('/leistungserbringer', t),
+        infinityGet(`/berichte/reseller?subjectType=KONNEKTOR&from=${from}&to=${to}`, t),
+        infinityGet(`/berichte/reseller?subjectType=VPN&from=${from}&to=${to}`, t),
+        infinityGet('/reseller-kontingente', t),
+        infinityGet('/firmen', t),
       ]);
 
       const [profil, leistungserbringer, berichtKonnektor, berichtVpn, resellerKontingente, firmen] = results;
-
       const r = (p: PromiseSettledResult<unknown>) =>
         p.status === 'fulfilled' ? { data: p.value } : { error: (p as PromiseRejectedResult).reason?.message };
 
-      return json({
-        benutzerProfil:      r(profil),
-        leistungserbringer:  r(leistungserbringer),
-        berichtKonnektor:    r(berichtKonnektor),
-        berichtVpn:          r(berichtVpn),
-        resellerKontingente: r(resellerKontingente),
-        firmen:              r(firmen),
-        _dateRange:          { from, to },
-      });
-    } catch (e) {
-      return json({ error: String(e) }, 500);
-    }
+      return { profil, leistungserbringer, berichtKonnektor, berichtVpn, resellerKontingente, firmen, dateRange: { from, to } };
+    };
+
+    // If profil returns 401 and we have a refresh token, refresh first
+    const firstTry = await (async () => {
+      try {
+        const to   = new Date().toISOString().slice(0, 10);
+        const from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+        if (infinityRefreshToken) {
+          // Preemptively check if token is near expiry by trying the profile endpoint
+          const profilRes = await fetch(`${INFINITY_BASE}/benutzer-profil`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (profilRes.status === 401) {
+            // Token expired — refresh it
+            const refreshed = await refreshAccessToken(infinityRefreshToken);
+            if (refreshed) {
+              token = refreshed.accessToken;
+              newRefreshToken = refreshed.refreshToken;
+            }
+          }
+        }
+
+        const results = await Promise.allSettled([
+          infinityGet('/benutzer-profil', token),
+          infinityGet('/leistungserbringer', token),
+          infinityGet(`/berichte/reseller?subjectType=KONNEKTOR&from=${from}&to=${to}`, token),
+          infinityGet(`/berichte/reseller?subjectType=VPN&from=${from}&to=${to}`, token),
+          infinityGet('/reseller-kontingente', token),
+          infinityGet('/firmen', token),
+        ]);
+
+        const [profil, leistungserbringer, berichtKonnektor, berichtVpn, resellerKontingente, firmen] = results;
+        const r = (p: PromiseSettledResult<unknown>) =>
+          p.status === 'fulfilled' ? { data: p.value } : { error: (p as PromiseRejectedResult).reason?.message };
+
+        return json({
+          benutzerProfil:      r(profil),
+          leistungserbringer:  r(leistungserbringer),
+          berichtKonnektor:    r(berichtKonnektor),
+          berichtVpn:          r(berichtVpn),
+          resellerKontingente: r(resellerKontingente),
+          firmen:              r(firmen),
+          _dateRange:          { from, to },
+          _newToken:           newRefreshToken ? token : null,
+          _newRefreshToken:    newRefreshToken,
+        });
+      } catch (e) {
+        return json({ error: String(e) }, 500);
+      }
+    })();
+
+    return firstTry;
+  }
+
+  // ── REFRESH TOKEN ─────────────────────────────────────────────────────────
+  if (action === 'refresh') {
+    const rt = body.refreshToken;
+    if (!rt) return json({ error: 'refreshToken required' }, 400);
+    const refreshed = await refreshAccessToken(rt);
+    if (!refreshed) return json({ error: 'Token refresh failed' }, 401);
+    return json({ token: refreshed.accessToken, refreshToken: refreshed.refreshToken });
   }
 
   return json({ error: 'Unknown action' }, 400);

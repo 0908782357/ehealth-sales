@@ -357,10 +357,31 @@
         </div>
       </div>
       <div class="form-error" id="login-error1"></div>
-      <div class="modal-actions">
+      <div class="modal-actions" style="flex-wrap:wrap; gap:8px">
         <button class="btn btn-primary" id="btn-login-next" onclick="doLogin()">
           Weiter
         </button>
+        <button class="btn btn-outline" onclick="showStep1b()" style="font-size:0.78rem; padding:8px 12px">
+          Token manuell einfügen
+        </button>
+      </div>
+    </div>
+
+    <!-- Step 1b: Token manuell einfügen -->
+    <div id="login-step1b" style="display:none">
+      <h2>Token aus Portal einfügen</h2>
+      <p>Öffne <a href="https://portal.managed-infinity.de" target="_blank" style="color:var(--navy)">portal.managed-infinity.de</a>, logge dich ein, öffne DevTools (F12) → Network, klicke auf eine beliebige API-Anfrage und kopiere den Wert aus dem Header <code>Authorization</code> (ohne "Bearer ").</p>
+      <div class="form-group">
+        <label>Bearer Token</label>
+        <textarea id="inf-manual-token" placeholder="eyJhbGci..." rows="4"
+          style="width:100%;padding:9px 12px;border:1.5px solid var(--gray-300);border-radius:9px;font-size:0.75rem;font-family:monospace;outline:none;resize:vertical"></textarea>
+      </div>
+      <div class="form-error" id="login-error1b"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="showStep1()" style="flex:0;padding:11px 14px">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        </button>
+        <button class="btn btn-primary" onclick="doManualToken()">Übernehmen</button>
       </div>
     </div>
 
@@ -393,11 +414,13 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 const EDGE_URL = `${SUPA_URL}/functions/v1/infinity-proxy`;
-const INF_TOKEN_KEY    = 'infinity_token';
-const INF_COOKIE_KEY   = 'infinity_cookie';
+const INF_TOKEN_KEY         = 'infinity_token';
+const INF_REFRESH_TOKEN_KEY = 'infinity_refresh_token';
+const INF_COOKIE_KEY        = 'infinity_cookie';
 
 let session = null;
 let partialToken = null;
+let partialRefreshToken = null;
 let allRows = [];
 
 // ── Supabase Auth ─────────────────────────────────────
@@ -439,6 +462,7 @@ function openLoginModal() {
 
 function clearInfinitySession() {
   sessionStorage.removeItem(INF_TOKEN_KEY);
+  sessionStorage.removeItem(INF_REFRESH_TOKEN_KEY);
   sessionStorage.removeItem(INF_COOKIE_KEY);
   document.getElementById('session-banner').style.display = 'none';
   document.getElementById('summary-grid').style.display = 'none';
@@ -460,6 +484,31 @@ function backToStep1() {
   document.getElementById('step-dot-1').classList.add('active');
   document.getElementById('step-dot-2').classList.remove('active');
   partialToken = null;
+  partialRefreshToken = null;
+}
+
+function showStep1() {
+  document.getElementById('login-step1b').style.display = 'none';
+  document.getElementById('login-step1').style.display = '';
+}
+
+function showStep1b() {
+  document.getElementById('login-step1').style.display = 'none';
+  document.getElementById('login-step1b').style.display = '';
+  setTimeout(() => document.getElementById('inf-manual-token').focus(), 50);
+}
+
+function doManualToken() {
+  const token = document.getElementById('inf-manual-token').value.trim()
+    .replace(/^Bearer\s+/i, '');
+  const errEl = document.getElementById('login-error1b');
+  errEl.style.display = 'none';
+  if (!token || token.length < 20) {
+    errEl.textContent = 'Kein gültiger Token eingegeben.';
+    errEl.style.display = 'block';
+    return;
+  }
+  onLoginSuccess(token);
 }
 
 async function doLogin() {
@@ -491,6 +540,7 @@ async function doLogin() {
     console.log('Login debug:', JSON.stringify(data._debug));
     if (data.needsTotp) {
       partialToken = data.partialToken;
+      partialRefreshToken = data.partialRefreshToken ?? null;
       sessionStorage.setItem('infinity_partial_cookie', data.partialCookie ?? '');
       document.getElementById('login-step1').style.display = 'none';
       document.getElementById('login-step2').style.display = '';
@@ -527,7 +577,7 @@ async function doConfirmTotp() {
     const res = await fetch(EDGE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify({ action: 'confirm', partialToken, totp, sessionCookie: partialCookie }),
+      body: JSON.stringify({ action: 'confirm', partialToken, partialRefreshToken: partialRefreshToken ?? '', totp, sessionCookie: partialCookie }),
     });
     const data = await res.json();
 
@@ -537,7 +587,7 @@ async function doConfirmTotp() {
       return;
     }
 
-    if (data.token) onLoginSuccess(data.token, data.sessionCookie ?? '');
+    if (data.token) onLoginSuccess(data.token, data.sessionCookie ?? '', data.refreshToken ?? '');
     else { errEl.textContent = 'Kein Token erhalten.'; errEl.style.display = 'block'; }
   } catch (e) {
     errEl.textContent = 'Netzwerkfehler: ' + e.message;
@@ -548,8 +598,9 @@ async function doConfirmTotp() {
   }
 }
 
-function onLoginSuccess(token, cookie = '') {
+function onLoginSuccess(token, cookie = '', refreshToken = '') {
   sessionStorage.setItem(INF_TOKEN_KEY, token);
+  if (refreshToken) sessionStorage.setItem(INF_REFRESH_TOKEN_KEY, refreshToken);
   if (cookie) sessionStorage.setItem(INF_COOKIE_KEY, cookie);
   sessionStorage.removeItem('infinity_partial_cookie');
   document.getElementById('login-modal').classList.add('hidden');
@@ -570,17 +621,18 @@ async function loadRealmData() {
   setTableLoading();
 
   try {
+    const refreshToken = sessionStorage.getItem(INF_REFRESH_TOKEN_KEY) ?? '';
     const res = await fetch(EDGE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify({ action: 'realm', infinityToken: token, sessionCookie: sessionStorage.getItem(INF_COOKIE_KEY) ?? '' }),
+      body: JSON.stringify({ action: 'realm', infinityToken: token, infinityRefreshToken: refreshToken, sessionCookie: sessionStorage.getItem(INF_COOKIE_KEY) ?? '' }),
     });
     const data = await res.json();
 
     if (!res.ok || data.error) {
-      // Token might be expired
       if (res.status === 401 || String(data.error).includes('401')) {
         sessionStorage.removeItem(INF_TOKEN_KEY);
+        sessionStorage.removeItem(INF_REFRESH_TOKEN_KEY);
         document.getElementById('session-banner').style.display = 'none';
         setTableError('Session abgelaufen. Bitte neu anmelden.');
         openLoginModal();
@@ -588,6 +640,12 @@ async function loadRealmData() {
         setTableError('Fehler beim Laden: ' + (data.error ?? res.status));
       }
       return;
+    }
+
+    // If Edge Function refreshed the token, save the new tokens
+    if (data._newToken) {
+      sessionStorage.setItem(INF_TOKEN_KEY, data._newToken);
+      if (data._newRefreshToken) sessionStorage.setItem(INF_REFRESH_TOKEN_KEY, data._newRefreshToken);
     }
 
     renderReport(data);
@@ -625,8 +683,19 @@ function renderReport(data) {
     document.getElementById('debug-wrap').style.display = 'block';
   }
 
-  const konnektoren = normalizeList(data.konnektoren);
-  const firmen = normalizeList(data.firmen);
+  // Extract from new Edge Function response structure
+  const leistungserbringer = normalizeList(data.leistungserbringer?.data);
+  const berichtKonnektor   = normalizeList(data.berichtKonnektor?.data);
+  const berichtVpn         = normalizeList(data.berichtVpn?.data);
+  const firmen             = normalizeList(data.firmen?.data);
+  const resellerKontingente = normalizeList(data.resellerKontingente?.data);
+
+  // Try to build konnektor list from leistungserbringer or berichtKonnektor
+  const konnektoren = leistungserbringer.length > 0
+    ? leistungserbringer
+    : berichtKonnektor.length > 0
+    ? berichtKonnektor
+    : normalizeList(data.konnektoren);
 
   // Build firma lookup
   const firmaMap = {};
