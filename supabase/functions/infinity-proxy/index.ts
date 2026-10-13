@@ -13,11 +13,17 @@ function json(body: unknown, status = 200) {
   });
 }
 
-async function infinityGet(path: string, token: string) {
+async function infinityGet(path: string, token: string, cookie = '') {
   const res = await fetch(`${INFINITY_BASE}${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(cookie ? { Cookie: cookie } : {}),
+    },
   });
-  if (!res.ok) throw new Error(`${path} → ${res.status}`);
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`${res.status}: ${body.slice(0, 200)}`);
+  }
   return res.json();
 }
 
@@ -40,54 +46,70 @@ Deno.serve(async (req) => {
     });
     const data = await res.json();
     if (!res.ok) return json({ error: data.message ?? 'Login failed', details: data }, res.status);
-    // Check if full token or partial (needs 2FA)
-    const needsTotp = data.isOnlyFirstFactorToken === true || !data.accessToken;
+    const cookies = res.headers.get('set-cookie') ?? '';
+    // Always require TOTP confirmation if account has it set up;
+    // treat as partial unless server explicitly confirms full auth
+    const needsTotp = data.isOnlyFirstFactorToken !== false || !data.accessToken;
     return json({
       needsTotp,
       partialToken: data.accessToken ?? data.token ?? null,
+      partialCookie: cookies,
       fullToken: needsTotp ? null : (data.accessToken ?? data.token),
+      fullCookie: needsTotp ? null : cookies,
+      _debug: { isOnlyFirstFactorToken: data.isOnlyFirstFactorToken, keys: Object.keys(data) },
     });
   }
 
   // ── LOGIN: step 2 (confirm with TOTP) ─────────────────────────────────────
   if (action === 'confirm') {
     if (!totp || !partialToken) return json({ error: 'totp and partialToken required' }, 400);
+    const incomingCookie = (body as Record<string, string>).sessionCookie ?? '';
     const res = await fetch(`${INFINITY_BASE}/login/bestaetigen`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${partialToken}`,
+        ...(incomingCookie ? { Cookie: incomingCookie } : {}),
       },
       body: JSON.stringify({ totp }),
     });
     const data = await res.json();
     if (!res.ok) return json({ error: data.message ?? 'TOTP confirmation failed', details: data }, res.status);
-    return json({ token: data.accessToken ?? data.token ?? null });
+    const cookies = res.headers.get('set-cookie') ?? incomingCookie;
+    return json({ token: data.accessToken ?? data.token ?? null, sessionCookie: cookies });
   }
 
   // ── REALM DATA ────────────────────────────────────────────────────────────
   if (action === 'realm') {
     if (!infinityToken) return json({ error: 'infinityToken required' }, 400);
+    const sessionCookie = (body as Record<string, string>).sessionCookie ?? '';
     try {
-      // Fetch all data in parallel
-      const [konnektoren, firmen, firmenProfil] = await Promise.allSettled([
-        infinityGet('/konnektoren', infinityToken),
-        infinityGet('/firmen', infinityToken),
-        infinityGet('/firmen-profil', infinityToken),
+      // Date range: last 30 days → today
+      const to   = new Date().toISOString().slice(0, 10);
+      const from = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+      const results = await Promise.allSettled([
+        infinityGet('/benutzer-profil', infinityToken, sessionCookie),
+        infinityGet('/leistungserbringer', infinityToken, sessionCookie),
+        infinityGet(`/berichte/reseller?subjectType=KONNEKTOR&from=${from}&to=${to}`, infinityToken, sessionCookie),
+        infinityGet(`/berichte/reseller?subjectType=VPN&from=${from}&to=${to}`, infinityToken, sessionCookie),
+        infinityGet('/reseller-kontingente', infinityToken, sessionCookie),
+        infinityGet('/firmen', infinityToken, sessionCookie),
       ]);
 
-      // Try reseller-specific endpoints
-      const [resellerKontingente, leistungserbringer] = await Promise.allSettled([
-        infinityGet('/reseller-kontingente', infinityToken),
-        infinityGet('/leistungserbringer', infinityToken),
-      ]);
+      const [profil, leistungserbringer, berichtKonnektor, berichtVpn, resellerKontingente, firmen] = results;
+
+      const r = (p: PromiseSettledResult<unknown>) =>
+        p.status === 'fulfilled' ? { data: p.value } : { error: (p as PromiseRejectedResult).reason?.message };
 
       return json({
-        konnektoren:          konnektoren.status === 'fulfilled' ? konnektoren.value : null,
-        firmen:               firmen.status === 'fulfilled' ? firmen.value : null,
-        firmenProfil:         firmenProfil.status === 'fulfilled' ? firmenProfil.value : null,
-        resellerKontingente:  resellerKontingente.status === 'fulfilled' ? resellerKontingente.value : null,
-        leistungserbringer:   leistungserbringer.status === 'fulfilled' ? leistungserbringer.value : null,
+        benutzerProfil:      r(profil),
+        leistungserbringer:  r(leistungserbringer),
+        berichtKonnektor:    r(berichtKonnektor),
+        berichtVpn:          r(berichtVpn),
+        resellerKontingente: r(resellerKontingente),
+        firmen:              r(firmen),
+        _dateRange:          { from, to },
       });
     } catch (e) {
       return json({ error: String(e) }, 500);
