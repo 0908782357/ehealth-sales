@@ -63,7 +63,8 @@ Deno.serve(async (req) => {
     });
     const data = await res.json();
     if (!res.ok) return json({ error: data.message ?? 'Login failed', details: data }, res.status);
-    const needsTotp = data.isOnlyFirstFactorToken === true || !data.accessToken;
+    // API omits isOnlyFirstFactorToken when TOTP is required; only explicitly false = no TOTP
+    const needsTotp = data.isOnlyFirstFactorToken !== false;
     return json({
       needsTotp,
       partialToken:        data.accessToken ?? data.token ?? null,

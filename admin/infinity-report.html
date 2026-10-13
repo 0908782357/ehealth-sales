@@ -537,8 +537,12 @@ async function doLogin() {
       return;
     }
 
-    console.log('Login debug:', JSON.stringify(data._debug));
-    if (data.needsTotp) {
+    console.log('Login response:', JSON.stringify(data));
+    // Always show TOTP when we get a partialToken back (first-factor token)
+    // API omits isOnlyFirstFactorToken when TOTP is required
+    const hasPartialToken = !!(data.partialToken);
+    const noTotpNeeded = data.needsTotp === false && !hasPartialToken && data.fullToken;
+    if (hasPartialToken || data.needsTotp) {
       partialToken = data.partialToken;
       partialRefreshToken = data.partialRefreshToken ?? null;
       sessionStorage.setItem('infinity_partial_cookie', data.partialCookie ?? '');
@@ -549,7 +553,7 @@ async function doLogin() {
       setTimeout(() => document.getElementById('inf-totp').focus(), 50);
     } else if (data.fullToken) {
       // No TOTP needed (single-factor)
-      onLoginSuccess(data.fullToken);
+      onLoginSuccess(data.fullToken, '', data.fullRefreshToken ?? '');
     }
   } catch (e) {
     errEl.textContent = 'Netzwerkfehler: ' + e.message;
