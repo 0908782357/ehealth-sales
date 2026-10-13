@@ -2,7 +2,7 @@ const RESEND_API_KEY  = Deno.env.get('RESEND_API_KEY') ?? '';
 const SUPABASE_URL    = Deno.env.get('SUPABASE_URL') ?? '';
 const SERVICE_KEY     = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 const FROM            = 'TI Monitoring <anfragecenter@ehealth-sales.de>';
-const RATE_LIMIT_MS   = 30 * 60 * 1000; // 30 Minuten
+const RATE_LIMIT_MS   = 30 * 60 * 1000; // Fallback: max. 1 Mail alle 30 Min.
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -15,6 +15,35 @@ function json(body: unknown, status = 200) {
     status,
     headers: { ...cors, 'Content-Type': 'application/json' },
   });
+}
+
+const PORTAL_URL = 'https://ehealth-sales.de/admin/ti-lagebild.html';
+
+function emailWrapper(headerBg: string, headerTitle: string, body: string): string {
+  return `<!DOCTYPE html>
+<html lang="de">
+<head><meta charset="UTF-8"></head>
+<body style="font-family:Inter,Helvetica Neue,sans-serif;background:#f8fafc;padding:0;margin:0;">
+  <div style="max-width:560px;margin:32px auto;background:white;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+    <div style="background:${headerBg};padding:24px 28px;">
+      <h1 style="color:white;font-family:Montserrat,sans-serif;font-size:1.1rem;margin:0;">${headerTitle}</h1>
+      <p style="color:rgba(255,255,255,0.75);font-size:0.82rem;margin:6px 0 0;">eHealth Sales Alliance Portal</p>
+    </div>
+    <div style="padding:28px;">
+      ${body}
+      <a href="${PORTAL_URL}" style="display:inline-block;background:#3C4A7C;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.85rem;">
+        Zum TI Lagebild →
+      </a>
+    </div>
+    <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:16px 28px;">
+      <p style="color:#94a3b8;font-size:0.72rem;margin:0;">
+        Diese Benachrichtigung wurde automatisch gesendet.
+        Um Alerts zu deaktivieren, öffne das TI Lagebild und klicke auf den Alert-Button.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
 }
 
 Deno.serve(async (req) => {
@@ -30,7 +59,7 @@ Deno.serve(async (req) => {
     headers: { Authorization: `Bearer ${token}`, apikey: SERVICE_KEY },
   });
   if (!userRes.ok) return json({ error: 'Unauthorized' }, 401);
-  const { id: userId, email: userEmail } = await userRes.json();
+  const { id: userId } = await userRes.json();
   if (!userId) return json({ error: 'Unauthorized' }, 401);
 
   // Subscription aus DB lesen
@@ -43,14 +72,15 @@ Deno.serve(async (req) => {
 
   if (!sub?.active) return json({ ok: false, reason: 'no_active_subscription' });
 
-  // Rate-Limiting: max. eine Mail alle 30 Minuten
-  if (sub.last_alerted_at) {
+  // Payload lesen
+  const { type = 'disruption', services = [], timestamp = '' } = await req.json().catch(() => ({}));
+
+  // Rate-Limiting als Fallback (z.B. Seiten-Reload während aktiver Störung)
+  // Entwarnung (recovery) ist immer erlaubt
+  if (type !== 'recovery' && sub.last_alerted_at) {
     const diff = Date.now() - new Date(sub.last_alerted_at).getTime();
     if (diff < RATE_LIMIT_MS) return json({ ok: false, reason: 'rate_limited' });
   }
-
-  // Payload lesen
-  const { services = [], timestamp = '' } = await req.json().catch(() => ({}));
 
   // last_alerted_at sofort setzen (verhindert Doppel-Mails bei parallelen Tabs)
   await fetch(`${SUPABASE_URL}/rest/v1/ti_alert_subscriptions?user_id=eq.${userId}`, {
@@ -63,48 +93,38 @@ Deno.serve(async (req) => {
     body: JSON.stringify({ last_alerted_at: new Date().toISOString() }),
   });
 
-  // E-Mail aufbauen
-  const listItems = (services as { label: string; status: string }[])
-    .map(s => `<li style="margin:4px 0;"><strong>${s.label}</strong>: ${s.status}</li>`)
-    .join('');
+  // E-Mail je nach Typ zusammenbauen
+  let subject: string;
+  let html: string;
 
-  const html = `
-<!DOCTYPE html>
-<html lang="de">
-<head><meta charset="UTF-8"></head>
-<body style="font-family:Inter,Helvetica Neue,sans-serif;background:#f8fafc;padding:0;margin:0;">
-  <div style="max-width:560px;margin:32px auto;background:white;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
-    <div style="background:#3C4A7C;padding:24px 28px;">
-      <h1 style="color:white;font-family:Montserrat,sans-serif;font-size:1.1rem;margin:0;">⚠️ TI Störungs-Alert</h1>
-      <p style="color:rgba(255,255,255,0.75);font-size:0.82rem;margin:6px 0 0;">eHealth Sales Alliance Portal</p>
-    </div>
-    <div style="padding:28px;">
-      <p style="color:#0f172a;font-size:0.92rem;margin-bottom:16px;">
+  if (type === 'recovery') {
+    subject = '✅ TI-Störung behoben – Alle Dienste wieder betriebsbereit';
+    html = emailWrapper(
+      '#15803d',
+      '✅ TI-Störung behoben',
+      `<p style="color:#0f172a;font-size:0.92rem;margin-bottom:16px;">
+        Die TI-Dienste sind wieder vollständig <strong>betriebsbereit</strong>. Es liegen keine aktiven Störungen vor.
+      </p>
+      <p style="color:#64748b;font-size:0.78rem;margin-bottom:20px;">Zeitpunkt: ${timestamp}</p>`,
+    );
+  } else {
+    const listItems = (services as { label: string; status: string }[])
+      .map(s => `<li style="margin:4px 0;"><strong>${s.label}</strong>: ${s.status}</li>`)
+      .join('');
+    const affected = (services as { label: string }[]).map(s => s.label).join(', ');
+    subject = `⚠️ TI-Störung: ${affected}`;
+    html = emailWrapper(
+      '#3C4A7C',
+      '⚠️ TI Störungs-Alert',
+      `<p style="color:#0f172a;font-size:0.92rem;margin-bottom:16px;">
         Folgende TI-Dienste haben aktuell <strong>Störungen oder Einschränkungen</strong>:
       </p>
       <ul style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 16px 12px 28px;color:#dc2626;font-size:0.9rem;margin:0 0 20px;">
         ${listItems}
       </ul>
-      <p style="color:#64748b;font-size:0.78rem;margin-bottom:20px;">
-        Zeitpunkt: ${timestamp}
-      </p>
-      <a href="https://ehealth-sales.de/admin/ti-lagebild.html"
-         style="display:inline-block;background:#3C4A7C;color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.85rem;">
-        Zum TI Lagebild →
-      </a>
-    </div>
-    <div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:16px 28px;">
-      <p style="color:#94a3b8;font-size:0.72rem;margin:0;">
-        Diese Benachrichtigung wurde automatisch gesendet.
-        Um Alerts zu deaktivieren, öffne das TI Lagebild und klicke auf den Alert-Button.
-      </p>
-    </div>
-  </div>
-</body>
-</html>`;
-
-  const affected = (services as { label: string }[]).map(s => s.label).join(', ');
-  const subject  = `⚠️ TI-Störung: ${affected}`;
+      <p style="color:#64748b;font-size:0.78rem;margin-bottom:20px;">Zeitpunkt: ${timestamp}</p>`,
+    );
+  }
 
   const mailRes = await fetch('https://api.resend.com/emails', {
     method: 'POST',
