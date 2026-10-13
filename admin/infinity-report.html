@@ -414,11 +414,13 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 const EDGE_URL = `${SUPA_URL}/functions/v1/infinity-proxy`;
-const INF_TOKEN_KEY    = 'infinity_token';
-const INF_COOKIE_KEY   = 'infinity_cookie';
+const INF_TOKEN_KEY         = 'infinity_token';
+const INF_REFRESH_TOKEN_KEY = 'infinity_refresh_token';
+const INF_COOKIE_KEY        = 'infinity_cookie';
 
 let session = null;
 let partialToken = null;
+let partialRefreshToken = null;
 let allRows = [];
 
 // ── Supabase Auth ─────────────────────────────────────
@@ -460,6 +462,7 @@ function openLoginModal() {
 
 function clearInfinitySession() {
   sessionStorage.removeItem(INF_TOKEN_KEY);
+  sessionStorage.removeItem(INF_REFRESH_TOKEN_KEY);
   sessionStorage.removeItem(INF_COOKIE_KEY);
   document.getElementById('session-banner').style.display = 'none';
   document.getElementById('summary-grid').style.display = 'none';
@@ -481,6 +484,7 @@ function backToStep1() {
   document.getElementById('step-dot-1').classList.add('active');
   document.getElementById('step-dot-2').classList.remove('active');
   partialToken = null;
+  partialRefreshToken = null;
 }
 
 function showStep1() {
@@ -536,6 +540,7 @@ async function doLogin() {
     console.log('Login debug:', JSON.stringify(data._debug));
     if (data.needsTotp) {
       partialToken = data.partialToken;
+      partialRefreshToken = data.partialRefreshToken ?? null;
       sessionStorage.setItem('infinity_partial_cookie', data.partialCookie ?? '');
       document.getElementById('login-step1').style.display = 'none';
       document.getElementById('login-step2').style.display = '';
@@ -572,7 +577,7 @@ async function doConfirmTotp() {
     const res = await fetch(EDGE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify({ action: 'confirm', partialToken, totp, sessionCookie: partialCookie }),
+      body: JSON.stringify({ action: 'confirm', partialToken, partialRefreshToken: partialRefreshToken ?? '', totp, sessionCookie: partialCookie }),
     });
     const data = await res.json();
 
@@ -582,7 +587,7 @@ async function doConfirmTotp() {
       return;
     }
 
-    if (data.token) onLoginSuccess(data.token, data.sessionCookie ?? '');
+    if (data.token) onLoginSuccess(data.token, data.sessionCookie ?? '', data.refreshToken ?? '');
     else { errEl.textContent = 'Kein Token erhalten.'; errEl.style.display = 'block'; }
   } catch (e) {
     errEl.textContent = 'Netzwerkfehler: ' + e.message;
@@ -593,8 +598,9 @@ async function doConfirmTotp() {
   }
 }
 
-function onLoginSuccess(token, cookie = '') {
+function onLoginSuccess(token, cookie = '', refreshToken = '') {
   sessionStorage.setItem(INF_TOKEN_KEY, token);
+  if (refreshToken) sessionStorage.setItem(INF_REFRESH_TOKEN_KEY, refreshToken);
   if (cookie) sessionStorage.setItem(INF_COOKIE_KEY, cookie);
   sessionStorage.removeItem('infinity_partial_cookie');
   document.getElementById('login-modal').classList.add('hidden');
@@ -615,17 +621,18 @@ async function loadRealmData() {
   setTableLoading();
 
   try {
+    const refreshToken = sessionStorage.getItem(INF_REFRESH_TOKEN_KEY) ?? '';
     const res = await fetch(EDGE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify({ action: 'realm', infinityToken: token, sessionCookie: sessionStorage.getItem(INF_COOKIE_KEY) ?? '' }),
+      body: JSON.stringify({ action: 'realm', infinityToken: token, infinityRefreshToken: refreshToken, sessionCookie: sessionStorage.getItem(INF_COOKIE_KEY) ?? '' }),
     });
     const data = await res.json();
 
     if (!res.ok || data.error) {
-      // Token might be expired
       if (res.status === 401 || String(data.error).includes('401')) {
         sessionStorage.removeItem(INF_TOKEN_KEY);
+        sessionStorage.removeItem(INF_REFRESH_TOKEN_KEY);
         document.getElementById('session-banner').style.display = 'none';
         setTableError('Session abgelaufen. Bitte neu anmelden.');
         openLoginModal();
@@ -633,6 +640,12 @@ async function loadRealmData() {
         setTableError('Fehler beim Laden: ' + (data.error ?? res.status));
       }
       return;
+    }
+
+    // If Edge Function refreshed the token, save the new tokens
+    if (data._newToken) {
+      sessionStorage.setItem(INF_TOKEN_KEY, data._newToken);
+      if (data._newRefreshToken) sessionStorage.setItem(INF_REFRESH_TOKEN_KEY, data._newRefreshToken);
     }
 
     renderReport(data);
@@ -670,8 +683,19 @@ function renderReport(data) {
     document.getElementById('debug-wrap').style.display = 'block';
   }
 
-  const konnektoren = normalizeList(data.konnektoren);
-  const firmen = normalizeList(data.firmen);
+  // Extract from new Edge Function response structure
+  const leistungserbringer = normalizeList(data.leistungserbringer?.data);
+  const berichtKonnektor   = normalizeList(data.berichtKonnektor?.data);
+  const berichtVpn         = normalizeList(data.berichtVpn?.data);
+  const firmen             = normalizeList(data.firmen?.data);
+  const resellerKontingente = normalizeList(data.resellerKontingente?.data);
+
+  // Try to build konnektor list from leistungserbringer or berichtKonnektor
+  const konnektoren = leistungserbringer.length > 0
+    ? leistungserbringer
+    : berichtKonnektor.length > 0
+    ? berichtKonnektor
+    : normalizeList(data.konnektoren);
 
   // Build firma lookup
   const firmaMap = {};
