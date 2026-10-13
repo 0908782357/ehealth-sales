@@ -500,13 +500,17 @@ async function init() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { location.href = 'index.html'; return; }
 
+  // Name aus user_profiles (vorname + nachname)
   const { data: profile } = await sb.from('user_profiles')
-    .select('name, rolle').eq('id', session.user.id).single();
+    .select('vorname, nachname').eq('user_id', session.user.id).maybeSingle();
+  const name = profile ? [profile.vorname, profile.nachname].filter(Boolean).join(' ') : session.user.email;
+  document.getElementById('user-name').textContent = name || '–';
 
-  const name = profile?.name || session.user.email || '–';
-  document.getElementById('user-name').textContent = name;
+  // Rolle aus user_roles (konsistent mit allen anderen Admin-Seiten)
+  const { data: ur } = await sb.from('user_roles')
+    .select('role').eq('user_id', session.user.id).maybeSingle();
+  const rolle = ur?.role || '';
 
-  const rolle = profile?.rolle || '';
   if (rolle === 'admin') {
     document.getElementById('nav-group-admin').style.display = '';
     const supportLink = document.getElementById('nav-link-support');
