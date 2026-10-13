@@ -443,6 +443,7 @@ let nextRefreshAt = null;
 let alertSub = null;
 // Letzter bekannter Störungs-Zustand (edge-triggered: nur bei OK→Störung auslösen)
 let prevDisruptionActive = false;
+let _lastAffectedServices = [];
 
 function updateAlertButton() {
   const btn = document.getElementById('btn-alert');
@@ -496,10 +497,21 @@ async function saveAlertSub() {
   const { data: { session } } = await sb.auth.getSession();
   const payload = { user_id: session.user.id, email, active };
 
+  const wasInactive = !alertSub?.active;
   const { error } = await sb.from('ti_alert_subscriptions').upsert(payload, { onConflict: 'user_id' });
   if (!error) {
     alertSub = { ...(alertSub || {}), ...payload };
     updateAlertButton();
+
+    // Alert gerade erst aktiviert und Störung läuft bereits → sofort Mail senden
+    if (active && wasInactive && prevDisruptionActive) {
+      callAlertFunction({
+        type: 'disruption',
+        services: _lastAffectedServices,
+        timestamp: document.getElementById('last-updated').textContent.replace('Zuletzt aktualisiert: ', ''),
+      });
+    }
+
     const toast = document.getElementById('modal-toast');
     toast.style.display = 'block';
     btn.textContent = 'Gespeichert';
@@ -534,6 +546,7 @@ async function checkAndSendAlert(appStatus, timestamp) {
     }));
 
   const nowDisrupted = affected.length > 0;
+  _lastAffectedServices = affected; // aktuellen Stand merken
 
   if (!nowDisrupted) {
     // Übergang Störung → OK: Entwarnung senden
