@@ -73,7 +73,29 @@ Deno.serve(async (req) => {
   if (!sub?.active) return json({ ok: false, reason: 'no_active_subscription' });
 
   // Payload lesen
-  const { type = 'disruption', services = [], timestamp = '' } = await req.json().catch(() => ({}));
+  const { type = 'disruption', email: testEmail, services = [], timestamp = '' } = await req.json().catch(() => ({}));
+
+  // Test-Mail: direkt senden, kein DB-Lookup, kein Rate-Limit
+  if (type === 'test') {
+    const to = testEmail || sub?.email;
+    if (!to) return json({ error: 'No email address' }, 400);
+    const testHtml = emailWrapper(
+      '#3C4A7C',
+      '🔔 Test-Alert – TI Monitoring',
+      `<p style="color:#0f172a;font-size:0.92rem;margin-bottom:16px;">
+        Dies ist eine <strong>Test-Benachrichtigung</strong> des TI Störungs-Alerts.
+        Wenn du diese Mail erhalten hast, funktioniert der Alert korrekt.
+      </p>
+      <p style="color:#64748b;font-size:0.78rem;margin-bottom:20px;">Zeitpunkt: ${timestamp}</p>`,
+    );
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: FROM, to: [to], subject: '🔔 Test: TI Störungs-Alert', html: testHtml }),
+    });
+    const rb = await r.text();
+    return new Response(rb, { status: r.status, headers: { ...cors, 'Content-Type': 'application/json' } });
+  }
 
   // Rate-Limiting als Fallback (z.B. Seiten-Reload während aktiver Störung)
   // Entwarnung (recovery) ist immer erlaubt
