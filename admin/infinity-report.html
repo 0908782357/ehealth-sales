@@ -320,6 +320,16 @@
   </div>
 </main>
 
+<!-- ── Debug Panel ─────────────────────────────────── -->
+<div id="debug-wrap" style="display:none; margin-top:24px;">
+  <details open>
+    <summary style="cursor:pointer; font-size:0.82rem; font-weight:600; color:var(--gray-500); padding:8px 0; user-select:none;">
+      🔍 Raw API Response (Debug)
+    </summary>
+    <pre id="debug-panel" style="background:#1e1e2e; color:#cdd6f4; padding:16px; border-radius:10px; font-size:0.72rem; overflow:auto; max-height:400px; margin-top:8px; white-space:pre-wrap; word-break:break-all;"></pre>
+  </details>
+</div>
+
 <!-- ── Login Modal ─────────────────────────────────── -->
 <div class="modal-backdrop hidden" id="login-modal">
   <div class="modal-box">
@@ -596,6 +606,14 @@ function setTableError(msg) {
 }
 
 function renderReport(data) {
+  // Debug: rohe API-Antwort in Konsole + auf der Seite anzeigen
+  console.log('=== Infinity API Raw Response ===', JSON.stringify(data, null, 2));
+  const debugEl = document.getElementById('debug-panel');
+  if (debugEl) {
+    debugEl.textContent = JSON.stringify(data, null, 2);
+    document.getElementById('debug-wrap').style.display = 'block';
+  }
+
   const konnektoren = normalizeList(data.konnektoren);
   const firmen = normalizeList(data.firmen);
 
