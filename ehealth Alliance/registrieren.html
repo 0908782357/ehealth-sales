@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registrierung – eHealth Alliance</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #3C4A7C; --navy-dark: #2d3a63; --green: #6DC52D;
+    --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0;
+    --gray-400: #94a3b8; --gray-500: #64748b; --gray-900: #0f172a;
+  }
+  body { font-family: 'Inter','Helvetica Neue',sans-serif; background: var(--gray-50); color: var(--gray-900); min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 48px 16px; }
+  .card { background: white; border-radius: 16px; border: 1px solid var(--gray-200); box-shadow: 0 2px 16px rgba(0,0,0,0.07); padding: 40px; width: 100%; max-width: 520px; }
+  .card-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  .card-logo img { height: 36px; }
+  .card-logo h1 { font-family: Montserrat,sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--navy); }
+  h2 { font-family: Montserrat,sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+  .sub { font-size: 0.85rem; color: var(--gray-500); margin-bottom: 28px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--gray-500); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--gray-200); border-radius: 9px;
+    font-size: 0.88rem; font-family: inherit; color: var(--gray-900); background: white;
+    outline: none; transition: border-color 0.15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--navy); }
+  .form-group textarea { resize: vertical; min-height: 90px; }
+  .char-counter { font-size: 0.72rem; color: var(--gray-400); text-align: right; margin-top: 4px; }
+  .char-counter.over { color: #ef4444; }
+  .btn-submit {
+    width: 100%; padding: 13px; background: var(--navy); color: white; border: none;
+    border-radius: 10px; font-size: 0.95rem; font-weight: 700; cursor: pointer;
+    font-family: inherit; transition: background 0.15s; margin-top: 8px;
+  }
+  .btn-submit:hover { background: var(--navy-dark); }
+  .btn-submit:disabled { opacity: 0.6; cursor: default; }
+  .msg { border-radius: 9px; padding: 12px 16px; font-size: 0.85rem; margin-bottom: 16px; display: none; }
+  .msg.success { display: block; background: #d1fae5; color: #065f46; }
+  .msg.error   { display: block; background: #fee2e2; color: #991b1b; }
+  .success-box { display: none; text-align: center; padding: 24px 0; }
+  .success-box .icon { font-size: 2.5rem; margin-bottom: 16px; }
+  .success-box h3 { font-family: Montserrat,sans-serif; font-size: 1.2rem; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+  .success-box p { font-size: 0.88rem; color: var(--gray-500); line-height: 1.6; }
+  @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; } .card { padding: 28px 20px; } }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="card-logo">
+    <img src="../ehs-logo.jpg" alt="eHealth Alliance" onerror="this.style.display='none'">
+    <h1>eHealth Alliance</h1>
+  </div>
+
+  <div id="form-container">
+    <h2>Jetzt registrieren</h2>
+    <p class="sub">Fordern Sie Ihren Zugang zum eHealth Sales Kundenportal an. Wir schalten Sie nach Prüfung frei.</p>
+    <div class="msg" id="msg"></div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Vorname *</label>
+        <input type="text" id="f-vorname" placeholder="Max" maxlength="100">
+      </div>
+      <div class="form-group">
+        <label>Nachname *</label>
+        <input type="text" id="f-nachname" placeholder="Mustermann" maxlength="100">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>E-Mail-Adresse *</label>
+      <input type="email" id="f-email" placeholder="max.mustermann@praxis.de" maxlength="200">
+    </div>
+    <div class="form-group">
+      <label>Firma / Praxis *</label>
+      <input type="text" id="f-firma" placeholder="Praxis Dr. Mustermann" maxlength="200">
+    </div>
+    <div class="form-group">
+      <label>Berufsgruppe *</label>
+      <select id="f-berufsgruppe">
+        <option value="">Bitte wählen…</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Interesse an Produkt *</label>
+      <select id="f-produkt">
+        <option value="">Bitte wählen…</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Ihr Anliegen *</label>
+      <textarea id="f-anliegen" placeholder="Beschreiben Sie kurz, wie wir Ihnen helfen können…" maxlength="500" oninput="updateCounter()"></textarea>
+      <div class="char-counter" id="char-counter">0 / 500</div>
+    </div>
+    <button class="btn-submit" id="btn-submit" onclick="submit()">Registrierung absenden</button>
+  </div>
+
+  <div class="success-box" id="success-box">
+    <div class="icon">✅</div>
+    <h3>Vielen Dank!</h3>
+    <p>Ihre Registrierungsanfrage ist bei uns eingegangen.<br>Sie erhalten eine E-Mail, sobald Ihr Zugang freigeschaltet wurde.</p>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL  = 'https://focysklymhmcfwgxdtuk.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  async function init() {
+    const [bgRes, prodRes] = await Promise.all([
+      sb.from('berufsgruppen').select('id, name').order('name'),
+      sb.from('products').select('id, produkt').eq('published', true).order('produkt'),
+    ]);
+    const bgSel = document.getElementById('f-berufsgruppe');
+    (bgRes.data || []).forEach(b => {
+      const o = document.createElement('option');
+      o.value = b.id; o.textContent = b.name;
+      bgSel.appendChild(o);
+    });
+    const prodSel = document.getElementById('f-produkt');
+    (prodRes.data || []).forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.id; o.textContent = p.produkt;
+      prodSel.appendChild(o);
+    });
+  }
+
+  function updateCounter() {
+    const v = document.getElementById('f-anliegen').value.length;
+    const el = document.getElementById('char-counter');
+    el.textContent = v + ' / 500';
+    el.className = 'char-counter' + (v > 500 ? ' over' : '');
+  }
+
+  function showMsg(text, type) {
+    const el = document.getElementById('msg');
+    el.textContent = text;
+    el.className = 'msg ' + type;
+  }
+
+  async function sendEmail(to, subject, html) {
+    await fetch(SUPABASE_URL + '/functions/v1/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to, subject, html }),
+    });
+  }
+
+  async function submit() {
+    const vorname   = document.getElementById('f-vorname').value.trim();
+    const nachname  = document.getElementById('f-nachname').value.trim();
+    const email     = document.getElementById('f-email').value.trim();
+    const firma     = document.getElementById('f-firma').value.trim();
+    const bgId      = document.getElementById('f-berufsgruppe').value;
+    const prodId    = document.getElementById('f-produkt').value;
+    const anliegen  = document.getElementById('f-anliegen').value.trim();
+
+    if (!vorname || !nachname || !email || !firma || !bgId || !prodId || !anliegen) {
+      showMsg('Bitte füllen Sie alle Pflichtfelder aus.', 'error'); return;
+    }
+    if (anliegen.length > 500) {
+      showMsg('Das Anliegen darf maximal 500 Zeichen enthalten.', 'error'); return;
+    }
+
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = true; btn.textContent = 'Wird gesendet…';
+
+    // Uniqueness-Check
+    const { data: existing } = await sb.from('registrierungen')
+      .select('id').eq('email', email).eq('status', 'ausstehend').maybeSingle();
+    if (existing) {
+      showMsg('Für diese E-Mail-Adresse liegt bereits eine ausstehende Anfrage vor.', 'error');
+      btn.disabled = false; btn.textContent = 'Registrierung absenden'; return;
+    }
+
+    const { error } = await sb.from('registrierungen').insert({
+      vorname, nachname, email, firma,
+      berufsgruppe_id: bgId || null,
+      produkt_id: prodId || null,
+      anliegen,
+    });
+    if (error) {
+      showMsg('Fehler beim Speichern: ' + error.message, 'error');
+      btn.disabled = false; btn.textContent = 'Registrierung absenden'; return;
+    }
+
+    // E-Mail an Endkunden
+    await sendEmail(email,
+      'Ihre Registrierungsanfrage bei eHealth Sales',
+      `<p>Sehr geehrte/r ${esc(vorname)} ${esc(nachname)},</p>
+       <p>vielen Dank für Ihre Registrierungsanfrage beim eHealth Sales Kundenportal. Wir haben Ihre Anfrage erhalten und werden diese in Kürze prüfen.</p>
+       <p>Sie erhalten eine weitere E-Mail, sobald Ihr Zugang freigeschaltet wurde.</p>
+       <p>Mit freundlichen Grüßen<br>Ihr eHealth Sales Team</p>`
+    );
+
+    // E-Mail an Admin
+    await sendEmail('marco.alexandre@healoscope.de',
+      `Neue Registrierungsanfrage: ${esc(vorname)} ${esc(nachname)}`,
+      `<p>Eine neue Registrierungsanfrage ist eingegangen:</p>
+       <ul>
+         <li><strong>Name:</strong> ${esc(vorname)} ${esc(nachname)}</li>
+         <li><strong>E-Mail:</strong> ${esc(email)}</li>
+         <li><strong>Firma:</strong> ${esc(firma)}</li>
+         <li><strong>Anliegen:</strong> ${esc(anliegen)}</li>
+       </ul>
+       <p><a href="https://ehealth-sales.de/admin/anfragen.html">Im Anfragecenter öffnen</a></p>`
+    );
+
+    document.getElementById('form-container').style.display = 'none';
+    document.getElementById('success-box').style.display = 'block';
+  }
+
+  init();
+</script>
+</body>
+</html>
