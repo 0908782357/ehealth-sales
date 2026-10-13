@@ -159,6 +159,57 @@
 
   /* ── Error state ── */
   .error-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 20px 24px; color: #dc2626; font-size: 0.88rem; }
+
+  /* ── Alert-Button ── */
+  .btn-alert {
+    background: white; border: 1px solid var(--gray-200); color: var(--gray-500);
+    border-radius: 8px; padding: 7px 14px; font-size: 0.78rem; font-weight: 600;
+    cursor: pointer; display: flex; align-items: center; gap: 5px;
+    margin-top: 8px; transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .btn-alert:hover { background: var(--gray-100); border-color: var(--navy); color: var(--navy); }
+  .btn-alert.active { background: #fef9c3; border-color: #fde047; color: #854d0e; }
+  .btn-alert.active:hover { background: #fef08a; }
+  .btn-alert svg { width: 14px; height: 14px; }
+
+  /* ── Alert-Modal ── */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 500;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal-backdrop.hidden { display: none; }
+  .modal-box {
+    background: white; border-radius: 16px; padding: 28px 28px 24px;
+    width: 420px; max-width: calc(100vw - 32px); box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  }
+  .modal-title { font-family: Montserrat, sans-serif; font-size: 1rem; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
+  .modal-sub { color: var(--gray-500); font-size: 0.82rem; margin-bottom: 20px; }
+  .modal-field { margin-bottom: 16px; }
+  .modal-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--gray-500); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .modal-input { width: 100%; padding: 9px 12px; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 0.88rem; font-family: Inter, sans-serif; color: var(--gray-900); outline: none; transition: border-color 0.15s; }
+  .modal-input:focus { border-color: var(--navy); }
+  .modal-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--gray-100); border-bottom: 1px solid var(--gray-100); margin-bottom: 20px; }
+  .modal-toggle-label { font-size: 0.88rem; font-weight: 600; color: var(--gray-900); }
+  .modal-toggle-sub { font-size: 0.75rem; color: var(--gray-500); margin-top: 2px; }
+  .toggle-switch { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute; inset: 0; background: var(--gray-200); border-radius: 20px; cursor: pointer; transition: background 0.2s;
+  }
+  .toggle-track::after {
+    content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
+    background: white; border-radius: 50%; transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle-switch input:checked + .toggle-track { background: var(--green); }
+  .toggle-switch input:checked + .toggle-track::after { transform: translateX(18px); }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .btn-modal-cancel { background: white; border: 1px solid var(--gray-200); color: var(--gray-500); border-radius: 8px; padding: 8px 16px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
+  .btn-modal-cancel:hover { background: var(--gray-100); }
+  .btn-modal-save { background: var(--navy); border: none; color: white; border-radius: 8px; padding: 8px 18px; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
+  .btn-modal-save:hover { background: var(--navy-dark); }
+  .btn-modal-save:disabled { opacity: 0.5; cursor: not-allowed; }
+  .modal-toast { font-size: 0.78rem; color: var(--status-ok-text); margin-top: 12px; display: none; text-align: center; }
 </style>
 </head>
 <body>
@@ -283,10 +334,16 @@
       <div class="header-meta">
         <div id="last-updated" class="meta-time">Wird geladen …</div>
         <div id="next-refresh" class="meta-countdown"></div>
-        <button class="btn-refresh" onclick="loadStatus()">
-          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-          Aktualisieren
-        </button>
+        <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end;">
+          <button id="btn-alert" class="btn-alert" onclick="openAlertModal()">
+            <svg id="alert-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            <span id="alert-btn-label">Alert einrichten</span>
+          </button>
+          <button class="btn-refresh" onclick="loadStatus()">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Aktualisieren
+          </button>
+        </div>
       </div>
     </div>
 
@@ -326,6 +383,38 @@
   </main>
 </div>
 
+<!-- Alert-Modal -->
+<div id="alert-modal" class="modal-backdrop hidden" onclick="handleBackdropClick(event)">
+  <div class="modal-box">
+    <div class="modal-title">
+      🔔 Störungs-Alert konfigurieren
+    </div>
+    <p class="modal-sub">Erhalte eine E-Mail, wenn das TI-Lagebild eine Störung erkennt (max. 1 Mail alle 30 Min.).</p>
+
+    <div class="modal-field">
+      <label class="modal-label" for="alert-email">E-Mail-Adresse</label>
+      <input type="email" id="alert-email" class="modal-input" placeholder="deine@email.de">
+    </div>
+
+    <div class="modal-toggle-row">
+      <div>
+        <div class="modal-toggle-label">Alert aktiv</div>
+        <div class="modal-toggle-sub">Benachrichtigung bei Erkennung einer Störung</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="alert-active">
+        <span class="toggle-track"></span>
+      </label>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeAlertModal()">Abbrechen</button>
+      <button class="btn-modal-save" id="btn-modal-save" onclick="saveAlertSub()">Speichern</button>
+    </div>
+    <div id="modal-toast" class="modal-toast">✓ Gespeichert</div>
+  </div>
+</div>
+
 <script>
 const SUPA_URL = 'https://focysklymhmcfwgxdtuk.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
@@ -349,6 +438,114 @@ const ORDER = ['tianschluss','erezept','epa','kim','vsdm','wanda','ogd'];
 let refreshTimer = null;
 let countdownInterval = null;
 let nextRefreshAt = null;
+
+// Alert-Subscription (im Speicher gehalten)
+let alertSub = null;
+
+function updateAlertButton() {
+  const btn = document.getElementById('btn-alert');
+  const lbl = document.getElementById('alert-btn-label');
+  const ico = document.getElementById('alert-icon');
+  if (alertSub?.active) {
+    btn.classList.add('active');
+    lbl.textContent = 'Alert aktiv';
+    // gefüllte Glocke
+    ico.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>';
+  } else {
+    btn.classList.remove('active');
+    lbl.textContent = 'Alert einrichten';
+    ico.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>';
+  }
+}
+
+async function loadAlertSub(session) {
+  const { data } = await sb.from('ti_alert_subscriptions')
+    .select('*').eq('user_id', session.user.id).maybeSingle();
+  alertSub = data || null;
+  updateAlertButton();
+}
+
+function openAlertModal() {
+  const email = alertSub?.email || document.getElementById('user-name').dataset.email || '';
+  document.getElementById('alert-email').value = email;
+  document.getElementById('alert-active').checked = alertSub?.active ?? true;
+  document.getElementById('modal-toast').style.display = 'none';
+  document.getElementById('btn-modal-save').disabled = false;
+  document.getElementById('alert-modal').classList.remove('hidden');
+}
+
+function closeAlertModal() {
+  document.getElementById('alert-modal').classList.add('hidden');
+}
+
+function handleBackdropClick(e) {
+  if (e.target === document.getElementById('alert-modal')) closeAlertModal();
+}
+
+async function saveAlertSub() {
+  const email  = document.getElementById('alert-email').value.trim();
+  const active = document.getElementById('alert-active').checked;
+  if (!email) { document.getElementById('alert-email').focus(); return; }
+
+  const btn = document.getElementById('btn-modal-save');
+  btn.disabled = true;
+  btn.textContent = '…';
+
+  const { data: { session } } = await sb.auth.getSession();
+  const payload = { user_id: session.user.id, email, active };
+
+  const { error } = await sb.from('ti_alert_subscriptions').upsert(payload, { onConflict: 'user_id' });
+  if (!error) {
+    alertSub = { ...(alertSub || {}), ...payload };
+    updateAlertButton();
+    const toast = document.getElementById('modal-toast');
+    toast.style.display = 'block';
+    btn.textContent = 'Gespeichert';
+    setTimeout(closeAlertModal, 1200);
+  } else {
+    btn.textContent = 'Fehler – nochmal';
+    btn.disabled = false;
+  }
+}
+
+async function checkAndSendAlert(appStatus, timestamp) {
+  if (!alertSub?.active) return;
+
+  // Betroffene Dienste ermitteln
+  const affected = ORDER
+    .filter(k => appStatus[k] && appStatus[k].outage !== 'none')
+    .map(k => ({
+      label:  SERVICE_META[k]?.label || k,
+      status: appStatus[k].outage === 'full' ? 'Vollstörung' : 'Teilstörung',
+    }));
+
+  if (affected.length === 0) return;
+
+  // Rate-Limiting: max. alle 30 Min.
+  if (alertSub.last_alerted_at) {
+    const diff = Date.now() - new Date(alertSub.last_alerted_at).getTime();
+    if (diff < 30 * 60 * 1000) return;
+  }
+
+  // Edge Function aufrufen
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+
+  try {
+    const res = await fetch(`${SUPA_URL}/functions/v1/send-ti-alert`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ services: affected, timestamp }),
+    });
+    if (res.ok) {
+      // last_alerted_at lokal aktualisieren (Edge Function hat DB-seitig gesetzt)
+      alertSub = { ...alertSub, last_alerted_at: new Date().toISOString() };
+    }
+  } catch (_) { /* Stilles Versagen – Alert ist nicht kritisch */ }
+}
 
 function esc(s) {
   return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -476,12 +673,15 @@ async function loadStatus() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
-    document.getElementById('last-updated').textContent =
-      'Zuletzt aktualisiert: ' + formatTime(data.timestamp);
+    const ts = formatTime(data.timestamp);
+    document.getElementById('last-updated').textContent = 'Zuletzt aktualisiert: ' + ts;
 
     renderGrid(data.appStatus || {});
     updateBanner(data.appStatus || {});
     renderCauses(data.cause || []);
+
+    // Alert prüfen (asynchron, kein await – blockiert Refresh nicht)
+    checkAndSendAlert(data.appStatus || {}, ts);
   } catch (e) {
     document.getElementById('global-banner').className = 'global-banner full';
     document.getElementById('global-banner').innerHTML =
@@ -504,7 +704,9 @@ async function init() {
   const { data: profile } = await sb.from('user_profiles')
     .select('vorname, nachname').eq('user_id', session.user.id).maybeSingle();
   const name = profile ? [profile.vorname, profile.nachname].filter(Boolean).join(' ') : session.user.email;
-  document.getElementById('user-name').textContent = name || '–';
+  const nameEl = document.getElementById('user-name');
+  nameEl.textContent = name || '–';
+  nameEl.dataset.email = session.user.email || '';
 
   // Rolle aus user_roles (konsistent mit allen anderen Admin-Seiten)
   const { data: ur } = await sb.from('user_roles')
@@ -519,7 +721,8 @@ async function init() {
     badge.textContent = 'Admin'; badge.className = 'role-badge role-admin'; badge.style.display = '';
   }
 
-  await loadStatus();
+  // Alert-Subscription laden (parallel zu loadStatus)
+  await Promise.all([loadAlertSub(session), loadStatus()]);
 }
 
 async function logout() {
