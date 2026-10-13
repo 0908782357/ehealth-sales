@@ -387,7 +387,8 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
 const EDGE_URL = `${SUPA_URL}/functions/v1/infinity-proxy`;
-const INF_TOKEN_KEY = 'infinity_token';
+const INF_TOKEN_KEY    = 'infinity_token';
+const INF_COOKIE_KEY   = 'infinity_cookie';
 
 let session = null;
 let partialToken = null;
@@ -403,7 +404,6 @@ async function init() {
   // Apply nav permissions (re-use same logic as other pages)
   applyPermissions();
 
-  // Check if we already have an Infinity token in sessionStorage
   const stored = sessionStorage.getItem(INF_TOKEN_KEY);
   if (stored) {
     document.getElementById('session-banner').style.display = 'flex';
@@ -433,6 +433,7 @@ function openLoginModal() {
 
 function clearInfinitySession() {
   sessionStorage.removeItem(INF_TOKEN_KEY);
+  sessionStorage.removeItem(INF_COOKIE_KEY);
   document.getElementById('session-banner').style.display = 'none';
   document.getElementById('summary-grid').style.display = 'none';
   document.getElementById('search-wrap').style.display = 'none';
@@ -481,9 +482,10 @@ async function doLogin() {
       return;
     }
 
+    console.log('Login debug:', JSON.stringify(data._debug));
     if (data.needsTotp) {
-      // Has partial token, needs TOTP
       partialToken = data.partialToken;
+      sessionStorage.setItem('infinity_partial_cookie', data.partialCookie ?? '');
       document.getElementById('login-step1').style.display = 'none';
       document.getElementById('login-step2').style.display = '';
       document.getElementById('step-dot-1').classList.remove('active');
@@ -515,10 +517,11 @@ async function doConfirmTotp() {
   btn.innerHTML = '<span class="spinner"></span> Prüfe…';
 
   try {
+    const partialCookie = sessionStorage.getItem('infinity_partial_cookie') ?? '';
     const res = await fetch(EDGE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify({ action: 'confirm', partialToken, totp }),
+      body: JSON.stringify({ action: 'confirm', partialToken, totp, sessionCookie: partialCookie }),
     });
     const data = await res.json();
 
@@ -528,7 +531,7 @@ async function doConfirmTotp() {
       return;
     }
 
-    if (data.token) onLoginSuccess(data.token);
+    if (data.token) onLoginSuccess(data.token, data.sessionCookie ?? '');
     else { errEl.textContent = 'Kein Token erhalten.'; errEl.style.display = 'block'; }
   } catch (e) {
     errEl.textContent = 'Netzwerkfehler: ' + e.message;
@@ -539,8 +542,10 @@ async function doConfirmTotp() {
   }
 }
 
-function onLoginSuccess(token) {
+function onLoginSuccess(token, cookie = '') {
   sessionStorage.setItem(INF_TOKEN_KEY, token);
+  if (cookie) sessionStorage.setItem(INF_COOKIE_KEY, cookie);
+  sessionStorage.removeItem('infinity_partial_cookie');
   document.getElementById('login-modal').classList.add('hidden');
   document.getElementById('session-banner').style.display = 'flex';
   // Auto-load
@@ -562,7 +567,7 @@ async function loadRealmData() {
     const res = await fetch(EDGE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
-      body: JSON.stringify({ action: 'realm', infinityToken: token }),
+      body: JSON.stringify({ action: 'realm', infinityToken: token, sessionCookie: sessionStorage.getItem(INF_COOKIE_KEY) ?? '' }),
     });
     const data = await res.json();
 
