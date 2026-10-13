@@ -11,6 +11,11 @@ CREATE TABLE IF NOT EXISTS ti_alert_subscriptions (
 
 ALTER TABLE ti_alert_subscriptions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "ti_alert_own_select" ON ti_alert_subscriptions;
+DROP POLICY IF EXISTS "ti_alert_own_insert" ON ti_alert_subscriptions;
+DROP POLICY IF EXISTS "ti_alert_own_update" ON ti_alert_subscriptions;
+DROP POLICY IF EXISTS "ti_alert_own_delete" ON ti_alert_subscriptions;
+
 CREATE POLICY "ti_alert_own_select" ON ti_alert_subscriptions
   FOR SELECT USING (user_id = auth.uid());
 
