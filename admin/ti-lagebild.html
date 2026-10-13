@@ -441,6 +441,8 @@ let nextRefreshAt = null;
 
 // Alert-Subscription (im Speicher gehalten)
 let alertSub = null;
+// Letzter bekannter Störungs-Zustand (edge-triggered: nur bei OK→Störung auslösen)
+let prevDisruptionActive = false;
 
 function updateAlertButton() {
   const btn = document.getElementById('btn-alert');
@@ -509,8 +511,6 @@ async function saveAlertSub() {
 }
 
 async function checkAndSendAlert(appStatus, timestamp) {
-  if (!alertSub?.active) return;
-
   // Betroffene Dienste ermitteln
   const affected = ORDER
     .filter(k => appStatus[k] && appStatus[k].outage !== 'none')
@@ -519,13 +519,19 @@ async function checkAndSendAlert(appStatus, timestamp) {
       status: appStatus[k].outage === 'full' ? 'Vollstörung' : 'Teilstörung',
     }));
 
-  if (affected.length === 0) return;
+  const nowDisrupted = affected.length > 0;
 
-  // Rate-Limiting: max. alle 30 Min.
-  if (alertSub.last_alerted_at) {
-    const diff = Date.now() - new Date(alertSub.last_alerted_at).getTime();
-    if (diff < 30 * 60 * 1000) return;
+  // Zustand zurücksetzen wenn wieder OK → nächste Störung löst erneut aus
+  if (!nowDisrupted) {
+    prevDisruptionActive = false;
+    return;
   }
+
+  // Nur auslösen beim Übergang OK → Störung (nicht bei anhaltender Störung)
+  if (prevDisruptionActive) return;
+  prevDisruptionActive = true;
+
+  if (!alertSub?.active) return;
 
   // Edge Function aufrufen
   const { data: { session } } = await sb.auth.getSession();
@@ -541,7 +547,6 @@ async function checkAndSendAlert(appStatus, timestamp) {
       body: JSON.stringify({ services: affected, timestamp }),
     });
     if (res.ok) {
-      // last_alerted_at lokal aktualisieren (Edge Function hat DB-seitig gesetzt)
       alertSub = { ...alertSub, last_alerted_at: new Date().toISOString() };
     }
   } catch (_) { /* Stilles Versagen – Alert ist nicht kritisch */ }
