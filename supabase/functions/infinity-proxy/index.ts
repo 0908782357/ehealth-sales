@@ -47,9 +47,7 @@ Deno.serve(async (req) => {
     const data = await res.json();
     if (!res.ok) return json({ error: data.message ?? 'Login failed', details: data }, res.status);
     const cookies = res.headers.get('set-cookie') ?? '';
-    // Always require TOTP confirmation if account has it set up;
-    // treat as partial unless server explicitly confirms full auth
-    const needsTotp = data.isOnlyFirstFactorToken !== false || !data.accessToken;
+    const needsTotp = data.isOnlyFirstFactorToken === true || !data.accessToken;
     return json({
       needsTotp,
       partialToken: data.accessToken ?? data.token ?? null,
