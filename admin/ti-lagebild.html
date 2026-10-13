@@ -510,7 +510,21 @@ async function saveAlertSub() {
   }
 }
 
+async function callAlertFunction(payload) {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return;
+  try {
+    await fetch(`${SUPA_URL}/functions/v1/send-ti-alert`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch (_) { /* Stilles Versagen */ }
+}
+
 async function checkAndSendAlert(appStatus, timestamp) {
+  if (!alertSub?.active) return;
+
   // Betroffene Dienste ermitteln
   const affected = ORDER
     .filter(k => appStatus[k] && appStatus[k].outage !== 'none')
@@ -521,35 +535,19 @@ async function checkAndSendAlert(appStatus, timestamp) {
 
   const nowDisrupted = affected.length > 0;
 
-  // Zustand zurücksetzen wenn wieder OK → nächste Störung löst erneut aus
   if (!nowDisrupted) {
-    prevDisruptionActive = false;
+    // Übergang Störung → OK: Entwarnung senden
+    if (prevDisruptionActive) {
+      prevDisruptionActive = false;
+      callAlertFunction({ type: 'recovery', timestamp });
+    }
     return;
   }
 
-  // Nur auslösen beim Übergang OK → Störung (nicht bei anhaltender Störung)
+  // Übergang OK → Störung: Alert senden
   if (prevDisruptionActive) return;
   prevDisruptionActive = true;
-
-  if (!alertSub?.active) return;
-
-  // Edge Function aufrufen
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) return;
-
-  try {
-    const res = await fetch(`${SUPA_URL}/functions/v1/send-ti-alert`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ services: affected, timestamp }),
-    });
-    if (res.ok) {
-      alertSub = { ...alertSub, last_alerted_at: new Date().toISOString() };
-    }
-  } catch (_) { /* Stilles Versagen – Alert ist nicht kritisch */ }
+  callAlertFunction({ type: 'disruption', services: affected, timestamp });
 }
 
 function esc(s) {
