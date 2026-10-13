@@ -585,8 +585,9 @@ async function doConfirmTotp() {
     });
     const data = await res.json();
 
+    console.log('Confirm response:', JSON.stringify(data));
     if (!res.ok || data.error) {
-      errEl.textContent = data.error ?? 'Code ungültig.';
+      errEl.textContent = (data.error ?? 'Code ungültig.') + (data.details ? ' | ' + JSON.stringify(data.details) : '');
       errEl.style.display = 'block';
       return;
     }

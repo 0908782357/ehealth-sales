@@ -89,11 +89,13 @@ Deno.serve(async (req) => {
         ...(partialRefreshToken ? { refreshToken: partialRefreshToken } : {}),
       }),
     });
-    const data = await res.json();
-    if (!res.ok) return json({ error: data.message ?? 'TOTP confirmation failed', details: data }, res.status);
+    const rawText = await res.text();
+    let data: Record<string, unknown> = {};
+    try { data = JSON.parse(rawText); } catch { data = { raw: rawText }; }
+    if (!res.ok) return json({ error: data.message ?? `TOTP ${res.status}`, details: data, sentBody: { totp, hasRefreshToken: !!partialRefreshToken } }, res.status);
     return json({
-      token:        data.accessToken ?? data.token ?? null,
-      refreshToken: data.refreshToken ?? null,
+      token:        (data.accessToken ?? data.token) as string ?? null,
+      refreshToken: data.refreshToken as string ?? null,
     });
   }
 
