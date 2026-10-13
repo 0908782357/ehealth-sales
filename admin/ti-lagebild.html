@@ -527,16 +527,12 @@ async function callAlertFunction(payload) {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { console.warn('[TI Alert] Kein Session'); return; }
   try {
-    const res = await fetch(`${SUPA_URL}/functions/v1/send-ti-alert`, {
+    await fetch(`${SUPA_URL}/functions/v1/send-ti-alert`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    const body = await res.text();
-    console.log('[TI Alert] Response:', res.status, body);
-  } catch (e) {
-    console.error('[TI Alert] Netzwerkfehler:', e);
-  }
+  } catch (_) { /* Stilles Versagen */ }
 }
 
 async function sendTestMail() {
@@ -578,7 +574,6 @@ async function sendTestMail() {
 }
 
 async function checkAndSendAlert(appStatus, timestamp) {
-  console.log('[TI Alert] checkAndSendAlert:', { active: alertSub?.active });
   if (!alertSub?.active) return;
 
   // Betroffene Dienste ermitteln
@@ -591,7 +586,6 @@ async function checkAndSendAlert(appStatus, timestamp) {
 
   const nowDisrupted = affected.length > 0;
   _lastAffectedServices = affected;
-  console.log('[TI Alert] affected:', affected.length, '| prevDisruptionActive:', prevDisruptionActive);
 
   if (!nowDisrupted) {
     // Übergang Störung → OK: Entwarnung senden
