@@ -515,13 +515,6 @@ async function init() {
     badge.textContent = 'Admin'; badge.className = 'role-badge role-admin'; badge.style.display = '';
   }
 
-  // hide permission-gated items the user can't access
-  document.querySelectorAll('[data-perm]').forEach(el => {
-    if (!profile?.permissions?.includes(el.dataset.perm) && rolle !== 'admin') {
-      el.style.display = 'none';
-    }
-  });
-
   await loadStatus();
 }
 
