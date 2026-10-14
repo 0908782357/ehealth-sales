@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Alliance Portal – Infinity Report</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -294,6 +295,10 @@
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
         <input type="text" placeholder="Konnektor oder Firma suchen…" id="search-input" oninput="filterTable()">
       </div>
+      <button class="btn" id="btn-export" onclick="exportExcel()" style="display:none;gap:6px;align-items:center;border:1px solid var(--gray-200);background:var(--gray-50);">
+        <svg style="width:15px;height:15px;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        Excel Export
+      </button>
       <span class="last-updated" id="last-updated"></span>
     </div>
 
@@ -731,6 +736,7 @@ function renderReport(data) {
   document.getElementById('sc-firmen').textContent = leiSet.size || '–';
   document.getElementById('summary-grid').style.display = 'grid';
   document.getElementById('search-wrap').style.display = 'flex';
+  document.getElementById('btn-export').style.display = 'inline-flex';
   document.getElementById('last-updated').textContent = 'Aktualisiert: ' + new Date().toLocaleTimeString('de-DE');
 
   // Profile chips
@@ -815,6 +821,88 @@ function filterTable() {
     return hay.includes(q);
   });
   renderTable(filtered, allGruppenMap);
+}
+
+function exportExcel() {
+  if (!allRows.length) return;
+
+  const wb = XLSX.utils.book_new();
+
+  // ── Sheet 1: Konnektoren ──────────────────────────────────────────────
+  const headers = ['Kunde (LEI)', 'Konnektor', 'Profil', 'Status', 'Version', 'Update-Status', 'VPN', 'IP-Adresse'];
+  const sheetData = [headers, ...allRows.map(k => {
+    const lei       = k.leiName ?? k.konnektorGroupName ?? '–';
+    const label     = k.label ?? k.konnektorId ?? '–';
+    const profil    = k.profileName ?? '–';
+    const st        = (k.runtimeStatus ?? k.status ?? '').toUpperCase();
+    const status    = st === 'READY' || st === 'ONLINE' ? 'Ready'
+                    : st === 'NOT_READY' ? 'Not Ready'
+                    : st || '–';
+    const version   = k.fwVersion ?? '–';
+    const fwStatus  = k.fwStatus ?? '–';
+    const gruppe    = allGruppenMap[k.konnektorGroupInternalId] ?? null;
+    const vpn       = gruppe?.countVpnAccesses ?? '–';
+    const ip        = k.ipAddress ?? k.operatorNetworkIpAddress ?? '–';
+    return [lei, label, profil, status, version, fwStatus, vpn, ip];
+  })];
+
+  const ws1 = XLSX.utils.aoa_to_sheet(sheetData);
+
+  // Column widths
+  ws1['!cols'] = [
+    { wch: 30 }, { wch: 22 }, { wch: 20 }, { wch: 12 },
+    { wch: 16 }, { wch: 18 }, { wch: 6 }, { wch: 18 }
+  ];
+
+  XLSX.utils.book_append_sheet(wb, ws1, 'Konnektoren');
+
+  // ── Sheet 2: Übersicht ────────────────────────────────────────────────
+  const uniqueLei = new Set(allRows.map(k => k.leiName).filter(Boolean));
+
+  // Sum VPNs across unique groups only
+  const seenGroups = new Set();
+  let totalVpn = 0;
+  for (const k of allRows) {
+    const gId = k.konnektorGroupInternalId;
+    if (gId && !seenGroups.has(gId)) {
+      seenGroups.add(gId);
+      const g = allGruppenMap[gId];
+      if (g?.countVpnAccesses) totalVpn += g.countVpnAccesses;
+    }
+  }
+
+  // Profile breakdown
+  const profileCount = {};
+  for (const k of allRows) {
+    const p = k.profileName ?? '–';
+    profileCount[p] = (profileCount[p] ?? 0) + 1;
+  }
+  const profileRows = Object.entries(profileCount)
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => [name, count]);
+
+  const today = new Date().toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  const ws2Data = [
+    ['Infinity Report – Übersicht'],
+    ['Stand:', today],
+    [],
+    ['Gesamt-Konnektoren', allRows.length],
+    ['Anzahl Kunden (LEI)', uniqueLei.size],
+    ['Gesamt VPN-Zugänge', totalVpn],
+    [],
+    ['Profil', 'Anzahl'],
+    ...profileRows,
+  ];
+
+  const ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
+  ws2['!cols'] = [{ wch: 28 }, { wch: 14 }];
+
+  XLSX.utils.book_append_sheet(wb, ws2, 'Übersicht');
+
+  // ── Download ──────────────────────────────────────────────────────────
+  const dateStr = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `infinity-report-${dateStr}.xlsx`);
 }
 
 function togglePw() {
