@@ -15,13 +15,37 @@ function json(body: unknown, status = 200) {
 
 async function infinityGet(path: string, token: string) {
   const res = await fetch(`${INFINITY_BASE}${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
   });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     throw new Error(`${res.status}: ${body.slice(0, 200)}`);
   }
   return res.json();
+}
+
+// Fetch all pages of a paginated endpoint (Spring Data: {content, totalPages})
+async function infinityGetAll(path: string, token: string): Promise<unknown[]> {
+  const sep = path.includes('?') ? '&' : '?';
+  const first = await infinityGet(`${path}${sep}size=200&page=0`, token) as Record<string, unknown>;
+  const items: unknown[] = Array.isArray(first) ? first
+    : Array.isArray((first as Record<string,unknown>).content) ? (first as Record<string,unknown[]>).content
+    : [first];
+  const totalPages = (first as Record<string,number>).totalPages ?? 1;
+  if (totalPages > 1) {
+    const rest = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, i) =>
+        infinityGet(`${path}${sep}size=200&page=${i + 1}`, token)
+          .then((p: unknown) => {
+            const pg = p as Record<string, unknown>;
+            return Array.isArray(pg.content) ? pg.content as unknown[] : [];
+          })
+          .catch(() => [] as unknown[])
+      )
+    );
+    for (const page of rest) items.push(...page);
+  }
+  return items;
 }
 
 async function refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | null> {
@@ -159,27 +183,31 @@ Deno.serve(async (req) => {
 
         const results = await Promise.allSettled([
           infinityGet('/benutzer-profil', token),
-          infinityGet('/leistungserbringer', token),
+          infinityGetAll('/leistungserbringer', token),
           infinityGet(`/berichte/reseller?subjectType=KONNEKTOR&from=${from}&to=${to}`, token),
           infinityGet(`/berichte/reseller?subjectType=VPN&from=${from}&to=${to}`, token),
-          infinityGet('/reseller-kontingente', token),
-          infinityGet('/firmen', token),
+          infinityGetAll('/reseller-kontingente', token),
+          infinityGetAll('/firmen', token),
+          infinityGet(`/berichte/reseller?subjectType=KONNEKTOR_BY_GROUP&from=${to}&to=${to}`, token),
+          infinityGet(`/berichte/reseller?subjectType=VPN_BY_GROUP`, token),
         ]);
 
-        const [profil, leistungserbringer, berichtKonnektor, berichtVpn, resellerKontingente, firmen] = results;
+        const [profil, leistungserbringer, berichtKonnektor, berichtVpn, resellerKontingente, firmen, berichtKonnektorByGroup, berichtVpnByGroup] = results;
         const r = (p: PromiseSettledResult<unknown>) =>
           p.status === 'fulfilled' ? { data: p.value } : { error: (p as PromiseRejectedResult).reason?.message };
 
         return json({
-          benutzerProfil:      r(profil),
-          leistungserbringer:  r(leistungserbringer),
-          berichtKonnektor:    r(berichtKonnektor),
-          berichtVpn:          r(berichtVpn),
-          resellerKontingente: r(resellerKontingente),
-          firmen:              r(firmen),
-          _dateRange:          { from, to },
-          _newToken:           newRefreshToken ? token : null,
-          _newRefreshToken:    newRefreshToken,
+          benutzerProfil:           r(profil),
+          leistungserbringer:       r(leistungserbringer),
+          berichtKonnektor:         r(berichtKonnektor),
+          berichtVpn:               r(berichtVpn),
+          resellerKontingente:      r(resellerKontingente),
+          firmen:                   r(firmen),
+          berichtKonnektorByGroup:  r(berichtKonnektorByGroup),
+          berichtVpnByGroup:        r(berichtVpnByGroup),
+          _dateRange:               { from, to },
+          _newToken:                newRefreshToken ? token : null,
+          _newRefreshToken:         newRefreshToken,
         });
       } catch (e) {
         return json({ error: String(e) }, 500);
