@@ -19,7 +19,7 @@
     { id: 'events',        kDef:'read',     sDef:'read',     prDef:'read',     stDef:'edit'     },
     { id: 'shop',          kDef:'read',     sDef:'read',     prDef:'read',     stDef:'edit'     },
     { id: 'produkte',      kFixed:'hidden', sFixed:'hidden', prDef:'read',     stDef:'edit'     },
-    { id: 'community',     kDef:'read',     sDef:'read',     prDef:'edit',     stDef:'edit'     },
+    { id: 'community',     kFixed:'hidden', sDef:'read',     prDef:'edit',     stDef:'edit'     },
     { id: 'tickets',       kDef:'edit',     sDef:'edit',     prDef:'edit',     stDef:'edit'     },
     { id: 'anfragen',      kFixed:'hidden', sDef:'read',     prDef:'edit',     stDef:'edit'     },
     { id: 'support',       kFixed:'hidden', sFixed:'hidden', prFixed:'hidden', stFixed:'hidden' },
