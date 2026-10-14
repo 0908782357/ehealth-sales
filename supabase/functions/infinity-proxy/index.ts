@@ -50,8 +50,9 @@ Deno.serve(async (req) => {
   try { body = await req.json(); } catch { return json({ error: 'Invalid JSON' }, 400); }
 
   const { action, username, password, totp, infinityToken, infinityRefreshToken } = body;
-  const partialToken       = body.partialToken       ?? '';
+  const partialToken        = body.partialToken        ?? '';
   const partialRefreshToken = body.partialRefreshToken ?? '';
+  const sessionCookie       = body.sessionCookie       ?? '';
 
   // ── LOGIN: step 1 (username + password) ──────────────────────────────────
   if (action === 'login') {
@@ -61,6 +62,8 @@ Deno.serve(async (req) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
     });
+    // Capture any session cookies set by the login endpoint
+    const setCookie = res.headers.get('set-cookie') ?? '';
     const data = await res.json();
     if (!res.ok) return json({ error: data.message ?? 'Login failed', details: data }, res.status);
     // API omits isOnlyFirstFactorToken when TOTP is required; only explicitly false = no TOTP
@@ -69,30 +72,36 @@ Deno.serve(async (req) => {
       needsTotp,
       partialToken:        data.accessToken ?? data.token ?? null,
       partialRefreshToken: data.refreshToken ?? null,
+      partialCookie:       setCookie || null,
       fullToken:           needsTotp ? null : (data.accessToken ?? data.token),
       fullRefreshToken:    needsTotp ? null : data.refreshToken,
-      _debug: { isOnlyFirstFactorToken: data.isOnlyFirstFactorToken, keys: Object.keys(data) },
+      _debug: { isOnlyFirstFactorToken: data.isOnlyFirstFactorToken, keys: Object.keys(data), hasCookie: !!setCookie },
     });
   }
 
   // ── LOGIN: step 2 (confirm with TOTP) ─────────────────────────────────────
   if (action === 'confirm') {
     if (!totp || !partialToken) return json({ error: 'totp and partialToken required' }, 400);
+    const confirmHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${partialToken}`,
+    };
+    if (sessionCookie) confirmHeaders['Cookie'] = sessionCookie;
     const res = await fetch(`${INFINITY_BASE}/login/bestaetigen`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${partialToken}`,
-      },
+      headers: confirmHeaders,
       body: JSON.stringify({ totp }),
     });
     const rawText = await res.text();
     let data: Record<string, unknown> = {};
     try { data = JSON.parse(rawText); } catch { data = { raw: rawText }; }
-    if (!res.ok) return json({ error: data.message ?? `TOTP ${res.status}`, details: data, sentBody: { totp, hasRefreshToken: !!partialRefreshToken } }, res.status);
+    if (!res.ok) return json({ error: data.message ?? `TOTP ${res.status}`, details: data, sentBody: { totp, hasCookie: !!sessionCookie } }, res.status);
+    // Capture cookies from confirmation response too
+    const confirmCookie = res.headers.get('set-cookie') ?? '';
     return json({
       token:        (data.accessToken ?? data.token) as string ?? null,
       refreshToken: data.refreshToken as string ?? null,
+      sessionCookie: confirmCookie || null,
     });
   }
 
