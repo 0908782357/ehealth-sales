@@ -84,10 +84,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${partialToken}`,
       },
-      body: JSON.stringify({
-        totp,
-        ...(partialRefreshToken ? { refreshToken: partialRefreshToken } : {}),
-      }),
+      body: JSON.stringify({ totp }),
     });
     const rawText = await res.text();
     let data: Record<string, unknown> = {};
