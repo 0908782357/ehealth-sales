@@ -726,7 +726,7 @@ function renderReport(data) {
   // Profile chips
   const chips = Object.entries(profileCount).sort((a, b) => b[1] - a[1]).map(([name, count]) =>
     `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:20px;padding:4px 12px;font-size:0.78rem;font-weight:500;">
-      <span style="background:var(--primary);border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:0.7rem;font-weight:700;">${count}</span>
+      <span style="background:#1e40af;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:0.7rem;font-weight:700;">${count}</span>
       ${esc(name)}
     </span>`
   ).join('');
