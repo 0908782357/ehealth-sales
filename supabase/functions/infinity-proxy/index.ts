@@ -84,6 +84,9 @@ Deno.serve(async (req) => {
     if (!totp || !partialToken) return json({ error: 'totp and partialToken required' }, 400);
     const confirmHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
+      'Origin': 'https://portal.managed-infinity.de',
+      'Referer': 'https://portal.managed-infinity.de/',
       Authorization: `Bearer ${partialToken}`,
     };
     if (sessionCookie) confirmHeaders['Cookie'] = sessionCookie;
