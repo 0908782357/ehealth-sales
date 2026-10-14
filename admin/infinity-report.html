@@ -332,15 +332,6 @@
   </div>
 </main>
 
-<!-- ── Debug Panel ─────────────────────────────────── -->
-<div id="debug-wrap" style="display:none; margin-top:24px;">
-  <details open>
-    <summary style="cursor:pointer; font-size:0.82rem; font-weight:600; color:var(--gray-500); padding:8px 0; user-select:none;">
-      🔍 Raw API Response (Debug)
-    </summary>
-    <pre id="debug-panel" style="background:#1e1e2e; color:#cdd6f4; padding:16px; border-radius:10px; font-size:0.72rem; overflow:auto; max-height:400px; margin-top:8px; white-space:pre-wrap; word-break:break-all;"></pre>
-  </details>
-</div>
 
 <!-- ── Login Modal ─────────────────────────────────── -->
 <div class="modal-backdrop hidden" id="login-modal">
@@ -693,23 +684,6 @@ function setTableError(msg) {
 }
 
 function renderReport(data) {
-  // Debug: rohe API-Antwort in Konsole + auf der Seite anzeigen
-  console.log('=== Infinity API Raw Response ===', JSON.stringify(data, null, 2));
-  const debugEl = document.getElementById('debug-panel');
-  if (debugEl) {
-    const kArr = data.konnektoren?.data;
-    const firstK = Array.isArray(kArr) ? kArr[0] : null;
-    const konnGruppen = data.konnektorGruppen?.data;
-    const firstG = Array.isArray(konnGruppen) ? konnGruppen[0] : null;
-    const debugOut = {
-      'konnektorGruppen[0] ALLE FELDER': firstG ? Object.keys(firstG) : null,
-      'konnektorGruppen[0] WERT': firstG,
-      'konnektorGruppen error': data.konnektorGruppen?.error ?? null,
-    };
-    debugEl.textContent = JSON.stringify(debugOut, null, 2);
-    document.getElementById('debug-wrap').style.display = 'block';
-  }
-
   // Primary data: /konnektoren endpoint
   const konnektoren = normalizeList(data.konnektoren?.data);
 
