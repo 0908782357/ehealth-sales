@@ -81,13 +81,32 @@
   .badge-gray  { background: var(--gray-100); color: var(--gray-400); }
   .meta-row { font-size: 0.75rem; color: var(--gray-400); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
-  /* Infosammlung */
-  .articles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-  .article-card { background: white; border-radius: 14px; border: 1px solid var(--gray-200); padding: 20px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
-  .article-card h3 { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
-  .article-card .meta-row { margin-bottom: 10px; }
-  .article-card p { font-size: 0.83rem; color: var(--gray-500); line-height: 1.5; margin-bottom: 14px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .article-actions { display: flex; gap: 6px; }
+  /* Wiki */
+  .wiki-layout { display: grid; grid-template-columns: 200px 1fr; gap: 24px; align-items: start; }
+  @media (max-width: 700px) { .wiki-layout { grid-template-columns: 1fr; } }
+  .wiki-sidebar { position: sticky; top: 84px; }
+  .wiki-cat { padding: 7px 12px; border-radius: 9px; font-size: 0.83rem; font-weight: 500; cursor: pointer; color: var(--gray-500); transition: all 0.15s; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .wiki-cat:hover { background: var(--gray-100); color: var(--navy); }
+  .wiki-cat.active { background: #eef0f7; color: var(--navy); font-weight: 700; }
+  .wiki-search { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+  .wiki-search input { flex: 1; min-width: 200px; padding: 9px 14px; border: 1.5px solid var(--gray-200); border-radius: 9px; font-size: 0.875rem; outline: none; font-family: inherit; }
+  .wiki-search input:focus { border-color: var(--navy); }
+  .wiki-article-card { background: white; border-radius: 14px; border: 1px solid var(--gray-200); padding: 22px 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); margin-bottom: 14px; }
+  .wiki-article-card:last-child { margin-bottom: 0; }
+  .wiki-article-card h3 { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
+  .wiki-article-content { font-size: 0.875rem; color: var(--gray-500); line-height: 1.6; margin-bottom: 12px; white-space: pre-wrap; word-break: break-word; }
+  .wiki-article-content a { color: var(--navy); }
+  .wiki-links-block { border-top: 1px solid var(--gray-100); margin-top: 12px; padding-top: 12px; }
+  .wiki-links-label { font-size: 0.68rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .wiki-link { display: block; font-size: 0.82rem; color: var(--navy); font-weight: 500; padding: 3px 0; text-decoration: none; }
+  .wiki-link:hover { text-decoration: underline; }
+  .tag-chip { display: inline-block; background: var(--gray-100); color: var(--gray-500); border-radius: 20px; padding: 2px 8px; font-size: 0.7rem; font-weight: 600; margin-right: 4px; margin-bottom: 4px; }
+  .article-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 14px; flex-wrap: wrap; gap: 8px; }
+  .article-meta { font-size: 0.75rem; color: var(--gray-400); }
+  .pin-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; font-weight: 700; background: #fffbeb; color: #92400e; border-radius: 20px; padding: 2px 8px; }
+  .btn-pin { padding: 4px 10px; font-size: 0.75rem; background: #fffbeb; color: #92400e; border: 1px solid #fde68a; border-radius: 7px; cursor: pointer; font-family: inherit; }
+  .btn-pin:hover { background: #fef3c7; }
+  /* Schwarzes Brett filter-chips */
   .filter-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
   .filter-chip { padding: 5px 14px; border-radius: 20px; border: 1.5px solid var(--gray-200); background: white; font-size: 0.78rem; font-weight: 600; cursor: pointer; color: var(--gray-500); transition: all 0.15s; }
   .filter-chip.active { background: var(--navy); color: white; border-color: var(--navy); }
@@ -282,22 +301,20 @@
     <h1>Community</h1>
 
     <div class="tab-bar">
-      <button class="tab-btn active" onclick="switchTab('info')">📚 Infosammlung</button>
+      <button class="tab-btn active" onclick="switchTab('info')">📖 Wiki</button>
       <button class="tab-btn" onclick="switchTab('forum')">💬 Forum</button>
       <button class="tab-btn" onclick="switchTab('board')">📌 Schwarzes Brett</button>
     </div>
 
-    <!-- ===== TAB: INFOSAMMLUNG ===== -->
+    <!-- ===== TAB: WIKI ===== -->
     <div class="tab-pane active" id="tab-info">
-      <div class="section-header">
-        <span class="section-title">Artikel & Ressourcen</span>
+      <div class="wiki-search">
+        <input type="text" id="wiki-search-input" placeholder="🔍 Wiki durchsuchen …" oninput="filterWiki()">
         <button class="btn btn-primary" id="btn-new-article" onclick="openArticleModal()" style="display:none">+ Neuer Artikel</button>
       </div>
-      <div class="filter-bar" id="article-filter-bar">
-        <button class="filter-chip active" onclick="filterArticles('')">Alle</button>
-      </div>
-      <div class="articles-grid" id="articles-grid">
-        <div class="empty" style="grid-column:1/-1">Laden…</div>
+      <div class="wiki-layout">
+        <div class="wiki-sidebar" id="wiki-sidebar"></div>
+        <div id="articles-list"><div class="empty">Laden…</div></div>
       </div>
     </div>
 
@@ -308,7 +325,8 @@
       <div id="forum-channels-view">
         <div class="section-header">
           <span class="section-title">Themenkanäle</span>
-          <button class="btn btn-primary" onclick="openThreadModal()">+ Neuer Beitrag</button>
+          <span id="forum-write-hint" style="display:none;font-size:0.78rem;color:var(--gray-400);">Premium-Account erforderlich, um neue Beiträge zu erstellen.</span>
+          <button class="btn btn-primary" id="btn-new-thread-channels" onclick="openThreadModal()">+ Neuer Beitrag</button>
         </div>
         <div class="channel-grid" id="channel-grid">
           <div class="empty" style="grid-column:1/-1">Laden…</div>
@@ -320,7 +338,8 @@
         <button class="back-btn" onclick="showChannels()">← Alle Kanäle</button>
         <div class="section-header">
           <span class="section-title" id="channel-title">Kanal</span>
-          <button class="btn btn-primary" onclick="openThreadModal()">+ Neuer Beitrag</button>
+          <span id="forum-write-hint2" style="display:none;font-size:0.78rem;color:var(--gray-400);">Premium-Account erforderlich.</span>
+          <button class="btn btn-primary" id="btn-new-thread-threads" onclick="openThreadModal()">+ Neuer Beitrag</button>
         </div>
         <div class="thread-list" id="thread-list">
           <div class="empty">Laden…</div>
@@ -351,7 +370,8 @@
     <div class="tab-pane" id="tab-board">
       <div class="section-header">
         <span class="section-title">Schwarzes Brett</span>
-        <button class="btn btn-primary" onclick="openBoardModal()">+ Eintrag erstellen</button>
+        <span id="board-write-hint" style="display:none;font-size:0.78rem;color:var(--gray-400);">Zum Erstellen von Einträgen ist ein Premium-Account erforderlich.</span>
+        <button class="btn btn-primary" id="btn-board-create" onclick="openBoardModal()">+ Eintrag erstellen</button>
       </div>
       <p style="font-size:0.82rem;color:var(--gray-400);margin-bottom:20px;">Suche Kooperationspartner, biete Ressourcen an, teile Projektideen. Einträge laufen nach 90 Tagen ab.</p>
       <div class="filter-bar">
@@ -374,8 +394,33 @@
     <h2 id="article-modal-title">Neuer Artikel</h2>
     <div id="article-msg" class="msg"></div>
     <div class="form-group"><label>Titel *</label><input type="text" id="f-title" placeholder="Artikeltitel"></div>
-    <div class="form-group"><label>Kategorie</label><input type="text" id="f-category" placeholder="z.B. TI, Security, Allgemein"></div>
-    <div class="form-group"><label>Inhalt</label><textarea id="f-content" placeholder="Artikeltext…"></textarea></div>
+    <div class="form-group">
+      <label>Kategorie</label>
+      <select id="f-category">
+        <option value="">– keine –</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Tags <span style="font-weight:400;text-transform:none;">(kommagetrennt)</span></label>
+      <input type="text" id="f-tags" placeholder="z.B. eHBA, KIM, Konnektor">
+    </div>
+    <div class="form-group">
+      <label>Inhalt <span style="font-weight:400;text-transform:none;">(URLs werden automatisch verlinkt)</span></label>
+      <textarea id="f-content" placeholder="Artikeltext…"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Weiterführende Links</label>
+      <div id="links-container"></div>
+      <button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="addLinkRow()">+ Link hinzufügen</button>
+    </div>
+    <div class="form-group">
+      <label>Sichtbar für</label>
+      <select id="f-min-tier">
+        <option value="">Alle Partner</option>
+        <option value="premium">Premium+</option>
+        <option value="strategisch">Nur Strategisch</option>
+      </select>
+    </div>
     <label class="toggle-row"><input type="checkbox" id="f-art-published"> Veröffentlicht</label>
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeArticleModal()">Abbrechen</button>
@@ -435,6 +480,31 @@
   let allArticles = [], allChannels = [], allBoardPosts = [], boardFilter = '';
   let currentArticleId = null, currentChannelId = null, currentThreadId = null;
 
+  const WIKI_CATEGORIES = [
+    'TI-Infrastruktur', 'KIM & Kommunikation', 'eHBA & Identität',
+    'Konnektor & Hardware', 'Abrechnung & KV', 'Datenschutz & DSGVO',
+    'Produkte & Lösungen', 'Allgemein',
+  ];
+  let wikiCatFilter = '';
+  let wikiSearchQuery = '';
+
+  function canWriteWiki() {
+    if (userRole === 'admin') return true;
+    if (userRole === 'partner') return userTier === 'premium' || userTier === 'strategisch';
+    return false;
+  }
+  function canWriteForum() { return canWriteWiki(); }
+  function canWriteBoard() { return canWriteWiki(); }
+  function canPin() { return userRole === 'admin' || (userRole === 'partner' && userTier === 'strategisch'); }
+
+  function autoLink(text) {
+    const escaped = esc(text);
+    return escaped.replace(
+      /(https?:\/\/[^\s<>"]+)/g,
+      '<a href="$1" target="_blank" rel="noopener">$1</a>'
+    );
+  }
+
   // ===== INIT =====
   async function init() {
     const { data: { session } } = await sb.auth.getSession();
@@ -453,6 +523,28 @@
     }
         if (userRole === 'kunde') { document.getElementById('nav-item-products').style.display = 'none'; }
     setupNavRole(userRole).catch(console.warn);
+    // Kategorie-Select im Artikel-Modal befüllen
+    const catSel = document.getElementById('f-category');
+    if (catSel) {
+      WIKI_CATEGORIES.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c; opt.textContent = c;
+        catSel.appendChild(opt);
+      });
+    }
+    // Schreibschutz: Forum + Schwarzes Brett
+    if (!canWriteForum()) {
+      ['btn-new-thread-channels','btn-new-thread-threads'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.style.display = 'none';
+      });
+      ['forum-write-hint','forum-write-hint2'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.style.display = '';
+      });
+    }
+    if (!canWriteBoard()) {
+      const btn = document.getElementById('btn-board-create'); if (btn) btn.style.display = 'none';
+      const hint = document.getElementById('board-write-hint'); if (hint) hint.style.display = '';
+    }
     loadArticles();
     loadChannels();
     loadBoard();
@@ -472,63 +564,134 @@
     document.querySelectorAll('.tab-btn')[tab === 'info' ? 0 : tab === 'forum' ? 1 : 2].classList.add('active');
   }
 
-  // ===== INFOSAMMLUNG =====
+  // ===== WIKI =====
   async function loadArticles() {
-    let q = sb.from('knowledge_articles').select('*').order('created_at', { ascending: false });
+    let q = sb.from('knowledge_articles')
+      .select('id,title,category,content,links,tags,published,created_at,updated_at,updated_by,min_tier,author_id')
+      .order('category').order('created_at', { ascending: false });
     if (userRole !== 'admin') q = q.eq('published', true);
     const { data } = await q;
-    allArticles = data || [];
-    buildCategoryFilter();
+    allArticles = (data || []).filter(a => {
+      if (!a.min_tier) return true;
+      if (a.min_tier === 'premium') return userTier === 'premium' || userTier === 'strategisch' || userRole === 'admin';
+      if (a.min_tier === 'strategisch') return userTier === 'strategisch' || userRole === 'admin';
+      return true;
+    });
+    buildWikiSidebar();
     renderArticles(allArticles);
+    if (canWriteWiki()) document.getElementById('btn-new-article').style.display = '';
   }
 
-  function buildCategoryFilter() {
-    const cats = [...new Set(allArticles.map(a => a.category).filter(Boolean))];
-    const bar = document.getElementById('article-filter-bar');
-    bar.innerHTML = '<button class="filter-chip active" onclick="filterArticles(\'\')">Alle</button>' +
-      cats.map(c => `<button class="filter-chip" onclick="filterArticles('${c}')">${c}</button>`).join('');
+  function buildWikiSidebar() {
+    const sidebar = document.getElementById('wiki-sidebar');
+    const allCats = [''].concat(WIKI_CATEGORIES);
+    sidebar.innerHTML = allCats.map(cat => {
+      const label = cat || 'Alle';
+      const count = cat ? allArticles.filter(a => a.category === cat).length : allArticles.length;
+      const safecat = cat.replace(/'/g, "\\'");
+      return `<div class="wiki-cat${cat === wikiCatFilter ? ' active' : ''}" onclick="setWikiCat('${safecat}')">${esc(label)} <span style="font-size:0.7rem;color:var(--gray-400);">(${count})</span></div>`;
+    }).join('');
   }
 
-  function filterArticles(cat) {
-    document.querySelectorAll('#article-filter-bar .filter-chip').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
-    const filtered = cat ? allArticles.filter(a => a.category === cat) : allArticles;
+  function setWikiCat(cat) {
+    wikiCatFilter = cat;
+    buildWikiSidebar();
+    applyWikiFilters();
+  }
+
+  function filterWiki() {
+    wikiSearchQuery = (document.getElementById('wiki-search-input').value || '').toLowerCase();
+    applyWikiFilters();
+  }
+
+  function applyWikiFilters() {
+    let filtered = allArticles;
+    if (wikiCatFilter) filtered = filtered.filter(a => a.category === wikiCatFilter);
+    if (wikiSearchQuery) filtered = filtered.filter(a => {
+      const hay = [a.title, a.content, a.category].concat(a.tags || []).join(' ').toLowerCase();
+      return hay.includes(wikiSearchQuery);
+    });
     renderArticles(filtered);
   }
 
   function renderArticles(items) {
-    const grid = document.getElementById('articles-grid');
-    if (!items.length) { grid.innerHTML = '<div class="empty" style="grid-column:1/-1">Noch keine Artikel vorhanden.</div>'; return; }
-    grid.innerHTML = items.map(a => `
-      <div class="article-card">
-        <h3>${esc(a.title)}</h3>
-        <div class="meta-row">
-          ${a.published ? '<span class="badge badge-green">Veröffentlicht</span>' : '<span class="badge badge-gray">Entwurf</span>'}
-          ${a.category ? `<span>${esc(a.category)}</span>` : ''}
-          <span>${fmtDate(a.created_at)}</span>
+    const list = document.getElementById('articles-list');
+    if (!items.length) { list.innerHTML = '<div class="empty">Keine Artikel gefunden.</div>'; return; }
+    list.innerHTML = items.map(a => {
+      const tags = (a.tags || []).map(t => `<span class="tag-chip">${esc(t)}</span>`).join('');
+      const links = a.links || [];
+      const linksBlock = links.length ? `
+        <div class="wiki-links-block">
+          <div class="wiki-links-label">Weiterführende Links</div>
+          ${links.map(l => `<a class="wiki-link" href="${esc(l.url)}" target="_blank" rel="noopener">→ ${esc(l.label || l.url)}</a>`).join('')}
+        </div>` : '';
+      const date = a.updated_at || a.created_at;
+      const dateStr = date ? new Date(date).toLocaleDateString('de-DE') : '';
+      const pubBadge = !a.published ? '<span class="badge badge-gray" style="margin-right:6px">Entwurf</span>' : '';
+      const tierBadge = a.min_tier ? `<span class="badge" style="background:#ede9fe;color:#6d28d9;margin-right:6px">${esc(a.min_tier)}</span>` : '';
+      const catBadge = a.category ? `<span class="badge badge-gray">${esc(a.category)}</span>` : '';
+      const canEdit = canWriteWiki() && (userRole === 'admin' || userTier === 'strategisch' || a.author_id === currentUser?.id);
+      const safeTitle = (a.title || '').replace(/'/g, "\\'");
+      return `<div class="wiki-article-card">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;">
+          <h3>${esc(a.title)}</h3>
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">${pubBadge}${tierBadge}${catBadge}</div>
         </div>
-        <p>${a.content ? esc(a.content).substring(0,180) + '…' : '(Kein Inhalt)'}</p>
-        ${userRole === 'admin' ? `
-        <div class="article-actions">
-          <button class="btn btn-sm btn-ghost" onclick="openArticleModal('${a.id}')">Bearbeiten</button>
-          <button class="btn btn-sm btn-danger" onclick="deleteArticle('${a.id}','${a.title.replace(/'/g,"\\'")}')">Löschen</button>
-        </div>` : ''}
-      </div>`).join('');
+        ${tags ? `<div style="margin-bottom:10px;">${tags}</div>` : ''}
+        <div class="wiki-article-content">${autoLink(a.content || '')}</div>
+        ${linksBlock}
+        <div class="article-footer">
+          <span class="article-meta">${dateStr ? 'Geändert: ' + dateStr : ''}</span>
+          <div style="display:flex;gap:6px;">
+            ${canEdit ? `<button class="btn btn-sm btn-ghost" onclick="openArticleModal('${a.id}')">✏ Bearbeiten</button>` : ''}
+            ${userRole === 'admin' ? `<button class="btn btn-sm btn-danger" onclick="deleteArticle('${a.id}','${safeTitle}')">Löschen</button>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  function addLinkRow(label, url) {
+    const container = document.getElementById('links-container');
+    const div = document.createElement('div');
+    div.className = 'link-row';
+    div.style.cssText = 'display:flex;gap:6px;margin-bottom:6px;align-items:center;';
+    div.innerHTML = `
+      <input class="link-label" type="text" placeholder="Bezeichnung" value="${esc(label||'')}"
+        style="flex:1;padding:7px 10px;border:1.5px solid var(--gray-200);border-radius:9px;font-size:0.83rem;outline:none;font-family:inherit;">
+      <input class="link-url" type="url" placeholder="https://…" value="${esc(url||'')}"
+        style="flex:2;padding:7px 10px;border:1.5px solid var(--gray-200);border-radius:9px;font-size:0.83rem;outline:none;font-family:inherit;">
+      <button type="button" onclick="this.closest('.link-row').remove()"
+        style="padding:4px 8px;border:none;background:var(--gray-100);border-radius:6px;cursor:pointer;font-size:1rem;color:var(--red);line-height:1;">×</button>`;
+    container.appendChild(div);
+  }
+
+  function buildLinksFromModal() {
+    return Array.from(document.querySelectorAll('.link-row')).map(row => ({
+      label: row.querySelector('.link-label').value.trim(),
+      url:   row.querySelector('.link-url').value.trim(),
+    })).filter(l => l.url);
   }
 
   function openArticleModal(id) {
     currentArticleId = id || null;
     document.getElementById('article-modal-title').textContent = id ? 'Artikel bearbeiten' : 'Neuer Artikel';
     document.getElementById('article-msg').className = 'msg';
+    document.getElementById('links-container').innerHTML = '';
     if (id) {
       const a = allArticles.find(x => x.id === id);
       if (!a) return;
       document.getElementById('f-title').value = a.title || '';
       document.getElementById('f-category').value = a.category || '';
+      document.getElementById('f-tags').value = (a.tags || []).join(', ');
       document.getElementById('f-content').value = a.content || '';
+      document.getElementById('f-min-tier').value = a.min_tier || '';
       document.getElementById('f-art-published').checked = !!a.published;
+      (a.links || []).forEach(l => addLinkRow(l.label, l.url));
     } else {
-      ['f-title','f-category','f-content'].forEach(i => document.getElementById(i).value = '');
+      ['f-title', 'f-tags', 'f-content'].forEach(i => document.getElementById(i).value = '');
+      document.getElementById('f-category').value = '';
+      document.getElementById('f-min-tier').value = '';
       document.getElementById('f-art-published').checked = false;
     }
     document.getElementById('article-modal').classList.add('open');
@@ -538,7 +701,18 @@
   async function saveArticle() {
     const title = document.getElementById('f-title').value.trim();
     if (!title) { showMsg('article-msg','Bitte Titel eingeben.','error'); return; }
-    const payload = { title, category: document.getElementById('f-category').value.trim() || null, content: document.getElementById('f-content').value.trim() || null, published: document.getElementById('f-art-published').checked, updated_at: new Date().toISOString() };
+    const tags = document.getElementById('f-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+    const payload = {
+      title,
+      category:   document.getElementById('f-category').value || null,
+      content:    document.getElementById('f-content').value.trim() || null,
+      links:      buildLinksFromModal(),
+      tags,
+      min_tier:   document.getElementById('f-min-tier').value || null,
+      published:  document.getElementById('f-art-published').checked,
+      updated_at: new Date().toISOString(),
+      updated_by: currentUser.id,
+    };
     if (!currentArticleId) payload.author_id = currentUser.id;
     let error;
     if (currentArticleId) ({ error } = await sb.from('knowledge_articles').update(payload).eq('id', currentArticleId));
@@ -596,14 +770,16 @@
     const { data } = await sb.from('forum_threads')
       .select('*, forum_posts(count)')
       .eq('channel_id', currentChannelId)
+      .order('pinned', { ascending: false })
       .order('created_at', { ascending: false });
     if (!data || !data.length) { list.innerHTML = '<div class="empty">Noch keine Beiträge in diesem Kanal.</div>'; return; }
     list.innerHTML = data.map(t => {
       const replies = t.forum_posts?.[0]?.count || 0;
+      const pinBadge = t.pinned ? '<span class="pin-badge">📌 Angepinnt</span> ' : '';
       return `<div class="thread-row" onclick="showThread('${t.id}')">
         <div class="thread-row-body">
-          <h4>${esc(t.titel)}</h4>
-          <div class="meta-row">${esc(t.autor_name || '–')} · ${fmtDate(t.created_at)}</div>
+          <h4>${t.pinned ? '📌 ' : ''}${esc(t.titel)}</h4>
+          <div class="meta-row">${pinBadge}${esc(t.autor_name || '–')} · ${fmtDate(t.created_at)}</div>
         </div>
         <div class="thread-replies">${replies} Antworten</div>
       </div>`;
@@ -623,8 +799,12 @@
     const { data: t } = await sb.from('forum_threads').select('*').eq('id', currentThreadId).single();
     if (!t) return;
     document.getElementById('thread-detail-title').textContent = t.titel;
-    document.getElementById('thread-detail-meta').textContent = (t.autor_name || '–') + ' · ' + fmtDate(t.created_at);
-    document.getElementById('thread-detail-content').textContent = t.inhalt || '';
+    const metaEl = document.getElementById('thread-detail-meta');
+    const pinBtn = canPin()
+      ? `<button class="btn-pin" onclick="toggleThreadPin('${t.id}',${!t.pinned})">${t.pinned ? '📌 Anpinnen aufheben' : '📌 Anpinnen'}</button>`
+      : '';
+    metaEl.innerHTML = `<span>${esc(t.autor_name || '–')} · ${fmtDate(t.created_at)}</span>${t.pinned ? ' <span class="pin-badge">📌 Angepinnt</span>' : ''} ${pinBtn}`;
+    document.getElementById('thread-detail-content').innerHTML = autoLink(t.inhalt || '');
     // Posts
     const { data: posts } = await sb.from('forum_posts').select('*').eq('thread_id', currentThreadId).order('created_at');
     const postList = document.getElementById('post-list');
@@ -636,7 +816,7 @@
           <span>${fmtDate(p.created_at)}</span>
           ${p.created_by === currentUser.id || userRole === 'admin' ? `<button class="btn btn-sm btn-danger" style="margin-left:auto" onclick="deletePost('${p.id}')">Löschen</button>` : ''}
         </div>
-        <div class="post-content">${esc(p.inhalt)}</div>
+        <div class="post-content">${autoLink(p.inhalt || '')}</div>
       </div>`).join('');
   }
 
@@ -654,6 +834,12 @@
   async function deletePost(id) {
     if (!confirm('Antwort löschen?')) return;
     await sb.from('forum_posts').delete().eq('id', id);
+    loadThread();
+  }
+
+  async function toggleThreadPin(threadId, pinValue) {
+    const { error } = await sb.from('forum_threads').update({ pinned: pinValue }).eq('id', threadId);
+    if (error) { alert('Fehler: ' + error.message); return; }
     loadThread();
   }
 
