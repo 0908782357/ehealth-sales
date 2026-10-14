@@ -162,6 +162,13 @@
   .role-badge { display:inline-block;padding:2px 9px;border-radius:20px;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em; }
   .role-admin  { background:#fef3c7;color:#92400e; }
   .role-partner{ background:#dbeafe;color:#1e40af; }
+
+  .perm-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--gray-100); }
+  .perm-row:last-child { border-bottom: none; }
+  .perm-tier-label { font-weight: 700; color: var(--navy); font-size: 0.875rem; min-width: 120px; }
+  .perm-select { padding: 7px 12px; border: 1.5px solid var(--gray-200); border-radius: 9px; font-size: 0.83rem; font-family: inherit; outline: none; cursor: pointer; }
+  .perm-select:focus { border-color: var(--navy); }
+  .perm-hint { font-size: 0.75rem; color: var(--gray-400); }
 </style>
 </head>
 <body>
@@ -329,6 +336,20 @@
         </div>
       </div>
     </div>
+
+    <!-- ========== Community-Berechtigungen ========== -->
+    <div class="section-block" style="margin-top:32px;">
+      <p class="section-label">Portal-Berechtigungen</p>
+      <h2>Community-Zugang je Stufe</h2>
+      <p class="page-sub" style="margin-bottom:16px;">Legt fest, ob Partner einer Stufe die Community lesen (read) oder auch schreiben können (edit). Standard hat Lesezugriff, Premium und Strategisch haben Schreibzugriff.</p>
+      <div id="community-perm-rows">
+        <p style="color:var(--gray-400);">Lade…</p>
+      </div>
+      <div style="margin-top:16px;display:flex;align-items:center;gap:12px;">
+        <button class="btn btn-primary btn-sm" onclick="saveCommunityPerms()">Speichern</button>
+        <span id="community-perm-msg" style="font-size:0.82rem;color:#16a34a;display:none;">Gespeichert ✓</span>
+      </div>
+    </div>
   </main>
 </div>
 
@@ -371,7 +392,7 @@ async function init() {
     badge.textContent = 'Admin'; badge.className = 'role-badge role-admin'; badge.style.display = '';
   }
 
-  await Promise.all([loadTiers(), loadFeatures()]);
+  await Promise.all([loadTiers(), loadFeatures(), loadCommunityPerms()]);
 }
 
 async function logout() {
@@ -490,6 +511,63 @@ async function saveTier(slug) {
 
 // ─────────────── Features / Vergleichstabelle ───────────────
 let featuresData = [];
+
+// ─────────────── Community-Berechtigungen ───────────────
+let communityPerms = { standard: 'read', premium: 'edit', strategisch: 'edit' };
+
+async function loadCommunityPerms() {
+  const { data } = await sb.from('portal_permissions')
+    .select('standard, premium, strategisch')
+    .eq('perm_id', 'community')
+    .maybeSingle();
+  if (data) {
+    communityPerms = {
+      standard:    data.standard    || 'read',
+      premium:     data.premium     || 'edit',
+      strategisch: data.strategisch || 'edit',
+    };
+  }
+  renderCommunityPerms();
+}
+
+function renderCommunityPerms() {
+  const TIERS = [
+    { key: 'standard',    label: 'Standard',    hint: 'Lesen + Forum-Antworten, kein Erstellen von Beiträgen' },
+    { key: 'premium',     label: 'Premium',     hint: 'Artikel erstellen, Forum-Threads starten, Schwarzes Brett' },
+    { key: 'strategisch', label: 'Strategisch', hint: 'Wie Premium + Forum-Threads anpinnen' },
+  ];
+  const container = document.getElementById('community-perm-rows');
+  container.innerHTML = TIERS.map(tier => `
+    <div class="perm-row">
+      <span class="perm-tier-label">${tier.label}</span>
+      <select class="perm-select" id="perm-community-${tier.key}">
+        <option value="read"${communityPerms[tier.key] === 'read' ? ' selected' : ''}>Lesen (read)</option>
+        <option value="edit"${communityPerms[tier.key] === 'edit' ? ' selected' : ''}>Schreiben (edit)</option>
+      </select>
+      <span class="perm-hint">${tier.hint}</span>
+    </div>`).join('');
+}
+
+async function saveCommunityPerms() {
+  const payload = {
+    standard:    document.getElementById('perm-community-standard').value,
+    premium:     document.getElementById('perm-community-premium').value,
+    strategisch: document.getElementById('perm-community-strategisch').value,
+  };
+  const { error } = await sb.from('portal_permissions')
+    .upsert({ perm_id: 'community', ...payload }, { onConflict: 'perm_id' });
+  const msgEl = document.getElementById('community-perm-msg');
+  if (error) {
+    msgEl.textContent = 'Fehler: ' + error.message;
+    msgEl.style.color = '#ef4444';
+  } else {
+    communityPerms = payload;
+    msgEl.textContent = 'Gespeichert ✓';
+    msgEl.style.color = '#16a34a';
+  }
+  msgEl.style.display = '';
+  setTimeout(() => { msgEl.style.display = 'none'; }, 2500);
+}
 
 async function loadFeatures() {
   const { data, error } = await sb.from('alliance_features')
