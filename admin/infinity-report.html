@@ -81,6 +81,7 @@
     .badge-green { background: #dcfce7; color: #15803d; }
     .badge-red { background: #fee2e2; color: #b91c1c; }
     .badge-amber { background: #fef3c7; color: #92400e; }
+    .badge-warn { background: #fef3c7; color: #92400e; }
     .badge-gray { background: var(--gray-100); color: var(--gray-500); }
     .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
     .dot-green { background: var(--green-ok); }
@@ -260,11 +261,11 @@
         <div class="sc-value" id="sc-total">–</div>
       </div>
       <div class="summary-card ok">
-        <div class="sc-label">Online</div>
+        <div class="sc-label">Online / Ready</div>
         <div class="sc-value" id="sc-online">–</div>
       </div>
       <div class="summary-card err">
-        <div class="sc-label">Offline</div>
+        <div class="sc-label">Offline / Fehler</div>
         <div class="sc-value" id="sc-offline">–</div>
       </div>
       <div class="summary-card warn">
@@ -272,9 +273,15 @@
         <div class="sc-value" id="sc-updates">–</div>
       </div>
       <div class="summary-card">
-        <div class="sc-label">Unternehmen</div>
+        <div class="sc-label">Kunden (LEI)</div>
         <div class="sc-value" id="sc-firmen">–</div>
       </div>
+    </div>
+
+    <!-- Profile summary -->
+    <div id="profile-summary" style="display:none; margin-bottom:16px;">
+      <div style="font-size:0.78rem; font-weight:600; color:var(--gray-500); margin-bottom:8px; text-transform:uppercase; letter-spacing:.05em;">Profil-Übersicht</div>
+      <div id="profile-chips" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
     </div>
 
     <!-- Toolbar -->
@@ -295,13 +302,13 @@
       <table>
         <thead>
           <tr>
-            <th>Firma</th>
+            <th>Kunde (LEI)</th>
             <th>Konnektor</th>
+            <th>Profil</th>
             <th>Status</th>
             <th>Version</th>
-            <th>VPN</th>
-            <th>Kartenterminals</th>
-            <th>Serial</th>
+            <th>Update</th>
+            <th>Deployed</th>
             <th>IP-Adresse</th>
           </tr>
         </thead>
@@ -688,47 +695,46 @@ function renderReport(data) {
     document.getElementById('debug-wrap').style.display = 'block';
   }
 
-  // Extract from new Edge Function response structure
-  const leistungserbringer = normalizeList(data.leistungserbringer?.data);
-  const berichtKonnektor   = normalizeList(data.berichtKonnektor?.data);
-  const berichtVpn         = normalizeList(data.berichtVpn?.data);
-  const firmen             = normalizeList(data.firmen?.data);
-  const resellerKontingente = normalizeList(data.resellerKontingente?.data);
-
-  // Try to build konnektor list from leistungserbringer or berichtKonnektor
-  const konnektoren = leistungserbringer.length > 0
-    ? leistungserbringer
-    : berichtKonnektor.length > 0
-    ? berichtKonnektor
-    : normalizeList(data.konnektoren);
-
-  // Build firma lookup
-  const firmaMap = {};
-  for (const f of firmen) {
-    firmaMap[f.id ?? f.internalId ?? f.uuid] = f.name ?? f.firmenname ?? f.bezeichnung ?? '–';
-  }
+  // Primary data: /konnektoren endpoint
+  const konnektoren = normalizeList(data.konnektoren?.data);
 
   // Summary
   const total = konnektoren.length;
   let online = 0, offline = 0, updates = 0;
+  const leiSet = new Set();
+  const profileCount = {};
+
   for (const k of konnektoren) {
-    const st = (k.status ?? k.verbindungsStatus ?? '').toUpperCase();
-    if (st === 'ONLINE' || st === 'CONNECTED' || st === 'AKTIV') online++;
+    const st = (k.runtimeStatus ?? k.status ?? '').toUpperCase();
+    if (st === 'READY' || st === 'ONLINE' || st === 'CONNECTED') online++;
     else if (st) offline++;
-    if (k.updateVerfuegbar || k.updateAvailable) updates++;
+    if ((k.fwStatus ?? '').toUpperCase() !== 'UP_TO_DATE' && k.fwStatus) updates++;
+    if (k.leiName) leiSet.add(k.leiName);
+    const prof = k.profileName ?? '–';
+    profileCount[prof] = (profileCount[prof] ?? 0) + 1;
   }
 
   document.getElementById('sc-total').textContent = total;
   document.getElementById('sc-online').textContent = online;
   document.getElementById('sc-offline').textContent = offline;
   document.getElementById('sc-updates').textContent = updates;
-  document.getElementById('sc-firmen').textContent = firmen.length || '–';
+  document.getElementById('sc-firmen').textContent = leiSet.size || '–';
   document.getElementById('summary-grid').style.display = 'grid';
   document.getElementById('search-wrap').style.display = 'flex';
   document.getElementById('last-updated').textContent = 'Aktualisiert: ' + new Date().toLocaleTimeString('de-DE');
 
+  // Profile chips
+  const chips = Object.entries(profileCount).sort((a, b) => b[1] - a[1]).map(([name, count]) =>
+    `<span style="display:inline-flex;align-items:center;gap:6px;background:var(--gray-100);border:1px solid var(--gray-200);border-radius:20px;padding:4px 12px;font-size:0.78rem;font-weight:500;">
+      <span style="background:var(--primary);border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:0.7rem;font-weight:700;">${count}</span>
+      ${esc(name)}
+    </span>`
+  ).join('');
+  document.getElementById('profile-chips').innerHTML = chips;
+  document.getElementById('profile-summary').style.display = chips ? 'block' : 'none';
+
   allRows = konnektoren;
-  renderTable(konnektoren, firmaMap);
+  renderTable(konnektoren);
 }
 
 function normalizeList(val) {
@@ -739,7 +745,7 @@ function normalizeList(val) {
   return [];
 }
 
-function renderTable(rows, firmaMap = {}) {
+function renderTable(rows) {
   if (!rows.length) {
     document.getElementById('table-body').innerHTML = `
       <tr><td colspan="8"><div class="empty-state"><p>Keine Konnektoren gefunden.</p></div></td></tr>`;
@@ -747,27 +753,36 @@ function renderTable(rows, firmaMap = {}) {
   }
 
   const html = rows.map(k => {
-    const firma = firmaMap[k.firmaId ?? k.firmenId ?? k.companyId ?? k.hskId] ?? k.firmaName ?? k.firmenname ?? '–';
-    const name  = k.name ?? k.bezeichnung ?? k.konnektorId ?? '–';
-    const st    = (k.status ?? k.verbindungsStatus ?? '').toUpperCase();
-    const stBadge = st === 'ONLINE' || st === 'CONNECTED' || st === 'AKTIV'
-      ? `<span class="badge badge-green"><span class="dot dot-green"></span>Online</span>`
-      : st
+    const lei     = k.leiName ?? k.konnektorGroupName ?? '–';
+    const label   = k.label ?? k.konnektorId ?? '–';
+    const profil  = k.profileName ?? '–';
+    const st      = (k.runtimeStatus ?? k.status ?? '').toUpperCase();
+    const stBadge = st === 'READY' || st === 'ONLINE'
+      ? `<span class="badge badge-green"><span class="dot dot-green"></span>Ready</span>`
+      : st === 'NOT_READY' || st === 'OFFLINE' || st === 'ERROR'
       ? `<span class="badge badge-red"><span class="dot dot-red"></span>${ucFirst(st.toLowerCase())}</span>`
+      : st
+      ? `<span class="badge badge-gray">${ucFirst(st.toLowerCase())}</span>`
       : `<span class="badge badge-gray">–</span>`;
-    const version  = k.firmwareVersion ?? k.softwareVersion ?? k.version ?? '–';
-    const vpn      = k.vpn ?? k.vpnTyp ?? k.vpnType ?? '–';
-    const terminals = k.anzahlKartenterminals ?? k.kartenterminals ?? k.terminalCount ?? '–';
-    const serial   = k.serialNumber ?? k.seriennummer ?? k.serial ?? '–';
-    const ip       = k.ipAdresse ?? k.ip ?? k.ipAddress ?? '–';
+    const version    = k.fwVersion ?? '–';
+    const fwStatus   = k.fwStatus ?? '';
+    const updateBadge = fwStatus === 'UP_TO_DATE'
+      ? `<span class="badge badge-green">Aktuell</span>`
+      : fwStatus
+      ? `<span class="badge badge-warn">${esc(fwStatus)}</span>`
+      : `<span class="badge badge-gray">–</span>`;
+    const deployed   = k.wallDeployment?.deployedAt
+      ? new Date(k.wallDeployment.deployedAt).toLocaleDateString('de-DE')
+      : '–';
+    const ip         = k.ipAddress ?? k.operatorNetworkIpAddress ?? '–';
     return `<tr>
-      <td>${esc(firma)}</td>
-      <td><span style="font-weight:500">${esc(name)}</span></td>
+      <td>${esc(lei)}</td>
+      <td><span style="font-weight:500">${esc(label)}</span></td>
+      <td style="font-size:0.78rem;color:var(--gray-500)">${esc(profil)}</td>
       <td>${stBadge}</td>
       <td class="mono">${esc(version)}</td>
-      <td>${esc(vpn)}</td>
-      <td style="text-align:center">${typeof terminals === 'number' ? terminals : esc(String(terminals))}</td>
-      <td class="mono text-muted">${esc(serial)}</td>
+      <td>${updateBadge}</td>
+      <td class="text-muted" style="font-size:0.78rem">${esc(deployed)}</td>
       <td class="mono text-muted">${esc(ip)}</td>
     </tr>`;
   }).join('');
