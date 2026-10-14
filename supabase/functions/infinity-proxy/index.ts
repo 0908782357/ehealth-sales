@@ -184,27 +184,23 @@ Deno.serve(async (req) => {
         const results = await Promise.allSettled([
           infinityGet('/benutzer-profil', token),
           infinityGetAll('/leistungserbringer', token),
-          infinityGet(`/berichte/reseller?subjectType=KONNEKTOR&from=${from}&to=${to}`, token),
-          infinityGet(`/berichte/reseller?subjectType=VPN&from=${from}&to=${to}`, token),
-          infinityGetAll('/reseller-kontingente', token),
-          infinityGetAll('/firmen', token),
+          infinityGetAll('/konnektoren', token),
           infinityGet(`/berichte/reseller?subjectType=KONNEKTOR_BY_GROUP&from=${to}&to=${to}`, token),
           infinityGet(`/berichte/reseller?subjectType=VPN_BY_GROUP`, token),
+          infinityGetAll('/firmen', token),
         ]);
 
-        const [profil, leistungserbringer, berichtKonnektor, berichtVpn, resellerKontingente, firmen, berichtKonnektorByGroup, berichtVpnByGroup] = results;
+        const [profil, leistungserbringer, konnektoren, berichtKonnektorByGroup, berichtVpnByGroup, firmen] = results;
         const r = (p: PromiseSettledResult<unknown>) =>
           p.status === 'fulfilled' ? { data: p.value } : { error: (p as PromiseRejectedResult).reason?.message };
 
         return json({
           benutzerProfil:           r(profil),
           leistungserbringer:       r(leistungserbringer),
-          berichtKonnektor:         r(berichtKonnektor),
-          berichtVpn:               r(berichtVpn),
-          resellerKontingente:      r(resellerKontingente),
-          firmen:                   r(firmen),
+          konnektoren:              r(konnektoren),
           berichtKonnektorByGroup:  r(berichtKonnektorByGroup),
           berichtVpnByGroup:        r(berichtVpnByGroup),
+          firmen:                   r(firmen),
           _dateRange:               { from, to },
           _newToken:                newRefreshToken ? token : null,
           _newRefreshToken:         newRefreshToken,
