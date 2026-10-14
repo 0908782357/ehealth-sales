@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       Authorization: `Bearer ${partialToken}`,
     };
     if (sessionCookie) confirmHeaders['Cookie'] = sessionCookie;
-    const res = await fetch(`${INFINITY_BASE}/login/bestaetigen`, {
+    const res = await fetch(`${INFINITY_BASE}/login`, {
       method: 'POST',
       headers: confirmHeaders,
       body: JSON.stringify({ totp }),
