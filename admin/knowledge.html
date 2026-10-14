@@ -91,10 +91,19 @@
   .wiki-search { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
   .wiki-search input { flex: 1; min-width: 200px; padding: 9px 14px; border: 1.5px solid var(--gray-200); border-radius: 9px; font-size: 0.875rem; outline: none; font-family: inherit; }
   .wiki-search input:focus { border-color: var(--navy); }
-  .wiki-article-card { background: white; border-radius: 14px; border: 1px solid var(--gray-200); padding: 22px 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); margin-bottom: 14px; }
-  .wiki-article-card:last-child { margin-bottom: 0; }
-  .wiki-article-card h3 { font-size: 1rem; font-weight: 700; color: var(--navy); margin-bottom: 8px; }
-  .wiki-article-content { font-size: 0.875rem; color: var(--gray-500); line-height: 1.6; margin-bottom: 12px; white-space: pre-wrap; word-break: break-word; }
+  /* Wiki – Listenzeilen */
+  .wiki-article-row { background: white; border-radius: 11px; border: 1px solid var(--gray-200); padding: 13px 18px; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; }
+  .wiki-article-row:last-child { margin-bottom: 0; }
+  .wiki-article-row:hover { border-color: var(--navy); box-shadow: 0 2px 10px rgba(60,74,124,0.08); }
+  .war-title { font-size: 0.93rem; font-weight: 700; color: var(--navy); margin-bottom: 4px; }
+  .war-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
+  .war-excerpt { font-size: 0.78rem; color: var(--gray-400); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
+  /* Wiki – Detailansicht */
+  .wiki-detail-header { margin-bottom: 16px; }
+  .wiki-detail-header h2 { font-family: Montserrat, sans-serif; font-size: 1.25rem; font-weight: 800; color: var(--navy); margin-bottom: 8px; }
+  .wiki-detail-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .wiki-detail-body { background: white; border-radius: 14px; border: 1px solid var(--gray-200); padding: 24px 28px; box-shadow: 0 1px 6px rgba(0,0,0,0.04); margin-bottom: 14px; }
+  .wiki-article-content { font-size: 0.9rem; color: var(--gray-900); line-height: 1.75; white-space: pre-wrap; word-break: break-word; }
   .wiki-article-content a { color: var(--navy); }
   .wiki-links-block { border-top: 1px solid var(--gray-100); margin-top: 12px; padding-top: 12px; }
   .wiki-links-label { font-size: 0.68rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
@@ -308,13 +317,24 @@
 
     <!-- ===== TAB: WIKI ===== -->
     <div class="tab-pane active" id="tab-info">
-      <div class="wiki-search">
-        <input type="text" id="wiki-search-input" placeholder="🔍 Wiki durchsuchen …" oninput="filterWiki()">
-        <button class="btn btn-primary" id="btn-new-article" onclick="openArticleModal()" style="display:none">+ Neuer Artikel</button>
+      <!-- Listenansicht -->
+      <div id="wiki-list-view">
+        <div class="wiki-search">
+          <input type="text" id="wiki-search-input" placeholder="🔍 Wiki durchsuchen …" oninput="filterWiki()">
+          <button class="btn btn-primary" id="btn-new-article" onclick="openArticleModal()" style="display:none">+ Neuer Artikel</button>
+        </div>
+        <div class="wiki-layout">
+          <div class="wiki-sidebar" id="wiki-sidebar"></div>
+          <div id="articles-list"><div class="empty">Laden…</div></div>
+        </div>
       </div>
-      <div class="wiki-layout">
-        <div class="wiki-sidebar" id="wiki-sidebar"></div>
-        <div id="articles-list"><div class="empty">Laden…</div></div>
+      <!-- Detailansicht -->
+      <div id="wiki-detail-view" style="display:none">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:8px;">
+          <button class="back-btn" onclick="closeArticleDetail()">← Zurück zur Übersicht</button>
+          <div id="wiki-detail-actions"></div>
+        </div>
+        <div id="wiki-detail-content"></div>
       </div>
     </div>
 
@@ -582,6 +602,9 @@
     buildWikiSidebar();
     renderArticles(allArticles);
     if (canWriteWiki()) document.getElementById('btn-new-article').style.display = '';
+    if (document.getElementById('wiki-detail-view').style.display !== 'none' && currentArticleId) {
+      openArticleDetail(currentArticleId);
+    }
   }
 
   function buildWikiSidebar() {
@@ -620,37 +643,58 @@
     const list = document.getElementById('articles-list');
     if (!items.length) { list.innerHTML = '<div class="empty">Keine Artikel gefunden.</div>'; return; }
     list.innerHTML = items.map(a => {
-      const tags = (a.tags || []).map(t => `<span class="tag-chip">${esc(t)}</span>`).join('');
-      const links = a.links || [];
-      const linksBlock = links.length ? `
-        <div class="wiki-links-block">
-          <div class="wiki-links-label">Weiterführende Links</div>
-          ${links.map(l => `<a class="wiki-link" href="${esc(l.url)}" target="_blank" rel="noopener">→ ${esc(l.label || l.url)}</a>`).join('')}
-        </div>` : '';
-      const date = a.updated_at || a.created_at;
-      const dateStr = date ? new Date(date).toLocaleDateString('de-DE') : '';
-      const pubBadge = !a.published ? '<span class="badge badge-gray" style="margin-right:6px">Entwurf</span>' : '';
-      const tierBadge = a.min_tier ? `<span class="badge" style="background:#ede9fe;color:#6d28d9;margin-right:6px">${esc(a.min_tier)}</span>` : '';
-      const catBadge = a.category ? `<span class="badge badge-gray">${esc(a.category)}</span>` : '';
-      const canEdit = canWriteWiki() && (userRole === 'admin' || userTier === 'strategisch' || a.author_id === currentUser?.id);
-      const safeTitle = (a.title || '').replace(/'/g, "\\'");
-      return `<div class="wiki-article-card">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;">
-          <h3>${esc(a.title)}</h3>
-          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">${pubBadge}${tierBadge}${catBadge}</div>
-        </div>
-        ${tags ? `<div style="margin-bottom:10px;">${tags}</div>` : ''}
-        <div class="wiki-article-content">${autoLink(a.content || '')}</div>
-        ${linksBlock}
-        <div class="article-footer">
-          <span class="article-meta">${dateStr ? 'Geändert: ' + dateStr : ''}</span>
-          <div style="display:flex;gap:6px;">
-            ${canEdit ? `<button class="btn btn-sm btn-ghost" onclick="openArticleModal('${a.id}')">✏ Bearbeiten</button>` : ''}
-            ${userRole === 'admin' ? `<button class="btn btn-sm btn-danger" onclick="deleteArticle('${a.id}','${safeTitle}')">Löschen</button>` : ''}
-          </div>
-        </div>
+      const excerpt = (a.content || '').replace(/\n+/g, ' ').slice(0, 110);
+      const catBadge = a.category ? `<span class="badge badge-gray" style="font-size:0.7rem;flex-shrink:0;">${esc(a.category)}</span>` : '';
+      const pubBadge = !a.published ? '<span class="badge badge-gray" style="font-size:0.7rem;flex-shrink:0;">Entwurf</span>' : '';
+      return `<div class="wiki-article-row" onclick="openArticleDetail('${a.id}')">
+        <div class="war-title">${esc(a.title)}</div>
+        <div class="war-meta">${catBadge}${pubBadge}<span class="war-excerpt">${esc(excerpt)}${excerpt.length >= 110 ? '…' : ''}</span></div>
       </div>`;
     }).join('');
+  }
+
+  function openArticleDetail(id) {
+    const a = allArticles.find(x => x.id === id);
+    if (!a) return;
+    currentArticleId = id;
+    const tags = (a.tags || []).map(t => `<span class="tag-chip">${esc(t)}</span>`).join('');
+    const links = a.links || [];
+    const linksBlock = links.length ? `
+      <div class="wiki-links-block">
+        <div class="wiki-links-label">Weiterführende Links</div>
+        ${links.map(l => `<a class="wiki-link" href="${esc(l.url)}" target="_blank" rel="noopener">→ ${esc(l.label || l.url)}</a>`).join('')}
+      </div>` : '';
+    const date = a.updated_at || a.created_at;
+    const dateStr = date ? new Date(date).toLocaleDateString('de-DE') : '';
+    const pubBadge = !a.published ? '<span class="badge badge-gray">Entwurf</span>' : '';
+    const tierBadge = a.min_tier ? `<span class="badge" style="background:#ede9fe;color:#6d28d9;">${esc(a.min_tier)}</span>` : '';
+    const catBadge = a.category ? `<span class="badge badge-gray">${esc(a.category)}</span>` : '';
+    const canEdit = canWriteWiki() && (userRole === 'admin' || userTier === 'strategisch' || a.author_id === currentUser?.id);
+    const safeTitle = (a.title || '').replace(/'/g, "\\'");
+    document.getElementById('wiki-detail-actions').innerHTML = `<div style="display:flex;gap:6px;">
+      ${canEdit ? `<button class="btn btn-sm btn-ghost" onclick="openArticleModal('${a.id}')">✏ Bearbeiten</button>` : ''}
+      ${userRole === 'admin' ? `<button class="btn btn-sm btn-danger" onclick="deleteArticle('${a.id}','${safeTitle}')">Löschen</button>` : ''}
+    </div>`;
+    document.getElementById('wiki-detail-content').innerHTML = `
+      <div class="wiki-detail-header">
+        <h2>${esc(a.title)}</h2>
+        <div class="wiki-detail-badges">${pubBadge}${tierBadge}${catBadge}</div>
+      </div>
+      ${tags ? `<div style="margin-bottom:16px;">${tags}</div>` : ''}
+      <div class="wiki-detail-body">
+        <div class="wiki-article-content">${autoLink(a.content || '')}</div>
+        ${linksBlock}
+      </div>
+      <div class="article-footer"><span class="article-meta">${dateStr ? 'Geändert: ' + dateStr : ''}</span></div>`;
+    document.getElementById('wiki-list-view').style.display = 'none';
+    document.getElementById('wiki-detail-view').style.display = '';
+    window.scrollTo(0, 0);
+  }
+
+  function closeArticleDetail() {
+    document.getElementById('wiki-detail-view').style.display = 'none';
+    document.getElementById('wiki-list-view').style.display = '';
+    currentArticleId = null;
   }
 
   function addLinkRow(label, url) {
@@ -727,6 +771,7 @@
   async function deleteArticle(id, title) {
     if (!confirm(`Artikel „${title}" wirklich löschen?`)) return;
     await sb.from('knowledge_articles').delete().eq('id', id);
+    closeArticleDetail();
     loadArticles();
   }
 
