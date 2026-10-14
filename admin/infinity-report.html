@@ -691,7 +691,14 @@ function renderReport(data) {
   console.log('=== Infinity API Raw Response ===', JSON.stringify(data, null, 2));
   const debugEl = document.getElementById('debug-panel');
   if (debugEl) {
-    debugEl.textContent = JSON.stringify(data, null, 2);
+    const kArr = data.konnektoren?.data;
+    const firstK = Array.isArray(kArr) ? kArr[0] : null;
+    const debugOut = {
+      'konnektoren[0] ALLE FELDER': firstK ? Object.keys(firstK) : null,
+      'konnektoren[0] WERT': firstK,
+      kartenterminals: data.kartenterminals,
+    };
+    debugEl.textContent = JSON.stringify(debugOut, null, 2);
     document.getElementById('debug-wrap').style.display = 'block';
   }
 
