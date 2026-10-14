@@ -480,11 +480,7 @@
   let allArticles = [], allChannels = [], allBoardPosts = [], boardFilter = '';
   let currentArticleId = null, currentChannelId = null, currentThreadId = null;
 
-  const WIKI_CATEGORIES = [
-    'TI-Infrastruktur', 'KIM & Kommunikation', 'eHBA & Identität',
-    'Konnektor & Hardware', 'Abrechnung & KV', 'Datenschutz & DSGVO',
-    'Produkte & Lösungen', 'Allgemein',
-  ];
+  let wikiCategories = [];
   let wikiCatFilter = '';
   let wikiSearchQuery = '';
 
@@ -505,6 +501,11 @@
     );
   }
 
+  async function loadWikiCategories() {
+    const { data } = await sb.from('themengebiete').select('name').eq('aktiv', true).order('sortierung').order('name');
+    wikiCategories = (data || []).map(t => t.name);
+  }
+
   // ===== INIT =====
   async function init() {
     const { data: { session } } = await sb.auth.getSession();
@@ -523,10 +524,11 @@
     }
         if (userRole === 'kunde') { document.getElementById('nav-item-products').style.display = 'none'; }
     setupNavRole(userRole).catch(console.warn);
+    await loadWikiCategories();
     // Kategorie-Select im Artikel-Modal befüllen
     const catSel = document.getElementById('f-category');
     if (catSel) {
-      WIKI_CATEGORIES.forEach(c => {
+      wikiCategories.forEach(c => {
         const opt = document.createElement('option');
         opt.value = c; opt.textContent = c;
         catSel.appendChild(opt);
@@ -584,7 +586,7 @@
 
   function buildWikiSidebar() {
     const sidebar = document.getElementById('wiki-sidebar');
-    const allCats = [''].concat(WIKI_CATEGORIES);
+    const allCats = [''].concat(wikiCategories);
     sidebar.innerHTML = allCats.map(cat => {
       const label = cat || 'Alle';
       const count = cat ? allArticles.filter(a => a.category === cat).length : allArticles.length;
