@@ -693,10 +693,12 @@ function renderReport(data) {
   if (debugEl) {
     const kArr = data.konnektoren?.data;
     const firstK = Array.isArray(kArr) ? kArr[0] : null;
+    const konnGruppen = data.konnektorGruppen?.data;
+    const firstG = Array.isArray(konnGruppen) ? konnGruppen[0] : null;
     const debugOut = {
-      'konnektoren[0] ALLE FELDER': firstK ? Object.keys(firstK) : null,
-      'konnektoren[0] WERT': firstK,
-      kartenterminals: data.kartenterminals,
+      'konnektorGruppen[0] ALLE FELDER': firstG ? Object.keys(firstG) : null,
+      'konnektorGruppen[0] WERT': firstG,
+      'konnektorGruppen error': data.konnektorGruppen?.error ?? null,
     };
     debugEl.textContent = JSON.stringify(debugOut, null, 2);
     document.getElementById('debug-wrap').style.display = 'block';

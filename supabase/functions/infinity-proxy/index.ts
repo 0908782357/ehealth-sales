@@ -188,7 +188,7 @@ Deno.serve(async (req) => {
           infinityGet(`/berichte/reseller?subjectType=KONNEKTOR_BY_GROUP&from=${to}&to=${to}`, token),
           infinityGet(`/berichte/reseller?subjectType=VPN_BY_GROUP`, token),
           infinityGetAll('/firmen', token),
-          infinityGetAll('/kartenterminals', token),
+          infinityGetAll('/konnektor-gruppen', token),
         ]);
 
         const [profil, leistungserbringer, konnektoren, berichtKonnektorByGroup, berichtVpnByGroup, firmen, kartenterminals] = results;
@@ -202,7 +202,7 @@ Deno.serve(async (req) => {
           berichtKonnektorByGroup:  r(berichtKonnektorByGroup),
           berichtVpnByGroup:        r(berichtVpnByGroup),
           firmen:                   r(firmen),
-          kartenterminals:          r(kartenterminals),
+          konnektorGruppen:         r(kartenterminals),
           _dateRange:               { from, to },
           _newToken:                newRefreshToken ? token : null,
           _newRefreshToken:         newRefreshToken,
