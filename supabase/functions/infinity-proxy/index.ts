@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
     const rawText = await res.text();
     let data: Record<string, unknown> = {};
     try { data = JSON.parse(rawText); } catch { data = { raw: rawText }; }
-    if (!res.ok) return json({ error: data.message ?? `TOTP ${res.status}`, details: data, sentBody: { totp, hasCookie: !!sessionCookie } }, res.status);
+    if (!res.ok) return json({ error: data.message ?? `TOTP ${res.status}`, details: data, sentBody: { totp, hasCookie: !!sessionCookie }, tokenPreview: partialToken ? (partialToken.substring(0, 20) + '...') : 'EMPTY' }, res.status);
     // Capture cookies from confirmation response too
     const confirmCookie = res.headers.get('set-cookie') ?? '';
     return json({
