@@ -308,7 +308,7 @@
             <th>Status</th>
             <th>Version</th>
             <th>Update</th>
-            <th>Deployed</th>
+            <th style="text-align:center">VPN</th>
             <th>IP-Adresse</th>
           </tr>
         </thead>
@@ -429,6 +429,7 @@ let session = null;
 let partialToken = null;
 let partialRefreshToken = null;
 let allRows = [];
+let allGruppenMap = {};
 
 // ── Supabase Auth ─────────────────────────────────────
 async function init() {
@@ -742,8 +743,16 @@ function renderReport(data) {
   document.getElementById('profile-chips').innerHTML = chips;
   document.getElementById('profile-summary').style.display = chips ? 'block' : 'none';
 
+  // Build lookup map: konnektorGroupInternalId → group (for VPN count etc.)
+  const gruppen = normalizeList(data.konnektorGruppen?.data);
+  const gruppenMap = {};
+  for (const g of gruppen) {
+    if (g.internalId) gruppenMap[g.internalId] = g;
+  }
+
   allRows = konnektoren;
-  renderTable(konnektoren);
+  allGruppenMap = gruppenMap;
+  renderTable(konnektoren, gruppenMap);
 }
 
 function normalizeList(val) {
@@ -754,7 +763,8 @@ function normalizeList(val) {
   return [];
 }
 
-function renderTable(rows) {
+function renderTable(rows, gruppenMap) {
+  const gMap = gruppenMap ?? allGruppenMap;
   if (!rows.length) {
     document.getElementById('table-body').innerHTML = `
       <tr><td colspan="8"><div class="empty-state"><p>Keine Konnektoren gefunden.</p></div></td></tr>`;
@@ -780,9 +790,8 @@ function renderTable(rows) {
       : fwStatus
       ? `<span class="badge badge-warn">${esc(fwStatus)}</span>`
       : `<span class="badge badge-gray">–</span>`;
-    const deployed   = k.wallDeployment?.deployedAt
-      ? new Date(k.wallDeployment.deployedAt).toLocaleDateString('de-DE')
-      : '–';
+    const gruppe     = gMap[k.konnektorGroupInternalId] ?? null;
+    const vpnCount   = gruppe?.countVpnAccesses ?? '–';
     const ip         = k.ipAddress ?? k.operatorNetworkIpAddress ?? '–';
     return `<tr>
       <td>${esc(lei)}</td>
@@ -791,7 +800,7 @@ function renderTable(rows) {
       <td>${stBadge}</td>
       <td class="mono">${esc(version)}</td>
       <td>${updateBadge}</td>
-      <td class="text-muted" style="font-size:0.78rem">${esc(deployed)}</td>
+      <td style="text-align:center;font-variant-numeric:tabular-nums">${typeof vpnCount === 'number' ? vpnCount : esc(String(vpnCount))}</td>
       <td class="mono text-muted">${esc(ip)}</td>
     </tr>`;
   }).join('');
@@ -805,7 +814,7 @@ function filterTable() {
     const hay = JSON.stringify(k).toLowerCase();
     return hay.includes(q);
   });
-  renderTable(filtered);
+  renderTable(filtered, allGruppenMap);
 }
 
 function togglePw() {
