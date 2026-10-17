@@ -1183,8 +1183,27 @@
       .offer-table tfoot td { padding: 0; border: none !important; }
       .offer-table tfoot td:last-child { text-align: right; }
 
-      /* Offer Bundle & Formular: Padding reduzieren */
-      .offer-bundle-header { padding: 18px 18px !important; }
+      /* Offer Bundle: vertikales Stacking auf Mobile */
+      .offer-bundle-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+        padding: 18px !important;
+      }
+      /* Rechtes Div (Preis + Button): horizontal nebeneinander */
+      .offer-bundle-header > div:last-child {
+        flex-shrink: unset !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        text-align: left !important;
+        flex-wrap: wrap !important;
+        gap: 10px !important;
+      }
+      .offer-bundle-price { font-size: 1.25rem !important; }
+      .offer-bundle-select-btn { margin-top: 0 !important; }
+
+      /* Formular: Padding reduzieren */
       .offer-form-wrap { padding: 20px !important; }
       .offer-sum-section { padding: 16px 18px; }
     }
