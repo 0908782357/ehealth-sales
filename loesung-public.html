@@ -18,7 +18,7 @@
     --gray-400: #94a3b8; --gray-500: #6B7280; --gray-700: #374151; --gray-900: #111827;
     --shadow-sm: 0 1px 3px rgba(60,74,124,0.08); --shadow-md: 0 4px 16px rgba(60,74,124,0.12);
   }
-  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--gray-50); color: var(--gray-900); line-height: 1.6; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--gray-50); color: var(--gray-900); line-height: 1.6; overflow-x: hidden; }
   a { text-decoration: none; color: inherit; }
   img { max-width: 100%; }
 
@@ -110,6 +110,8 @@
   }
   @media (max-width: 480px) {
     .nav-logo-text { display: none; }
+    /* Beratung-Button im Nav verstecken – CTA ist im Hero vorhanden */
+    .btn-nav-contact { display: none; }
     .nav-inner { padding: 0 16px; }
     .page-wrap { padding: 20px 16px 40px; }
     .hero-title { font-size: 1.3rem; }
