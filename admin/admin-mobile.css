@@ -1,0 +1,88 @@
+/* ===== Admin Portal Mobile Responsive ===== */
+/* Wird von allen Admin-Seiten per <link> eingebunden */
+
+/* Hamburger-Button: nur auf Mobile sichtbar */
+.topbar-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  margin-right: -4px;
+}
+.topbar-hamburger span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: white;
+  border-radius: 2px;
+  transition: all 0.22s;
+}
+.topbar-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.topbar-hamburger.open span:nth-child(2) { opacity: 0; }
+.topbar-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+/* Overlay hinter Sidebar */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 60px 0 0 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 199;
+}
+.sidebar-overlay.open { display: block; }
+
+@media (max-width: 768px) {
+  body { overflow-x: hidden; }
+
+  /* Topbar */
+  .topbar-hamburger { display: flex; }
+  .topbar { padding: 0 16px; }
+  .user-chip { display: none; }
+
+  /* Sidebar: slide-in Drawer */
+  .sidebar {
+    position: fixed !important;
+    top: 60px; left: 0; bottom: 0;
+    width: 260px;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+    box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  /* Layout: Main nimmt volle Breite */
+  .layout { flex-direction: column; }
+  .main {
+    padding: 20px 16px 32px !important;
+    max-width: 100% !important;
+  }
+
+  /* Tabellen horizontal scrollbar */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { min-width: 500px; }
+
+  /* Stats Grid: 2 Spalten */
+  .stats-row { grid-template-columns: 1fr 1fr !important; }
+
+  /* Tab-Leisten umbrechen */
+  .tab-bar, .tabs { flex-wrap: wrap; gap: 4px !important; }
+  .tab-btn, .tab { font-size: 0.8rem !important; padding: 7px 12px !important; }
+}
+
+@media (max-width: 480px) {
+  .topbar { padding: 0 12px; }
+  .topbar-brand { font-size: 0.88rem; gap: 8px; }
+  .topbar-brand img { height: 26px; }
+
+  .main { padding: 14px 12px 28px !important; }
+
+  .stats-row { grid-template-columns: 1fr !important; }
+
+  .btn-logout { padding: 6px 10px; font-size: 0.72rem; }
+}
