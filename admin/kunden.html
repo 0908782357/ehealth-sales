@@ -297,6 +297,72 @@
   .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--navy); }
   .form-group textarea { min-height: 70px; resize: vertical; }
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; padding-top: 8px; border-top: 1px solid var(--gray-100); margin-top: 4px; }
+
+  /* ─── Zurück-Button (nur auf Mobile sichtbar) ─── */
+  .crm-back-btn {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--gray-50);
+    border: none;
+    border-bottom: 1px solid var(--gray-200);
+    color: var(--navy);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    width: 100%;
+    text-align: left;
+    flex-shrink: 0;
+  }
+  .crm-back-btn:hover { background: var(--gray-100); }
+  .crm-back-btn svg { flex-shrink: 0; }
+
+  /* ─── Mobile CRM: Master-Detail ─── */
+  @media (max-width: 768px) {
+    /* Stack: Liste oben, Karte unten (oder wechselseitig) */
+    .crm-split { flex-direction: column; gap: 0; overflow: visible; height: auto; }
+    .crm-list { width: 100%; max-height: none; height: auto; border-radius: 12px; }
+    .crm-karte { display: none; width: 100%; border-radius: 12px; margin-top: 12px; height: auto; max-height: none; }
+    .crm-karte.mobile-open { display: flex; }
+
+    /* Layout: volle Höhe wieder herstellen wenn Karte aktiv */
+    .main { overflow: visible; height: auto; padding: 16px 12px 24px !important; }
+    .layout { overflow: visible; height: auto; }
+
+    /* Zurück-Button sichtbar */
+    .crm-back-btn { display: flex; }
+
+    /* Karte-Header: 2-spaltig (Links + Rechts), Mitte ausblenden */
+    .karte-header { grid-template-columns: 1fr auto; padding: 10px 14px; gap: 8px; }
+    .karte-hdr-center { display: none; }
+
+    /* Tabs: horizontal scrollbar */
+    .karte-tabs { overflow-x: auto; padding: 0 14px; scrollbar-width: none; }
+    .karte-tabs::-webkit-scrollbar { display: none; }
+    .karte-tab { white-space: nowrap; padding: 9px 12px; }
+
+    /* Karte Body: weniger Padding */
+    .karte-body { padding: 16px 14px 20px; }
+
+    /* Interne Grids: Single Column */
+    .karte-top-cols { grid-template-columns: 1fr; gap: 16px; }
+    .karte-cols { grid-template-columns: 1fr; gap: 16px; }
+    .kf-grid { grid-template-columns: 1fr; gap: 8px; }
+    .kf-edit-grid { grid-template-columns: 1fr; gap: 8px; }
+    .kf-full, .kf-eg-full { grid-column: auto; }
+    .form-row { grid-template-columns: 1fr; }
+
+    /* Pipeline-Tabelle: horizontal scrollbar */
+    .pipeline-scroll-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .pipeline-table { min-width: 580px; }
+
+    /* Modal: von unten einfahren */
+    .modal-bg { padding: 0; align-items: flex-end; }
+    .modal { border-radius: 20px 20px 0 0; max-width: 100%; max-height: 90vh; }
+    .modal-body { max-height: calc(90vh - 80px); }
+  }
 </style>
 <link rel="stylesheet" href="admin-mobile.css">
 
@@ -466,6 +532,11 @@
           <p>Kunden aus der Liste auswählen oder<br>neuen Kunden anlegen</p>
         </div>
         <div class="karte-view" id="karte-view" style="display:none">
+          <!-- Zurück-Button (nur Mobile) -->
+          <button class="crm-back-btn" onclick="closeMobileKarte()">
+            <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            Zurück zur Liste
+          </button>
           <!-- Karte header -->
           <div class="karte-header">
             <div class="karte-hdr-left">
@@ -1543,6 +1614,7 @@ function renderVcSection(kundenId) {
         <button class="btn btn-sm" style="background:#ede9fe;color:#5b21b6;padding:4px 10px;" onclick="openVcEdit('${kundenId}',null)">+ Chance</button>
       </span>
     </div>
+    <div class="pipeline-scroll-wrap">
     <table class="pipeline-table">
       <thead><tr>
         <th>Positionen</th>
@@ -1556,7 +1628,8 @@ function renderVcSection(kundenId) {
         <th></th><th></th><th></th>
       </tr></thead>
       <tbody>${tableRows}</tbody>
-    </table>`;
+    </table>
+    </div>`;
 }
 
 // ─── VC Inline Edit ───────────────────────────────────────────────────────────
@@ -2009,6 +2082,41 @@ async function generateAngebot(vcId) {
     alert('Fehler beim Erstellen des Angebots: ' + (e.message || e));
   }
 }
+</script>
+
+<script>
+/* ─── Mobile CRM: Master-Detail Patch ─── */
+(function() {
+  function isMobile() { return window.innerWidth <= 768; }
+
+  // Zurück zur Liste
+  window.closeMobileKarte = function() {
+    document.getElementById('crm-karte').classList.remove('mobile-open');
+    document.querySelector('.crm-list').style.display = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // showKarteView patchen: auf Mobile die Karte einblenden und Liste ausblenden
+  const _origShow = window.showKarteView;
+  window.showKarteView = function() {
+    _origShow();
+    if (isMobile()) {
+      document.getElementById('crm-karte').classList.add('mobile-open');
+      document.querySelector('.crm-list').style.display = 'none';
+      document.getElementById('crm-karte').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // closeKundenkarte patchen: auf Mobile Liste wieder einblenden
+  const _origClose = window.closeKundenkarte;
+  window.closeKundenkarte = function() {
+    _origClose();
+    if (isMobile()) {
+      document.getElementById('crm-karte').classList.remove('mobile-open');
+      document.querySelector('.crm-list').style.display = '';
+    }
+  };
+})();
 </script>
 </body>
 </html>
