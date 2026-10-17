@@ -1081,6 +1081,72 @@
     .result-spider-svg-wrap svg { width: 100%; height: auto; display: block; }
     #spider-tooltip { position: fixed; display: none; padding: 4px 12px; border-radius: 20px; color: white; font-size: 0.75rem; font-weight: 700; pointer-events: none; z-index: 9999; white-space: nowrap; font-family: var(--font-body); box-shadow: 0 2px 8px rgba(0,0,0,0.18); transform: translate(10px, -50%); }
     .assessment-result-badge { display: inline-flex; align-items: center; gap: 12px; border-radius: 12px; padding: 14px 24px; font-weight: 700; color: var(--navy); font-size: 0.95rem; }
+
+    /* ===== MOBILE NAV ===== */
+    .nav-hamburger { display: none; }
+    .mobile-nav { display: none; }
+
+    @media (max-width: 900px) {
+      .nav-links, .nav-cta { display: none !important; }
+      .nav-inner { height: 72px; gap: 0; }
+      .logo-wrap img { height: 60px !important; }
+      .nav-hamburger {
+        display: flex; flex-direction: column; justify-content: center; gap: 5px;
+        background: none; border: none; cursor: pointer; padding: 8px; margin-left: auto;
+      }
+      .nav-hamburger span {
+        display: block; width: 24px; height: 2.5px;
+        background: var(--navy); border-radius: 2px; transition: all 0.25s;
+      }
+      .nav-hamburger.open span:nth-child(1) { transform: translateY(7.5px) rotate(45deg); }
+      .nav-hamburger.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
+      .nav-hamburger.open span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
+      .mobile-nav {
+        position: fixed; top: 72px; left: 0; right: 0; bottom: 0;
+        background: white; z-index: 998; padding: 16px 20px 32px;
+        overflow-y: auto; border-top: 1px solid var(--gray-200);
+        flex-direction: column; gap: 2px;
+      }
+      .mobile-nav.open { display: flex; }
+      .mobile-nav a, .mobile-nav button.mnav-btn {
+        display: block; width: 100%; padding: 14px 16px;
+        font-size: 1rem; font-weight: 600; color: var(--gray-700);
+        text-decoration: none; border-radius: 10px; background: none; border: none;
+        text-align: left; cursor: pointer; font-family: inherit; transition: all 0.15s;
+      }
+      .mobile-nav a:hover, .mobile-nav button.mnav-btn:hover { background: var(--navy-bg); color: var(--navy); }
+      .mobile-nav .mnav-divider { height: 1px; background: var(--gray-200); margin: 10px 0; }
+      .mobile-nav .mnav-sub { padding-left: 28px; font-size: 0.92rem; color: var(--gray-500); }
+      .mobile-nav .mnav-cta {
+        display: block; width: 100%; margin-top: 16px; padding: 15px;
+        background: var(--navy); color: white; border-radius: 10px; border: none;
+        font-size: 1rem; font-weight: 700; text-align: center; cursor: pointer;
+        font-family: inherit; text-decoration: none;
+      }
+      /* Hero & sections */
+      .hero { padding: 56px 0 48px; }
+      .hero-inner { gap: 32px; }
+      .section { padding: 56px 0; }
+      .founder-stats { grid-template-columns: 1fr 1fr !important; gap: 20px; }
+      .about-grid { flex-direction: column; gap: 24px !important; }
+      .section-header h2 { font-size: clamp(1.5rem, 5vw, 2.2rem); }
+      .cta-inner { gap: 24px; }
+    }
+
+    @media (max-width: 540px) {
+      .nav-inner { height: 64px; }
+      .mobile-nav { top: 64px; }
+      .logo-wrap img { height: 52px !important; }
+      .nav-hamburger span { width: 22px; }
+      .hero { padding: 40px 0 36px; }
+      .container { padding: 0 16px; }
+      .founder-stats { grid-template-columns: 1fr !important; }
+      .grid-4 { grid-template-columns: 1fr !important; }
+      h2 { font-size: clamp(1.4rem, 6vw, 2rem) !important; }
+      .hero-actions { flex-direction: column; }
+      .hero-actions .btn { width: 100%; text-align: center; justify-content: center; }
+      .section { padding: 44px 0; }
+    }
   </style>
 </head>
 <body>
@@ -1113,9 +1179,27 @@
       <div class="nav-cta">
         <a href="#" class="btn btn-primary" onclick="showPage('kontakt'); return false;">Beratung anfragen</a>
       </div>
+      <button class="nav-hamburger" id="nav-hamburger" onclick="toggleMobileNav()" aria-label="Menü öffnen">
+        <span></span><span></span><span></span>
+      </button>
     </nav>
   </div>
 </header>
+
+<!-- Mobile Nav -->
+<div class="mobile-nav" id="mobile-nav">
+  <a href="#" onclick="showPage('home'); closeMobileNav(); return false;">Startseite</a>
+  <a href="#" onclick="showPage('produktfinder'); closeMobileNav(); return false;">Produktfinder</a>
+  <a href="admin/index.html" onclick="closeMobileNav()">Portal</a>
+  <a href="#" onclick="showPage('leistungen'); closeMobileNav(); return false;">Leistungen</a>
+  <a href="#" onclick="showPage('loesungen'); closeMobileNav(); return false;">Lösungen</a>
+  <div class="mnav-divider"></div>
+  <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--gray-400);padding:6px 16px;">Unternehmen</span>
+  <a class="mnav-sub" href="#" onclick="showPage('partner'); closeMobileNav(); return false;">Partner</a>
+  <a class="mnav-sub" href="#" onclick="showPage('ueber-uns'); closeMobileNav(); return false;">Über uns</a>
+  <a class="mnav-sub" href="#" onclick="showPage('kontakt'); closeMobileNav(); return false;">Kontakt</a>
+  <a class="mnav-cta" href="#" onclick="showPage('kontakt'); closeMobileNav(); return false;">Beratung anfragen</a>
+</div>
 
 <!-- ======================================================= -->
 <!-- PAGE: STARTSEITE                                         -->
@@ -2498,6 +2582,19 @@
 
 <!-- ===== JAVASCRIPT ===== -->
 <script>
+  function toggleMobileNav() {
+    const btn = document.getElementById('nav-hamburger');
+    const nav = document.getElementById('mobile-nav');
+    btn.classList.toggle('open');
+    nav.classList.toggle('open');
+    document.body.style.overflow = nav.classList.contains('open') ? 'hidden' : '';
+  }
+  function closeMobileNav() {
+    document.getElementById('nav-hamburger').classList.remove('open');
+    document.getElementById('mobile-nav').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
   const DETAIL_SLUGS = ['ti-gateway','hsm-b','easyti','easyti-hub','kim','tim','ki-arztbrief','tms','stele','medivise-box','online-services','tablett'];
 
   function showPage(pageId) {
