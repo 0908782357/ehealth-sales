@@ -38,10 +38,22 @@
 @media (max-width: 768px) {
   body { overflow-x: hidden; }
 
-  /* Topbar */
+  /* Topbar: nur Hamburger + Brand, kein Logout */
   .topbar-hamburger { display: flex; }
   .topbar { padding: 0 16px; }
   .user-chip { display: none; }
+  .btn-logout { display: none; }
+
+  /* Logout-Button in der Sidebar (unten) */
+  .sidebar-logout {
+    display: flex; align-items: center; gap: 10px;
+    width: 100%; margin-top: 24px; padding: 10px 10px;
+    background: none; border: 1px solid #e2e8f0; border-radius: 9px;
+    color: #64748b; font-size: 0.85rem; font-weight: 500;
+    cursor: pointer; font-family: inherit; text-align: left;
+    transition: all 0.15s;
+  }
+  .sidebar-logout:hover { background: #fef2f2; color: #dc2626; border-color: #fca5a5; }
 
   /* Sidebar: slide-in Drawer */
   .sidebar {
