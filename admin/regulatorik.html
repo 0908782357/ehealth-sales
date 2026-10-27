@@ -101,6 +101,7 @@
   .cat-datenschutz  { background: #fff1f2; color: #be123c; }
   .cat-cybersecurity { background: #fef2ff; color: #86198f; }
   .cat-telemedizin   { background: #f0fdf9; color: #0f766e; }
+  .cat-pflege        { background: #fff7ed; color: #c2410c; }
 
   /* ── Main content layout ── */
   .content-layout { display: grid; grid-template-columns: 180px 1fr; gap: 20px; align-items: start; }
@@ -400,6 +401,7 @@
             <option value="Datenschutz">Datenschutz</option>
             <option value="Cybersecurity">Cybersecurity</option>
             <option value="Telemedizin">Telemedizin</option>
+            <option value="Pflege">Pflege</option>
           </select>
         </div>
       </div>
@@ -446,7 +448,7 @@
   let userRole = 'partner';
   let userTier = null;
 
-  const CATEGORIES = ['Überblick','ePA','Datenzugang','Interoperabilität','TI','DiGA','Datenschutz','Cybersecurity','Telemedizin'];
+  const CATEGORIES = ['Überblick','ePA','Datenzugang','Interoperabilität','TI','DiGA','Datenschutz','Cybersecurity','Telemedizin','Pflege'];
   const STATUS_MAP = {
     'in Kraft':               'status-kraft',
     'Kabinettsbeschluss':     'status-kabinett',
@@ -459,7 +461,7 @@
     'Überblick': 'cat-überblick', 'ePA': 'cat-epa', 'Datenzugang': 'cat-datenzugang',
     'Interoperabilität': 'cat-interoperabilität', 'TI': 'cat-ti',
     'DiGA': 'cat-diga', 'Datenschutz': 'cat-datenschutz',
-    'Cybersecurity': 'cat-cybersecurity', 'Telemedizin': 'cat-telemedizin',
+    'Cybersecurity': 'cat-cybersecurity', 'Telemedizin': 'cat-telemedizin', 'Pflege': 'cat-pflege',
   };
 
   // ── Helpers ──────────────────────────────────────────────────────────
