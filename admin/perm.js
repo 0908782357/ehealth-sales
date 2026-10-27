@@ -75,8 +75,8 @@
       else                          { fixedKey = 'sFixed';  defKey = 'sDef';  roleKey = 'standard'; }
     }
     if (def[fixedKey] !== undefined) return def[fixedKey];
-    var v = stored[permId] && stored[permId][roleKey];
-    return v !== undefined ? v : (def[defKey] || 'hidden');
+    var v = stored[permId] ? stored[permId][roleKey] : undefined;
+    return (v !== undefined && v !== null) ? v : (def[defKey] || 'hidden');
   };
 
   window.permAtLeast = function (role, tier, permId, minLevel) {
