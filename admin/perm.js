@@ -25,6 +25,7 @@
     { id: 'support',       kFixed:'hidden', sFixed:'hidden', prFixed:'hidden', stFixed:'hidden' },
     { id: 'tirechner',     kFixed:'hidden', sDef:'read',     prDef:'read',     stDef:'edit'     },
     { id: 'produktfinder', kFixed:'hidden', sDef:'read',     prDef:'edit',     stDef:'edit'     },
+    { id: 'regulatorik',   kFixed:'hidden', sDef:'read',     prDef:'read',     stDef:'read'     },
     { id: 'kunden_mgmt',   kFixed:'hidden', sFixed:'hidden', prFixed:'hidden', stFixed:'hidden' },
     { id: 'verwaltung',    kFixed:'hidden', sFixed:'hidden', prFixed:'hidden', stFixed:'hidden' },
   ];
