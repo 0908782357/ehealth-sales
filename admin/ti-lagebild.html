@@ -4,45 +4,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alliance Portal – TI Lagebild</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="perm.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
     --navy: #3C4A7C; --green: #6DC52D; --navy-dark: #2d3a63;
     --gray-50: #f8fafc; --gray-100: #f1f5f9; --gray-200: #e2e8f0;
-    --gray-400: #94a3b8; --gray-500: #64748b; --gray-900: #0f172a;
-    --red: #ef4444;
-    --status-ok-bg: #f0fdf4; --status-ok-border: #bbf7d0; --status-ok-text: #15803d;
-    --status-partial-bg: #fffbeb; --status-partial-border: #fde68a; --status-partial-text: #b45309;
-    --status-full-bg: #fef2f2; --status-full-border: #fecaca; --status-full-text: #dc2626;
-    --status-maint-bg: #eff6ff; --status-maint-border: #bfdbfe; --status-maint-text: #1d4ed8;
+    --gray-400: #94a3b8; --gray-500: #64748b; --gray-700: #334155; --gray-900: #0f172a;
+    --red: #ef4444; --orange: #f59e0b; --blue: #3b82f6; --teal: #0d9488;
+    --ok: #16a34a; --warn: #d97706; --crit: #dc2626;
   }
   body { font-family: 'Inter','Helvetica Neue',sans-serif; background: var(--gray-50); color: var(--gray-900); }
 
   /* ── Topbar ── */
-  .topbar {
-    background: var(--navy); color: white; padding: 0 28px;
-    display: flex; align-items: center; justify-content: space-between; height: 60px;
-    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.15);
-  }
+  .topbar { background: var(--navy); color: white; padding: 0 28px; display: flex; align-items: center; justify-content: space-between; height: 60px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
   .topbar-brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1rem; }
   .topbar-brand img { height: 32px; border-radius: 6px; }
   .topbar-brand span { opacity: 0.7; font-weight: 400; font-size: 0.78rem; margin-left: 4px; }
   .topbar-right { display: flex; align-items: center; gap: 16px; }
   .user-chip { background: rgba(255,255,255,0.12); border-radius: 20px; padding: 5px 12px; font-size: 0.78rem; }
+  .role-badge { font-size: 0.7rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; background: rgba(109,197,45,0.2); color: #a7f3d0; letter-spacing: 0.04em; }
   .btn-logout { background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 8px; padding: 7px 14px; font-size: 0.78rem; cursor: pointer; }
   .btn-logout:hover { background: rgba(255,255,255,0.2); }
 
   /* ── Layout ── */
   .layout { display: flex; min-height: calc(100vh - 60px); }
   .sidebar { width: 220px; flex-shrink: 0; background: white; border-right: 1px solid var(--gray-200); padding: 24px 12px; }
-  .main { flex: 1; padding: 32px 36px; overflow: auto; }
-
-  /* ── Nav ── */
+  .nav-section { font-size: 0.62rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.1em; padding: 0 10px; margin-bottom: 6px; margin-top: 20px; }
+  .nav-section:first-child { margin-top: 0; }
   .nav-link { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px; color: var(--gray-500); font-size: 0.85rem; font-weight: 500; text-decoration: none; transition: all 0.15s; }
   .nav-link:hover { background: var(--gray-100); color: var(--navy); }
   .nav-link.active { background: #eef0f7; color: var(--navy); font-weight: 700; }
+  .nav-link svg { width: 16px; height: 16px; flex-shrink: 0; }
   .nav-group-header { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px; color: var(--gray-500); font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.15s; user-select: none; }
   .nav-group-header:hover { background: var(--gray-100); color: var(--navy); }
   .nav-group-header > svg:first-child { width: 16px; height: 16px; flex-shrink: 0; }
@@ -52,175 +45,116 @@
   .nav-group-body { display: none; }
   .nav-group.open .nav-group-body { display: block; }
   .nav-sub { padding-left: 28px !important; }
-  .nav-sub2 { padding-left: 40px !important; }
+  .nav-subgroup { margin-top: 2px; }
   .nav-subgroup-label { font-size: 0.62rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.1em; padding: 6px 10px 4px 28px; }
-  .nav-link svg { width: 16px; height: 16px; flex-shrink: 0; }
-  .role-badge { display:inline-block;padding:2px 9px;border-radius:20px;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em; }
-  .role-admin  { background:#fef3c7;color:#92400e; }
-  .role-partner{ background:#dbeafe;color:#1e40af; }
+  .nav-sub2 { padding-left: 40px !important; }
 
-  /* ── Page header ── */
-  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
+  /* ── Main ── */
+  .main { flex: 1; padding: 32px 36px; min-width: 0; overflow-x: hidden; }
+  @media (max-width: 768px) { .main { padding: 20px 16px; } .sidebar { display: none; } }
   h1 { font-family: Montserrat, sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--navy); }
-  .page-sub { color: var(--gray-500); font-size: 0.85rem; margin-top: 4px; }
-  .header-meta { text-align: right; }
-  .meta-time { color: var(--gray-500); font-size: 0.78rem; }
-  .meta-countdown { color: var(--gray-400); font-size: 0.72rem; margin-top: 2px; }
-  .btn-refresh { background: white; border: 1px solid var(--gray-200); color: var(--navy); border-radius: 8px; padding: 7px 14px; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; margin-top: 8px; margin-left: auto; transition: background 0.15s, border-color 0.15s; }
-  .btn-refresh:hover { background: var(--gray-100); border-color: var(--navy); }
-  .btn-refresh svg { width: 14px; height: 14px; }
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+  .page-subtitle { color: var(--gray-500); font-size: 0.875rem; margin-top: 4px; }
 
-  /* ── Global banner ── */
-  .global-banner {
-    display: flex; align-items: center; gap: 14px; padding: 14px 20px;
-    border-radius: 12px; margin-bottom: 28px; border: 1px solid transparent;
-  }
-  .global-banner.ok     { background: var(--status-ok-bg); border-color: var(--status-ok-border); color: var(--status-ok-text); }
-  .global-banner.partial { background: var(--status-partial-bg); border-color: var(--status-partial-border); color: var(--status-partial-text); }
-  .global-banner.full   { background: var(--status-full-bg); border-color: var(--status-full-border); color: var(--status-full-text); }
-  .global-banner.loading { background: var(--gray-100); border-color: var(--gray-200); color: var(--gray-500); }
-  .banner-icon { font-size: 1.5rem; flex-shrink: 0; }
-  .banner-text strong { font-size: 1rem; font-weight: 700; display: block; font-family: Montserrat, sans-serif; }
-  .banner-text span { font-size: 0.83rem; opacity: 0.85; }
+  /* ── Data notice ── */
+  .data-notice { display: flex; align-items: center; gap: 8px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 10px 16px; font-size: 0.8rem; color: #1d4ed8; margin-bottom: 28px; }
+  .data-notice a { color: #1d4ed8; font-weight: 600; }
 
-  /* ── Status grid ── */
-  .status-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 16px;
-    margin-bottom: 32px;
-  }
-  .status-card {
-    background: white; border-radius: 12px; border: 1px solid var(--gray-200);
-    padding: 20px 20px 18px; transition: box-shadow 0.15s;
-  }
-  .status-card:hover { box-shadow: 0 2px 12px rgba(60,74,124,0.09); }
-  .status-card.ok      { border-top: 3px solid #22c55e; }
-  .status-card.partial { border-top: 3px solid #f59e0b; }
-  .status-card.full    { border-top: 3px solid #ef4444; }
-  .status-card.maint   { border-top: 3px solid #3b82f6; }
+  /* ── KPI Grid ── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  @media (max-width: 900px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 500px) { .kpi-grid { grid-template-columns: 1fr; } }
 
-  .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
-  .card-name { font-family: Montserrat, sans-serif; font-size: 1rem; font-weight: 800; color: var(--navy); }
-  .card-desc { color: var(--gray-500); font-size: 0.72rem; margin-top: 1px; }
+  .kpi-card { background: white; border-radius: 14px; border: 1px solid var(--gray-200); padding: 20px 20px 16px; position: relative; overflow: hidden; }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .kpi-card.green::before  { background: linear-gradient(90deg, #6DC52D, #a3e635); }
+  .kpi-card.blue::before   { background: linear-gradient(90deg, #3b82f6, #818cf8); }
+  .kpi-card.teal::before   { background: linear-gradient(90deg, #0d9488, #14b8a6); }
+  .kpi-card.orange::before { background: linear-gradient(90deg, #f59e0b, #fb923c); }
+  .kpi-card.red::before    { background: linear-gradient(90deg, #dc2626, #f87171); }
+  .kpi-card.purple::before { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+  .kpi-icon { width: 36px; height: 36px; border-radius: 9px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+  .kpi-icon.green  { background: #dcfce7; color: #16a34a; }
+  .kpi-icon.blue   { background: #dbeafe; color: #1d4ed8; }
+  .kpi-icon.teal   { background: #ccfbf1; color: #0f766e; }
+  .kpi-icon.orange { background: #fef3c7; color: #b45309; }
+  .kpi-icon.red    { background: #fee2e2; color: #dc2626; }
+  .kpi-icon.purple { background: #ede9fe; color: #6d28d9; }
+  .kpi-icon svg { width: 18px; height: 18px; }
+  .kpi-value { font-family: Montserrat, sans-serif; font-size: 1.75rem; font-weight: 800; color: var(--gray-900); line-height: 1; margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+  .kpi-label { font-size: 0.78rem; font-weight: 600; color: var(--gray-500); margin-bottom: 6px; }
+  .kpi-sub { font-size: 0.7rem; color: var(--gray-400); }
 
-  .status-pill {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700;
-    white-space: nowrap; flex-shrink: 0;
-  }
-  .status-pill.ok      { background: var(--status-ok-bg); color: var(--status-ok-text); border: 1px solid var(--status-ok-border); }
-  .status-pill.partial { background: var(--status-partial-bg); color: var(--status-partial-text); border: 1px solid var(--status-partial-border); }
-  .status-pill.full    { background: var(--status-full-bg); color: var(--status-full-text); border: 1px solid var(--status-full-border); }
-  .status-pill.maint   { background: var(--status-maint-bg); color: var(--status-maint-text); border: 1px solid var(--status-maint-border); }
+  /* ── Section title ── */
+  .section-title { font-family: Montserrat, sans-serif; font-size: 1rem; font-weight: 800; color: var(--navy); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .section-title-bar { width: 3px; height: 18px; border-radius: 2px; background: var(--green); }
 
-  .status-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
-  .status-dot.ok      { background: #22c55e; }
-  .status-dot.partial { background: #f59e0b; }
-  .status-dot.full    { background: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.18); }
-  .status-dot.maint   { background: #3b82f6; }
+  /* ── Adoption rows ── */
+  .adoption-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+  @media (max-width: 780px) { .adoption-grid { grid-template-columns: 1fr; } }
 
-  .card-functions { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
-  .func-item { font-size: 0.75rem; padding: 7px 10px; border-radius: 7px; background: var(--gray-50); border: 1px solid var(--gray-200); }
-  .func-name { font-weight: 600; color: var(--gray-900); margin-bottom: 2px; }
-  .func-desc { color: var(--gray-500); line-height: 1.4; }
-  .func-badge {
-    display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 700;
-    margin-left: 6px; vertical-align: middle;
-  }
-  .func-badge.partial { background: var(--status-partial-bg); color: var(--status-partial-text); }
-  .func-badge.full    { background: var(--status-full-bg); color: var(--status-full-text); }
-  .func-badge.maint   { background: var(--status-maint-bg); color: var(--status-maint-text); }
+  .adoption-card { background: white; border-radius: 14px; border: 1px solid var(--gray-200); padding: 20px 22px; }
+  .adoption-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  .adoption-name { font-weight: 700; font-size: 0.95rem; color: var(--gray-900); }
+  .adoption-law { font-size: 0.72rem; color: var(--gray-400); font-weight: 500; margin-top: 2px; }
+  .adoption-pct-badge { font-family: Montserrat, sans-serif; font-size: 1.1rem; font-weight: 800; padding: 4px 10px; border-radius: 8px; white-space: nowrap; }
+  .pct-ok   { background: #dcfce7; color: #15803d; }
+  .pct-good { background: #dbeafe; color: #1d4ed8; }
+  .pct-warn { background: #fef3c7; color: #b45309; }
+  .pct-crit { background: #fee2e2; color: #dc2626; }
 
-  /* ── Causes section ── */
-  .section-title {
-    font-family: Montserrat, sans-serif; font-size: 1rem; font-weight: 700; color: var(--navy);
-    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
-  }
-  .section-title .count-badge {
-    background: var(--status-full-bg); color: var(--status-full-text); border: 1px solid var(--status-full-border);
-    border-radius: 20px; padding: 1px 8px; font-size: 0.7rem; font-weight: 700;
-  }
-  .causes-table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; border: 1px solid var(--gray-200); font-size: 0.82rem; }
-  .causes-table th { background: var(--gray-50); color: var(--gray-500); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 9px 14px; text-align: left; border-bottom: 1px solid var(--gray-200); }
-  .causes-table td { padding: 10px 14px; border-bottom: 1px solid var(--gray-100); color: var(--gray-900); }
-  .causes-table tr:last-child td { border-bottom: none; }
-  .causes-table tr:hover td { background: var(--gray-50); }
-  .ci-tag { font-family: monospace; font-size: 0.72rem; color: var(--gray-500); background: var(--gray-100); padding: 2px 6px; border-radius: 4px; }
+  .progress-bar-wrap { height: 8px; background: var(--gray-100); border-radius: 99px; overflow: hidden; margin-bottom: 12px; }
+  .progress-bar { height: 100%; border-radius: 99px; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+  .bar-ok   { background: linear-gradient(90deg, #6DC52D, #a3e635); }
+  .bar-good { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+  .bar-warn { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+  .bar-crit { background: linear-gradient(90deg, #dc2626, #f87171); }
 
-  /* ── Source note ── */
-  .source-note { color: var(--gray-400); font-size: 0.72rem; margin-top: 20px; display: flex; align-items: center; gap: 6px; }
-  .source-note a { color: var(--navy); text-decoration: none; }
-  .source-note a:hover { text-decoration: underline; }
+  .adoption-stats { display: flex; gap: 16px; flex-wrap: wrap; }
+  .adop-stat { font-size: 0.75rem; color: var(--gray-500); }
+  .adop-stat strong { color: var(--gray-900); font-weight: 700; }
 
-  /* ── Loading skeleton ── */
-  @keyframes shimmer { 0%{opacity:.6} 50%{opacity:1} 100%{opacity:.6} }
-  .skeleton { animation: shimmer 1.4s infinite; background: var(--gray-200); border-radius: 6px; }
+  .adoption-status-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; margin-top: 10px; }
+  .chip-ok   { background: #dcfce7; color: #15803d; }
+  .chip-good { background: #dbeafe; color: #1d4ed8; }
+  .chip-warn { background: #fef3c7; color: #b45309; }
+  .chip-crit { background: #fee2e2; color: #dc2626; }
 
-  /* ── Error state ── */
-  .error-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 20px 24px; color: #dc2626; font-size: 0.88rem; }
+  /* ── Opportunity table ── */
+  .opp-card { background: white; border-radius: 14px; border: 1px solid var(--gray-200); padding: 20px 22px; margin-bottom: 28px; }
+  .opp-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+  .opp-table th { text-align: left; font-size: 0.7rem; font-weight: 700; color: var(--gray-400); text-transform: uppercase; letter-spacing: 0.07em; padding: 0 12px 10px; border-bottom: 1px solid var(--gray-200); }
+  .opp-table td { padding: 11px 12px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+  .opp-table tr:last-child td { border-bottom: none; }
+  .opp-table tr:hover td { background: var(--gray-50); }
+  .seg-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
+  .seg-ok   { background: #dcfce7; color: #15803d; }
+  .seg-warn { background: #fef3c7; color: #b45309; }
+  .seg-crit { background: #fee2e2; color: #dc2626; }
+  .opp-value { font-weight: 700; color: var(--gray-900); }
+  .opp-note  { color: var(--gray-500); font-size: 0.78rem; }
 
-  /* ── Alert-Button ── */
-  .btn-alert {
-    background: white; border: 1px solid var(--gray-200); color: var(--gray-500);
-    border-radius: 8px; padding: 7px 14px; font-size: 0.78rem; font-weight: 600;
-    cursor: pointer; display: flex; align-items: center; gap: 5px;
-    margin-top: 8px; transition: background 0.15s, border-color 0.15s, color 0.15s;
-  }
-  .btn-alert:hover { background: var(--gray-100); border-color: var(--navy); color: var(--navy); }
-  .btn-alert.active { background: #fef9c3; border-color: #fde047; color: #854d0e; }
-  .btn-alert.active:hover { background: #fef08a; }
-  .btn-alert svg { width: 14px; height: 14px; }
+  /* ── Funnel (ePA) ── */
+  .funnel-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+  @media (max-width: 780px) { .funnel-row { grid-template-columns: 1fr; } }
+  .funnel-card { background: white; border-radius: 14px; border: 1px solid var(--gray-200); padding: 20px 22px; }
+  .funnel-step { display: flex; align-items: center; gap: 14px; padding: 9px 0; border-bottom: 1px solid var(--gray-100); }
+  .funnel-step:last-child { border-bottom: none; }
+  .funnel-bar-col { flex: 1; }
+  .funnel-label { font-size: 0.78rem; color: var(--gray-700); font-weight: 600; margin-bottom: 5px; }
+  .funnel-bar-bg { height: 10px; background: var(--gray-100); border-radius: 99px; overflow: hidden; }
+  .funnel-bar-fill { height: 100%; border-radius: 99px; }
+  .funnel-num { font-size: 0.82rem; font-weight: 700; color: var(--gray-900); min-width: 56px; text-align: right; font-variant-numeric: tabular-nums; }
+  .funnel-pct { font-size: 0.7rem; color: var(--gray-400); min-width: 36px; text-align: right; font-variant-numeric: tabular-nums; }
 
-  /* ── Alert-Modal ── */
-  .modal-backdrop {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 500;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .modal-backdrop.hidden { display: none; }
-  .modal-box {
-    background: white; border-radius: 16px; padding: 28px 28px 24px;
-    width: 420px; max-width: calc(100vw - 32px); box-shadow: 0 20px 60px rgba(0,0,0,0.18);
-  }
-  .modal-title { font-family: Montserrat, sans-serif; font-size: 1rem; font-weight: 800; color: var(--navy); margin-bottom: 6px; }
-  .modal-sub { color: var(--gray-500); font-size: 0.82rem; margin-bottom: 20px; }
-  .modal-field { margin-bottom: 16px; }
-  .modal-label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--gray-500); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-  .modal-input { width: 100%; padding: 9px 12px; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 0.88rem; font-family: Inter, sans-serif; color: var(--gray-900); outline: none; transition: border-color 0.15s; }
-  .modal-input:focus { border-color: var(--navy); }
-  .modal-toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-top: 1px solid var(--gray-100); border-bottom: 1px solid var(--gray-100); margin-bottom: 20px; }
-  .modal-toggle-label { font-size: 0.88rem; font-weight: 600; color: var(--gray-900); }
-  .modal-toggle-sub { font-size: 0.75rem; color: var(--gray-500); margin-top: 2px; }
-  .toggle-switch { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
-  .toggle-switch input { opacity: 0; width: 0; height: 0; }
-  .toggle-track {
-    position: absolute; inset: 0; background: var(--gray-200); border-radius: 20px; cursor: pointer; transition: background 0.2s;
-  }
-  .toggle-track::after {
-    content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px;
-    background: white; border-radius: 50%; transition: transform 0.2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  }
-  .toggle-switch input:checked + .toggle-track { background: var(--green); }
-  .toggle-switch input:checked + .toggle-track::after { transform: translateX(18px); }
-  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-  .btn-modal-cancel { background: white; border: 1px solid var(--gray-200); color: var(--gray-500); border-radius: 8px; padding: 8px 16px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
-  .btn-modal-cancel:hover { background: var(--gray-100); }
-  .btn-modal-save { background: var(--navy); border: none; color: white; border-radius: 8px; padding: 8px 18px; font-size: 0.82rem; font-weight: 700; cursor: pointer; }
-  .btn-modal-save:hover { background: var(--navy-dark); }
-  .btn-modal-save:disabled { opacity: 0.5; cursor: not-allowed; }
-  .modal-toast { font-size: 0.78rem; color: var(--status-ok-text); margin-top: 12px; display: none; text-align: center; }
+  /* ── Source footer ── */
+  .source-bar { background: white; border: 1px solid var(--gray-200); border-radius: 12px; padding: 14px 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; font-size: 0.75rem; color: var(--gray-400); margin-top: 8px; }
+  .source-bar a { color: var(--navy); font-weight: 500; text-decoration: none; }
+  .source-bar a:hover { text-decoration: underline; }
+  .source-dot { width: 4px; height: 4px; background: var(--gray-300); border-radius: 50%; }
 </style>
-<link rel="stylesheet" href="admin-mobile.css">
-
-<script src="admin-mobile.js"></script>
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#3C4A7C">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Alliance">
-<link rel="apple-touch-icon" href="../alliance-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@800&display=swap">
 </head>
 <body>
 
@@ -243,8 +177,7 @@
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
       Dashboard
     </a>
-
-    <div class="nav-group open" id="nav-group-admin" style="display:none">
+    <div class="nav-group" id="nav-group-admin" style="display:none">
       <div class="nav-group-header" onclick="toggleNavGroup(this)">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
         <span>Administration</span>
@@ -258,7 +191,6 @@
         <a class="nav-link nav-sub" href="alliance-config.html">Alliance-Stufen</a>
       </div>
     </div>
-
     <div class="nav-group" id="nav-group-produkte">
       <div class="nav-group-header" onclick="toggleNavGroup(this)">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
@@ -266,49 +198,42 @@
         <svg class="nav-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
       </div>
       <div class="nav-group-body">
-        <a class="nav-link nav-sub" id="nav-item-products" data-perm="produkte" href="products.html">Verwaltung</a>
-        <div class="nav-subgroup" id="nav-subgroup-finder">
+        <a class="nav-link nav-sub" href="products.html">Verwaltung</a>
+        <div class="nav-subgroup">
           <div class="nav-subgroup-label">Produktfinder</div>
-          <a class="nav-link nav-sub nav-sub2" id="nav-item-kunden" data-perm="produktfinder" href="partners.html">Kunden</a>
+          <a class="nav-link nav-sub nav-sub2" href="partners.html">Kunden</a>
           <a class="nav-link nav-sub nav-sub2" href="finder-config.html">Finder-Konfiguration</a>
         </div>
       </div>
     </div>
-
-    <a class="nav-link" id="nav-link-anfragen" data-perm="anfragen" href="anfragen.html">
+    <a class="nav-link" href="anfragen.html">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
       Anfragecenter
     </a>
-    <a class="nav-link" id="nav-link-kunden-mgmt" data-perm="kunden_mgmt" href="kunden.html">
+    <a class="nav-link" href="kunden.html">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
       Kunden
     </a>
-    <a class="nav-link" data-perm="events" href="events.html">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-        <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
-        <line x1="3" y1="10" x2="21" y2="10"/>
-      </svg>
+    <a class="nav-link" href="events.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
       Events
     </a>
-    <a class="nav-link" data-perm="shop" href="shop.html">
+    <a class="nav-link" href="shop.html">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
       Shop
     </a>
-    <a class="nav-link" data-perm="community" href="knowledge.html">
+    <a class="nav-link" href="knowledge.html">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
       Community
     </a>
-    <a class="nav-link" data-perm="regulatorik" href="regulatorik.html">
+    <a class="nav-link" href="regulatorik.html">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
       Regulatorik
     </a>
-
-    <a class="nav-link" id="nav-link-rechner" data-perm="tirechner" href="rechner.html">
+    <a class="nav-link" href="rechner.html">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
       TI-Rechner
     </a>
-
     <a class="nav-link active" href="ti-lagebild.html">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
       TI Lagebild
@@ -317,30 +242,9 @@
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
       Infinity Report
     </a>
-
-    <a class="nav-link" id="nav-link-support" data-perm="support" href="support.html">
+    <a class="nav-link" href="support.html">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
       Support
-    </a>
-    <a class="nav-link" id="nav-link-tickets" data-perm="tickets" href="tickets.html">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 17h.01"/></svg>
-      Tickets
-    </a>
-
-    <div class="nav-group" id="nav-group-account">
-      <div class="nav-group-header" onclick="toggleNavGroup(this)">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-        <span>Account</span>
-        <svg class="nav-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-      </div>
-      <div class="nav-group-body">
-        <a class="nav-link nav-sub" href="profile.html">Mein Konto</a>
-      </div>
-    </div>
-
-    <a class="nav-link" id="nav-link-website" href="../index.html">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-      Zur Website
     </a>
   </nav>
 
@@ -348,465 +252,385 @@
     <div class="page-header">
       <div>
         <h1>TI Lagebild</h1>
-        <p class="page-sub">Aktueller Betriebsstatus der Telematik-Infrastruktur (Quelle: gematik, Live-Daten alle 5 Min.)</p>
+        <p class="page-subtitle">Umsetzungsstand und Nutzungsstatistik der Telematikinfrastruktur · Stand Oktober 2026</p>
       </div>
-      <div class="header-meta">
-        <div id="last-updated" class="meta-time">Wird geladen …</div>
-        <div id="next-refresh" class="meta-countdown"></div>
-        <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end;">
-          <button id="btn-alert" class="btn-alert" onclick="openAlertModal()">
-            <svg id="alert-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-            <span id="alert-btn-label">Alert einrichten</span>
-          </button>
-          <button class="btn-refresh" onclick="loadStatus()">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-            Aktualisieren
-          </button>
+    </div>
+
+    <div class="data-notice">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      Daten basieren auf gematik TI-Dashboard, DAK-Auswertung, Ärzteblatt und ABDA-Angaben.
+      Tagesaktuelle Zahlen: <a href="https://www.gematik.de/ti-dashboard" target="_blank">gematik.de/ti-dashboard</a>
+    </div>
+
+    <!-- KPI Tiles -->
+    <div class="kpi-grid" id="kpi-grid">
+      <div class="kpi-card green">
+        <div class="kpi-icon green">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         </div>
+        <div class="kpi-value" id="kv-erp">1 Mrd.</div>
+        <div class="kpi-label">E-Rezepte eingelöst</div>
+        <div class="kpi-sub">Meilenstein Oktober 2025 · tägl. mehrere Mio.</div>
+      </div>
+      <div class="kpi-card blue">
+        <div class="kpi-icon blue">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        </div>
+        <div class="kpi-value" id="kv-epa">73 Mio.</div>
+        <div class="kpi-label">ePA angelegt</div>
+        <div class="kpi-sub">von ~74 Mio. GKV-Versicherten · 98 %</div>
+      </div>
+      <div class="kpi-card teal">
+        <div class="kpi-icon teal">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        </div>
+        <div class="kpi-value" id="kv-kim">~1 Mrd.</div>
+        <div class="kpi-label">KIM-Nachrichten</div>
+        <div class="kpi-sub">davon ~80 % eAU · kumulativ seit 2020</div>
+      </div>
+      <div class="kpi-card orange">
+        <div class="kpi-icon orange">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-2 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+        </div>
+        <div class="kpi-value" id="kv-pflege">~30 %</div>
+        <div class="kpi-label">Pflegeeinrichtungen TI-angebunden</div>
+        <div class="kpi-sub">von ~32.000 Einrichtungen · Frist 1.7.2025 verfehlt</div>
       </div>
     </div>
 
-    <div id="global-banner" class="global-banner loading">
-      <div class="banner-icon">⏳</div>
-      <div class="banner-text">
-        <strong>Daten werden geladen …</strong>
+    <!-- Umsetzungsreife -->
+    <div class="section-title"><div class="section-title-bar"></div>Umsetzungsreife nach Anwendung</div>
+    <div class="adoption-grid">
+
+      <div class="adoption-card">
+        <div class="adoption-header">
+          <div>
+            <div class="adoption-name">E-Rezept</div>
+            <div class="adoption-law">SGB V §§ 360–369, DVPMG, DigiG</div>
+          </div>
+          <div class="adoption-pct-badge pct-ok">~100 %</div>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar bar-ok" data-width="99" style="width:0"></div></div>
+        <div class="adoption-stats">
+          <div class="adop-stat"><strong>1 Mrd.</strong> eingelöst (Okt 2025)</div>
+          <div class="adop-stat"><strong>~500 Mio.</strong> allein 2024</div>
+          <div class="adop-stat"><strong>H1 2025:</strong> ~300 Mio. neu</div>
+        </div>
+        <span class="adoption-status-chip chip-ok">✓ Vollständig etabliert</span>
+      </div>
+
+      <div class="adoption-card">
+        <div class="adoption-header">
+          <div>
+            <div class="adoption-name">eAU (elektronische Arbeitsunfähigkeitsbescheinigung)</div>
+            <div class="adoption-law">SGB V § 295, KBV-Vereinbarung</div>
+          </div>
+          <div class="adoption-pct-badge pct-ok">~100 %</div>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar bar-ok" data-width="99" style="width:0"></div></div>
+        <div class="adoption-stats">
+          <div class="adop-stat"><strong>Pflicht</strong> seit 1. Juli 2022</div>
+          <div class="adop-stat"><strong>~800 Mio.</strong> eAUs via KIM versendet</div>
+          <div class="adop-stat"><strong>~80 %</strong> aller KIM-Nachrichten</div>
+        </div>
+        <span class="adoption-status-chip chip-ok">✓ Vollständig etabliert</span>
+      </div>
+
+      <div class="adoption-card">
+        <div class="adoption-header">
+          <div>
+            <div class="adoption-name">ePA – Anlage durch Krankenkassen</div>
+            <div class="adoption-law">SGB V §§ 341–354, DigiG (ePA für alle)</div>
+          </div>
+          <div class="adoption-pct-badge pct-ok">~98 %</div>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar bar-ok" data-width="98" style="width:0"></div></div>
+        <div class="adoption-stats">
+          <div class="adop-stat"><strong>73 Mio.</strong> Akten angelegt (April 2026)</div>
+          <div class="adop-stat"><strong>100 Mio.+</strong> Dokumente eingestellt</div>
+          <div class="adop-stat"><strong>67.700</strong> Institutionen angebunden</div>
+        </div>
+        <span class="adoption-status-chip chip-ok">✓ Opt-out-Einführung erfolgreich</span>
+      </div>
+
+      <div class="adoption-card">
+        <div class="adoption-header">
+          <div>
+            <div class="adoption-name">ePA – Aktive Nutzung durch Patienten</div>
+            <div class="adoption-law">SGB V §§ 341–354 / GesundheitsID</div>
+          </div>
+          <div class="adoption-pct-badge pct-crit">~7 %</div>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar bar-crit" data-width="7" style="width:0"></div></div>
+        <div class="adoption-stats">
+          <div class="adop-stat"><strong>5,1 Mio.</strong> GesundheitsIDs aktiv</div>
+          <div class="adop-stat"><strong>~73 Mio.</strong> Akten vorhanden</div>
+          <div class="adop-stat"><strong>Lücke:</strong> 68 Mio. ungenutzte Akten</div>
+        </div>
+        <span class="adoption-status-chip chip-crit">⚠ Aktivierungsrate sehr gering</span>
+      </div>
+
+      <div class="adoption-card">
+        <div class="adoption-header">
+          <div>
+            <div class="adoption-name">KIM – Arztpraxen &amp; Krankenhäuser</div>
+            <div class="adoption-law">SGB V §§ 311, 385, TI-Anschlusspflicht</div>
+          </div>
+          <div class="adoption-pct-badge pct-ok">~95 %</div>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar bar-ok" data-width="95" style="width:0"></div></div>
+        <div class="adoption-stats">
+          <div class="adop-stat"><strong>~130.000</strong> Praxen angebunden</div>
+          <div class="adop-stat"><strong>~1.700</strong> Krankenhäuser</div>
+          <div class="adop-stat"><strong>Pflicht</strong> seit 2021</div>
+        </div>
+        <span class="adoption-status-chip chip-ok">✓ Gut etabliert</span>
+      </div>
+
+      <div class="adoption-card">
+        <div class="adoption-header">
+          <div>
+            <div class="adoption-name">TI-Anbindung Pflegeeinrichtungen</div>
+            <div class="adoption-law">SGB XI § 105, DVPMG (Frist 1.7.2025)</div>
+          </div>
+          <div class="adoption-pct-badge pct-crit">~30 %</div>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar bar-crit" data-width="30" style="width:0"></div></div>
+        <div class="adoption-stats">
+          <div class="adop-stat"><strong>~9.600</strong> von 32.000 angebunden</div>
+          <div class="adop-stat"><strong>63 %</strong> haben SMC-B beantragt</div>
+          <div class="adop-stat"><strong>Frist 1.7.2025</strong> nicht eingehalten</div>
+        </div>
+        <span class="adoption-status-chip chip-crit">⚠ Größte Compliance-Lücke</span>
+      </div>
+
+      <div class="adoption-card">
+        <div class="adoption-header">
+          <div>
+            <div class="adoption-name">Videosprechstunde</div>
+            <div class="adoption-law">SGB V §§ 87, 365, TSVG 2019</div>
+          </div>
+          <div class="adoption-pct-badge pct-warn">~40 %</div>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar bar-warn" data-width="40" style="width:0"></div></div>
+        <div class="adoption-stats">
+          <div class="adop-stat"><strong>EBM-Vergütung</strong> seit Juli 2019</div>
+          <div class="adop-stat"><strong>Anlage 31c</strong> ab März 2025 verschärft</div>
+          <div class="adop-stat"><strong>30 %-Grenze</strong> durch DigiG aufgehoben</div>
+        </div>
+        <span class="adoption-status-chip chip-warn">~ Wachsend, regional ungleich</span>
+      </div>
+
+      <div class="adoption-card">
+        <div class="adoption-header">
+          <div>
+            <div class="adoption-name">IT-Sicherheit Krankenhäuser (§ 391 SGB V)</div>
+            <div class="adoption-law">SGB V § 391, NIS2UmsuCG (Dez. 2025)</div>
+          </div>
+          <div class="adoption-pct-badge pct-warn">~60 %</div>
+        </div>
+        <div class="progress-bar-wrap"><div class="progress-bar bar-warn" data-width="60" style="width:0"></div></div>
+        <div class="adoption-stats">
+          <div class="adop-stat"><strong>NIS2-Pflicht</strong> ab Dez. 2025</div>
+          <div class="adop-stat"><strong>B3S v1.1</strong> als Erfüllungsoption</div>
+          <div class="adop-stat"><strong>Viele KH</strong> noch ohne vollst. ISMS</div>
+        </div>
+        <span class="adoption-status-chip chip-warn">~ In Umsetzung</span>
+      </div>
+
+    </div>
+
+    <!-- ePA Funnel -->
+    <div class="funnel-row">
+      <div class="funnel-card">
+        <div class="section-title" style="margin-bottom:14px"><div class="section-title-bar"></div>ePA – Nutzungstrichter</div>
+        <div id="epa-funnel">
+          <div class="funnel-step">
+            <div class="funnel-bar-col">
+              <div class="funnel-label">GKV-Versicherte gesamt</div>
+              <div class="funnel-bar-bg"><div class="funnel-bar-fill bar-ok" data-width="100" style="width:0; background:#e2e8f0"></div></div>
+            </div>
+            <div class="funnel-num">74 Mio.</div>
+            <div class="funnel-pct">100 %</div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar-col">
+              <div class="funnel-label">ePA angelegt (Opt-out)</div>
+              <div class="funnel-bar-bg"><div class="funnel-bar-fill" data-width="98" style="width:0; background:#6DC52D"></div></div>
+            </div>
+            <div class="funnel-num">73 Mio.</div>
+            <div class="funnel-pct">98 %</div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar-col">
+              <div class="funnel-label">Dokumente eingestellt</div>
+              <div class="funnel-bar-bg"><div class="funnel-bar-fill" data-width="55" style="width:0; background:#3b82f6"></div></div>
+            </div>
+            <div class="funnel-num">100 Mio. Dok.</div>
+            <div class="funnel-pct">~55 %*</div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar-col">
+              <div class="funnel-label">Aktive Nutzer (GesundheitsID)</div>
+              <div class="funnel-bar-bg"><div class="funnel-bar-fill" data-width="7" style="width:0; background:#f59e0b"></div></div>
+            </div>
+            <div class="funnel-num">5,1 Mio.</div>
+            <div class="funnel-pct">7 %</div>
+          </div>
+        </div>
+        <p style="font-size:0.68rem;color:var(--gray-400);margin-top:10px">* mind. ein Dokument eingestellt, Schätzung</p>
+      </div>
+
+      <div class="funnel-card">
+        <div class="section-title" style="margin-bottom:14px"><div class="section-title-bar"></div>Pflege TI-Anbindung – Status</div>
+        <div>
+          <div class="funnel-step">
+            <div class="funnel-bar-col">
+              <div class="funnel-label">Einrichtungen gesamt</div>
+              <div class="funnel-bar-bg"><div class="funnel-bar-fill" data-width="100" style="width:0; background:#e2e8f0"></div></div>
+            </div>
+            <div class="funnel-num">32.000</div>
+            <div class="funnel-pct">100 %</div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar-col">
+              <div class="funnel-label">SMC-B beantragt</div>
+              <div class="funnel-bar-bg"><div class="funnel-bar-fill" data-width="63" style="width:0; background:#f59e0b"></div></div>
+            </div>
+            <div class="funnel-num">~20.160</div>
+            <div class="funnel-pct">63 %</div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar-col">
+              <div class="funnel-label">Im gematik-Verzeichnis</div>
+              <div class="funnel-bar-bg"><div class="funnel-bar-fill" data-width="33" style="width:0; background:#fb923c"></div></div>
+            </div>
+            <div class="funnel-num">~10.560</div>
+            <div class="funnel-pct">~33 %</div>
+          </div>
+          <div class="funnel-step">
+            <div class="funnel-bar-col">
+              <div class="funnel-label">Tatsächlich TI-angebunden</div>
+              <div class="funnel-bar-bg"><div class="funnel-bar-fill" data-width="30" style="width:0; background:#dc2626"></div></div>
+            </div>
+            <div class="funnel-num">~9.600</div>
+            <div class="funnel-pct">~30 %</div>
+          </div>
+        </div>
+        <p style="font-size:0.68rem;color:var(--gray-400);margin-top:10px">Quelle: DAK-Auswertung, September 2025</p>
       </div>
     </div>
 
-    <div id="status-grid" class="status-grid"></div>
-
-    <div id="cause-section" style="display:none; margin-bottom: 32px;">
-      <div class="section-title">
-        Störungsursachen
-        <span id="cause-count" class="count-badge"></span>
-      </div>
-      <table class="causes-table">
+    <!-- Marktchancen -->
+    <div class="section-title"><div class="section-title-bar"></div>Vertriebsrelevante Marktlücken</div>
+    <div class="opp-card">
+      <table class="opp-table">
         <thead>
           <tr>
-            <th>CI</th>
-            <th>Dienst / Produkt</th>
-            <th>Anbieter</th>
-            <th>Funktion</th>
+            <th>Segment</th>
+            <th>Lücke</th>
+            <th>Einheiten</th>
+            <th>Treiber / Frist</th>
+            <th>Status</th>
           </tr>
         </thead>
-        <tbody id="cause-tbody"></tbody>
+        <tbody>
+          <tr>
+            <td class="opp-value">Pflegeeinrichtungen TI</td>
+            <td><span style="font-size:1rem;font-weight:800;color:#dc2626">70 %</span></td>
+            <td class="opp-note">~22.400 von 32.000 offen</td>
+            <td class="opp-note">Frist 1.7.2025 (DVPMG)</td>
+            <td><span class="seg-pill seg-crit">Kritisch</span></td>
+          </tr>
+          <tr>
+            <td class="opp-value">ePA-Aktivierung / Patient Journey</td>
+            <td><span style="font-size:1rem;font-weight:800;color:#dc2626">93 %</span></td>
+            <td class="opp-note">~68 Mio. ungenutzte Akten</td>
+            <td class="opp-note">GesundheitsID-Rollout 2025</td>
+            <td><span class="seg-pill seg-crit">Kritisch</span></td>
+          </tr>
+          <tr>
+            <td class="opp-value">IT-Sicherheit Krankenhäuser</td>
+            <td><span style="font-size:1rem;font-weight:800;color:#d97706">40 %</span></td>
+            <td class="opp-note">~680 KH ohne vollst. ISMS</td>
+            <td class="opp-note">NIS2UmsuCG Dez. 2025</td>
+            <td><span class="seg-pill seg-warn">Dringend</span></td>
+          </tr>
+          <tr>
+            <td class="opp-value">Videosprechstunde (Qualität &amp; Abrechnung)</td>
+            <td><span style="font-size:1rem;font-weight:800;color:#d97706">60 %</span></td>
+            <td class="opp-note">Praxen ohne zertif. Anbieter</td>
+            <td class="opp-note">Anlage 31c ab März 2025</td>
+            <td><span class="seg-pill seg-warn">Wachstum</span></td>
+          </tr>
+          <tr>
+            <td class="opp-value">IT-Sicherheit Arztpraxen (§ 390)</td>
+            <td><span style="font-size:1rem;font-weight:800;color:#16a34a">~30 %</span></td>
+            <td class="opp-note">v.a. Großpraxen, MVZ</td>
+            <td class="opp-note">KBV-Richtlinie seit Okt. 2022</td>
+            <td><span class="seg-pill seg-ok">Laufend</span></td>
+          </tr>
+          <tr>
+            <td class="opp-value">DiGA / DiPA Beratung &amp; Integration</td>
+            <td><span style="font-size:1rem;font-weight:800;color:#16a34a">–</span></td>
+            <td class="opp-note">~50 DiGAs im Verzeichnis</td>
+            <td class="opp-note">DVG 2019, DVPMG 2021</td>
+            <td><span class="seg-pill seg-ok">Wachstum</span></td>
+          </tr>
+        </tbody>
       </table>
     </div>
 
-    <p class="source-note">
-      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-      Datenquelle: <a href="https://ti-status.gematik.de" target="_blank" rel="noopener">TI-Status gematik</a> &mdash;
-      REST-API v2, Probing alle 5 Minuten &mdash;
-      <a href="https://github.com/gematik/api-tilage" target="_blank" rel="noopener">API-Dokumentation</a>
-    </p>
+    <!-- Quellen -->
+    <div class="source-bar">
+      <span>Quellen:</span>
+      <a href="https://www.gematik.de/ti-dashboard" target="_blank">gematik TI-Dashboard</a>
+      <div class="source-dot"></div>
+      <a href="https://www.dak.de/presse/bundesthemen/politik-unternehmensnachrichten/digitalisierung-70-prozent-der-pflegeeinrichtungen-fehlt-anbindung-an-telematikinfrastruktur_146652" target="_blank">DAK-Auswertung Sept. 2025</a>
+      <div class="source-dot"></div>
+      <a href="https://www.pharmazeutische-zeitung.de/mehr-als-1-milliarde-e-rezepte-eingeloest-159763/" target="_blank">PZ: 1 Mrd. E-Rezepte</a>
+      <div class="source-dot"></div>
+      <a href="https://www.gematik.de/newsroom/news-detail/ein-jahr-epa-fuer-alle-mehr-als-100-millionen-hinterlegte-dokumente-verbessern-behandlung-und-versorgung-in-deutschland" target="_blank">gematik: 1 Jahr ePA für alle</a>
+      <div class="source-dot"></div>
+      <a href="https://www.aerzteblatt.de/news/viele-pflegeeinrichtungen-schlecht-auf-anbindung-an-telematikinfrastruktur-vorbereitet" target="_blank">Ärzteblatt: Pflege-TI</a>
+    </div>
+
   </main>
 </div>
 
-<!-- Alert-Modal -->
-<div id="alert-modal" class="modal-backdrop hidden" onclick="handleBackdropClick(event)">
-  <div class="modal-box">
-    <div class="modal-title">
-      🔔 Störungs-Alert konfigurieren
-    </div>
-    <p class="modal-sub">Erhalte eine E-Mail, wenn das TI-Lagebild eine Störung erkennt (max. 1 Mail alle 30 Min.).</p>
-
-    <div class="modal-field">
-      <label class="modal-label" for="alert-email">E-Mail-Adresse</label>
-      <input type="email" id="alert-email" class="modal-input" placeholder="deine@email.de">
-    </div>
-
-    <div class="modal-toggle-row">
-      <div>
-        <div class="modal-toggle-label">Alert aktiv</div>
-        <div class="modal-toggle-sub">Benachrichtigung bei Erkennung einer Störung</div>
-      </div>
-      <label class="toggle-switch">
-        <input type="checkbox" id="alert-active">
-        <span class="toggle-track"></span>
-      </label>
-    </div>
-
-    <div class="modal-actions">
-      <button class="btn-modal-cancel" onclick="closeAlertModal()">Abbrechen</button>
-      <button class="btn-modal-testmail" id="btn-modal-test" onclick="sendTestMail()" style="background:white;border:1px solid var(--gray-200);color:var(--gray-500);border-radius:8px;padding:8px 16px;font-size:0.82rem;font-weight:600;cursor:pointer;">Test-Mail</button>
-      <button class="btn-modal-save" id="btn-modal-save" onclick="saveAlertSub()">Speichern</button>
-    </div>
-    <div id="modal-toast" class="modal-toast">✓ Gespeichert</div>
-  </div>
-</div>
-
 <script>
-const SUPA_URL = 'https://focysklymhmcfwgxdtuk.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
-const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
-
-const API_URL = 'https://ti-lage.prod.ccs.gematik.solutions/lageapi/v2/tilage';
-const REFRESH_MS = 5 * 60 * 1000;
-
-const SERVICE_META = {
-  erezept:    { label: 'E-Rezept',      desc: 'Elektronisches Rezept' },
-  epa:        { label: 'ePA',           desc: 'Elektronische Patientenakte' },
-  kim:        { label: 'KIM',           desc: 'Kommunikation im Medizinwesen' },
-  wanda:      { label: 'WANDA',         desc: 'Notaufnahmeprotokoll' },
-  ogd:        { label: 'OGD',           desc: 'Öffentlicher Gesundheitsdienst' },
-  vsdm:       { label: 'VSDM',          desc: 'Versichertenstammdaten' },
-  tianschluss:{ label: 'TI-Anschluss',  desc: 'Vernetzung Leistungserbringer' },
-};
-
-const ORDER = ['tianschluss','erezept','epa','kim','vsdm','wanda','ogd'];
-
-let refreshTimer = null;
-let countdownInterval = null;
-let nextRefreshAt = null;
-
-// Alert-Subscription (im Speicher gehalten)
-let alertSub = null;
-// Letzter bekannter Störungs-Zustand (edge-triggered: nur bei OK→Störung auslösen)
-let prevDisruptionActive = false;
-let _lastAffectedServices = [];
-
-function updateAlertButton() {
-  const btn = document.getElementById('btn-alert');
-  const lbl = document.getElementById('alert-btn-label');
-  const ico = document.getElementById('alert-icon');
-  if (alertSub?.active) {
-    btn.classList.add('active');
-    lbl.textContent = 'Alert aktiv';
-    // gefüllte Glocke
-    ico.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>';
-  } else {
-    btn.classList.remove('active');
-    lbl.textContent = 'Alert einrichten';
-    ico.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>';
-  }
+function toggleNavGroup(el) {
+  el.closest('.nav-group').classList.toggle('open');
 }
 
-async function loadAlertSub(session) {
-  const { data } = await sb.from('ti_alert_subscriptions')
-    .select('*').eq('user_id', session.user.id).maybeSingle();
-  alertSub = data || null;
-  updateAlertButton();
-}
-
-function openAlertModal() {
-  const email = alertSub?.email || document.getElementById('user-name').dataset.email || '';
-  document.getElementById('alert-email').value = email;
-  document.getElementById('alert-active').checked = alertSub?.active ?? true;
-  document.getElementById('modal-toast').style.display = 'none';
-  document.getElementById('btn-modal-save').disabled = false;
-  document.getElementById('alert-modal').classList.remove('hidden');
-}
-
-function closeAlertModal() {
-  document.getElementById('alert-modal').classList.add('hidden');
-}
-
-function handleBackdropClick(e) {
-  if (e.target === document.getElementById('alert-modal')) closeAlertModal();
-}
-
-async function saveAlertSub() {
-  const email  = document.getElementById('alert-email').value.trim();
-  const active = document.getElementById('alert-active').checked;
-  if (!email) { document.getElementById('alert-email').focus(); return; }
-
-  const btn = document.getElementById('btn-modal-save');
-  btn.disabled = true;
-  btn.textContent = '…';
-
-  const { data: { session } } = await sb.auth.getSession();
-  const payload = { user_id: session.user.id, email, active };
-
-  const wasInactive = !alertSub?.active;
-  const { error } = await sb.from('ti_alert_subscriptions').upsert(payload, { onConflict: 'user_id' });
-  if (!error) {
-    alertSub = { ...(alertSub || {}), ...payload };
-    updateAlertButton();
-
-    // Alert gerade erst aktiviert und Störung läuft bereits → sofort Mail senden
-    if (active && wasInactive && prevDisruptionActive) {
-      callAlertFunction({
-        type: 'disruption',
-        services: _lastAffectedServices,
-        timestamp: document.getElementById('last-updated').textContent.replace('Zuletzt aktualisiert: ', ''),
-      });
+// Auth via perm.js
+if (typeof initAuth === 'function') {
+  initAuth({
+    onUser: (user, role) => {
+      document.getElementById('user-name').textContent = user.email || '–';
+      const rb = document.getElementById('header-role-badge');
+      if (role) { rb.textContent = role; rb.style.display = 'inline-flex'; }
+      // Show admin nav
+      if (['admin','superadmin'].includes(role)) {
+        document.getElementById('nav-group-admin').style.display = '';
+      }
     }
-
-    const toast = document.getElementById('modal-toast');
-    toast.style.display = 'block';
-    btn.textContent = 'Gespeichert';
-    setTimeout(closeAlertModal, 1200);
-  } else {
-    btn.textContent = 'Fehler – nochmal';
-    btn.disabled = false;
-  }
+  });
+}
+function logout() {
+  if (typeof supabaseLogout === 'function') supabaseLogout();
+  else window.location.href = 'index.html';
 }
 
-async function callAlertFunction(payload) {
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) { console.warn('[TI Alert] Kein Session'); return; }
-  try {
-    await fetch(`${SUPA_URL}/functions/v1/send-ti-alert`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+// Animate progress bars on load
+document.addEventListener('DOMContentLoaded', () => {
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.progress-bar[data-width], .funnel-bar-fill[data-width]').forEach(el => {
+      const w = parseFloat(el.dataset.width);
+      setTimeout(() => { el.style.width = w + '%'; }, 120);
     });
-  } catch (_) { /* Stilles Versagen */ }
-}
-
-async function sendTestMail() {
-  const email = document.getElementById('alert-email').value.trim();
-  if (!email) { document.getElementById('alert-email').focus(); return; }
-
-  const btn = document.getElementById('btn-modal-test');
-  btn.textContent = '…';
-  btn.disabled = true;
-
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) { btn.textContent = 'Test-Mail'; btn.disabled = false; return; }
-
-  try {
-    const res = await fetch(`${SUPA_URL}/functions/v1/send-ti-alert`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        type: 'test',
-        email,
-        services: [{ label: 'E-Rezept', status: 'Teilstörung' }, { label: 'KIM', status: 'Vollstörung' }],
-        timestamp: new Date().toLocaleString('de-DE'),
-      }),
-    });
-    if (res.ok || res.status === 200) {
-      btn.textContent = '✓ Mail gesendet';
-      setTimeout(() => { btn.textContent = 'Test-Mail'; btn.disabled = false; }, 2500);
-    } else {
-      const body = await res.text();
-      btn.textContent = `Fehler ${res.status}`;
-      console.error('Test-Mail Fehler:', body);
-      setTimeout(() => { btn.textContent = 'Test-Mail'; btn.disabled = false; }, 2500);
-    }
-  } catch (e) {
-    btn.textContent = 'Netzwerkfehler';
-    console.error(e);
-    setTimeout(() => { btn.textContent = 'Test-Mail'; btn.disabled = false; }, 2500);
-  }
-}
-
-async function checkAndSendAlert(appStatus, timestamp) {
-  if (!alertSub?.active) return;
-
-  // Betroffene Dienste ermitteln
-  const affected = ORDER
-    .filter(k => appStatus[k] && appStatus[k].outage !== 'none')
-    .map(k => ({
-      label:  SERVICE_META[k]?.label || k,
-      status: appStatus[k].outage === 'full' ? 'Vollstörung' : 'Teilstörung',
-    }));
-
-  const nowDisrupted = affected.length > 0;
-  _lastAffectedServices = affected;
-
-  if (!nowDisrupted) {
-    // Übergang Störung → OK: Entwarnung senden
-    if (prevDisruptionActive) {
-      prevDisruptionActive = false;
-      callAlertFunction({ type: 'recovery', timestamp });
-    }
-    return;
-  }
-
-  // Übergang OK → Störung: Alert senden
-  if (prevDisruptionActive) return;
-  prevDisruptionActive = true;
-  callAlertFunction({ type: 'disruption', services: affected, timestamp });
-}
-
-function esc(s) {
-  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function outageClass(outage, hasMaintenance) {
-  if (hasMaintenance) return 'maint';
-  if (outage === 'full')    return 'full';
-  if (outage === 'partial') return 'partial';
-  return 'ok';
-}
-
-function outagePillLabel(outage, hasMaintenance) {
-  if (hasMaintenance) return 'Wartung';
-  if (outage === 'full')    return 'Vollstörung';
-  if (outage === 'partial') return 'Teilstörung';
-  return 'Betrieb normal';
-}
-
-function formatTime(isoStr) {
-  if (!isoStr) return '–';
-  try {
-    const d = new Date(isoStr);
-    return d.toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) + ' Uhr';
-  } catch { return isoStr; }
-}
-
-function renderGrid(appStatus) {
-  const grid = document.getElementById('status-grid');
-  const keys = ORDER.filter(k => appStatus[k] !== undefined);
-  // append any extra keys not in ORDER
-  Object.keys(appStatus).forEach(k => { if (!ORDER.includes(k)) keys.push(k); });
-
-  grid.innerHTML = keys.map(key => {
-    const svc = appStatus[key];
-    const meta = SERVICE_META[key] || { label: key, desc: '' };
-    const cls = outageClass(svc.outage, svc.hasMaintenance);
-    const pill = outagePillLabel(svc.outage, svc.hasMaintenance);
-
-    const funcs = (svc.affectedFunctions || []).map(fn => {
-      const fcls = outageClass(fn.outage, fn.hasMaintenance);
-      const fbadge = fn.outage !== 'none' ? `<span class="func-badge ${fcls}">${fn.outage === 'full' ? 'Vollstörung' : fn.outage === 'partial' ? 'Teilstörung' : ''}</span>` : '';
-      return `<div class="func-item">
-        <div class="func-name">${esc(fn.function)}${fbadge}</div>
-        ${fn.impactDesc ? `<div class="func-desc">${esc(fn.impactDesc)}</div>` : ''}
-      </div>`;
-    }).join('');
-
-    const maintNote = svc.hasMaintenance
-      ? `<div style="margin-top:10px;font-size:0.75rem;color:var(--status-maint-text);display:flex;align-items:center;gap:5px;">
-           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;flex-shrink:0"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
-           Geplante Wartung
-         </div>` : '';
-
-    return `<div class="status-card ${cls}">
-      <div class="card-head">
-        <div>
-          <div class="card-name">${esc(meta.label)}</div>
-          <div class="card-desc">${esc(meta.desc)}</div>
-        </div>
-        <div class="status-pill ${cls}">
-          <span class="status-dot ${cls}"></span>
-          ${esc(pill)}
-        </div>
-      </div>
-      ${funcs ? `<div class="card-functions">${funcs}</div>` : ''}
-      ${maintNote}
-    </div>`;
-  }).join('');
-}
-
-function renderCauses(causes) {
-  const section = document.getElementById('cause-section');
-  const tbody = document.getElementById('cause-tbody');
-  const countEl = document.getElementById('cause-count');
-  if (!causes || causes.length === 0) { section.style.display = 'none'; return; }
-
-  countEl.textContent = causes.length;
-  tbody.innerHTML = causes.map(c => `<tr>
-    <td><span class="ci-tag">${esc(c.ci)}</span></td>
-    <td>${esc(c.service)}</td>
-    <td>${esc(c.organization)}</td>
-    <td>${esc(c.function)}</td>
-  </tr>`).join('');
-  section.style.display = '';
-}
-
-function updateBanner(appStatus) {
-  const banner = document.getElementById('global-banner');
-  const values = Object.values(appStatus);
-  const hasFullOutage = values.some(s => s.outage === 'full' && !s.hasMaintenance);
-  const hasPartial = values.some(s => (s.outage === 'partial' || (s.outage !== 'none' && s.hasMaintenance === false)) && !s.hasMaintenance);
-  const hasMaint = values.some(s => s.hasMaintenance);
-  const numIssues = values.filter(s => s.outage !== 'none').length;
-
-  if (hasFullOutage) {
-    banner.className = 'global-banner full';
-    banner.innerHTML = `<div class="banner-icon">🔴</div><div class="banner-text"><strong>Störungen aktiv</strong><span>${numIssues} Dienst${numIssues !== 1 ? 'e' : ''} mit Einschränkungen – weitere Details in den Kacheln unten.</span></div>`;
-  } else if (hasPartial || hasMaint) {
-    banner.className = 'global-banner partial';
-    banner.innerHTML = `<div class="banner-icon">🟡</div><div class="banner-text"><strong>Eingeschränkter Betrieb</strong><span>${numIssues} Dienst${numIssues !== 1 ? 'e' : ''} meldet Einschränkungen oder Wartungsarbeiten.</span></div>`;
-  } else {
-    banner.className = 'global-banner ok';
-    banner.innerHTML = `<div class="banner-icon">🟢</div><div class="banner-text"><strong>Alle Dienste betriebsbereit</strong><span>Keine Störungen oder Einschränkungen gemeldet.</span></div>`;
-  }
-}
-
-function startCountdown() {
-  clearInterval(countdownInterval);
-  const el = document.getElementById('next-refresh');
-  countdownInterval = setInterval(() => {
-    if (!nextRefreshAt) return;
-    const secs = Math.max(0, Math.round((nextRefreshAt - Date.now()) / 1000));
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    el.textContent = `Nächste Aktualisierung in ${m}:${String(s).padStart(2,'0')} min`;
-  }, 1000);
-}
-
-async function loadStatus() {
-  clearTimeout(refreshTimer);
-
-  try {
-    const res = await fetch(API_URL);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
-    const ts = formatTime(data.timestamp);
-    document.getElementById('last-updated').textContent = 'Zuletzt aktualisiert: ' + ts;
-
-    renderGrid(data.appStatus || {});
-    updateBanner(data.appStatus || {});
-    renderCauses(data.cause || []);
-
-    // Alert prüfen (asynchron, kein await – blockiert Refresh nicht)
-    checkAndSendAlert(data.appStatus || {}, ts);
-  } catch (e) {
-    document.getElementById('global-banner').className = 'global-banner full';
-    document.getElementById('global-banner').innerHTML =
-      `<div class="banner-icon">⚠️</div><div class="banner-text"><strong>API nicht erreichbar</strong><span>${esc(e.message)}</span></div>`;
-    document.getElementById('last-updated').textContent = 'Fehler beim Laden';
-  }
-
-  nextRefreshAt = Date.now() + REFRESH_MS;
-  startCountdown();
-  refreshTimer = setTimeout(loadStatus, REFRESH_MS);
-}
-
-function toggleNavGroup(h) { h.closest('.nav-group').classList.toggle('open'); }
-
-async function init() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (!session) { location.href = 'index.html'; return; }
-
-  // Name aus user_profiles (vorname + nachname)
-  const { data: profile } = await sb.from('user_profiles')
-    .select('vorname, nachname').eq('user_id', session.user.id).maybeSingle();
-  const name = profile ? [profile.vorname, profile.nachname].filter(Boolean).join(' ') : session.user.email;
-  const nameEl = document.getElementById('user-name');
-  nameEl.textContent = name || '–';
-  nameEl.dataset.email = session.user.email || '';
-
-  // Rolle aus user_roles (konsistent mit allen anderen Admin-Seiten)
-  const { data: ur } = await sb.from('user_roles')
-    .select('role').eq('user_id', session.user.id).maybeSingle();
-  const rolle = ur?.role || '';
-
-  if (rolle === 'admin') {
-    document.getElementById('nav-group-admin').style.display = '';
-    const supportLink = document.getElementById('nav-link-support');
-    if (supportLink) supportLink.href = 'support.html';
-    const badge = document.getElementById('header-role-badge');
-    badge.textContent = 'Admin'; badge.className = 'role-badge role-admin'; badge.style.display = '';
-  }
-
-  // Alert-Subscription ZUERST laden, dann Status – sonst checkAndSendAlert
-  // prüft alertSub bevor es geladen ist (Race Condition)
-  await loadAlertSub(session);
-  await loadStatus();
-}
-
-async function logout() {
-  await sb.auth.signOut();
-  location.href = 'index.html';
-}
-
-init();
+  });
+});
 </script>
 </body>
 </html>
