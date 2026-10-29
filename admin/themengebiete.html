@@ -131,6 +131,7 @@
 <link rel="stylesheet" href="admin-mobile.css">
 
 <script src="admin-mobile.js"></script>
+<script src="perm.js"></script>
 <script src="nav.js"></script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#3C4A7C">
@@ -326,6 +327,8 @@ async function init() {
   if (ur?.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
 
   document.getElementById('nav-group-admin').style.display = '';
+  await window.initPerms(sb);
+  window.enforcePage('admin', null, 'verwaltung');
   const supportLink = document.getElementById('nav-link-support');
   if (supportLink) supportLink.href = 'support.html';
 

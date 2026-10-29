@@ -311,7 +311,6 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     pagePerm = enforcePage(roleRow?.role || 'partner', _userTier, 'produktfinder');
     if (!roleRow || roleRow.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
     document.getElementById('nav-group-admin').style.display = '';
-    setupNavRole('admin').catch(console.warn);
 
     await loadPartners();
   }
@@ -493,8 +492,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   init();
 
-  async function setupNavRole(roleArg) {
-    const supportLink = document.getElementById('nav-link-support');
+  async function    const supportLink = document.getElementById('nav-link-support');
     if (supportLink) supportLink.href = roleArg === 'admin' ? 'support.html' : 'tickets.html';
     if (roleArg === 'kunde') {
       ['nav-group-produkte','nav-link-anfragen','nav-link-kunden-mgmt','nav-link-rechner','nav-link-website'].forEach(id => {

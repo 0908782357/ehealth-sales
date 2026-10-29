@@ -134,6 +134,7 @@
 <link rel="stylesheet" href="admin-mobile.css">
 
 <script src="admin-mobile.js"></script>
+<script src="perm.js"></script>
 <script src="nav.js"></script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#3C4A7C">
@@ -221,6 +222,8 @@
       return;
     }
     document.getElementById('nav-group-admin').style.display = '';
+    await window.initPerms(sb);
+    window.enforcePage('admin', null, 'verwaltung');
     await loadOrders();
   }
 
@@ -500,8 +503,7 @@
   async function logout() { await sb.auth.signOut(); window.location.href = 'index.html'; }
   init();
 
-  async function setupNavRole(roleArg) {
-    const supportLink = document.getElementById('nav-link-support');
+  async function    const supportLink = document.getElementById('nav-link-support');
     if (supportLink) supportLink.href = roleArg === 'admin' ? 'support.html' : 'tickets.html';
     if (roleArg === 'kunde') {
       ['nav-group-produkte','nav-link-anfragen','nav-link-kunden-mgmt','nav-link-rechner','nav-link-website'].forEach(id => {

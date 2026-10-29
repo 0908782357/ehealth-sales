@@ -556,7 +556,6 @@
     if (role === 'kunde') {
       document.getElementById('nav-item-products').style.display = 'none';
     }
-    setupNavRole(role).catch(console.warn);
     loadMfaStatus().catch(console.warn);
 
     if (role === 'admin') {
@@ -724,8 +723,7 @@
 
   // ── Nav helpers ────────────────────────────────────────────────────────────
 
-  async function setupNavRole(roleArg) {
-    const supportLink = document.getElementById('nav-link-support');
+  async function    const supportLink = document.getElementById('nav-link-support');
     if (supportLink) supportLink.href = roleArg === 'admin' ? 'support.html' : 'tickets.html';
     if (roleArg === 'kunde') {
       ['nav-group-produkte','nav-link-anfragen','nav-link-kunden-mgmt','nav-link-rechner','nav-link-website'].forEach(id => {

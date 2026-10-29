@@ -367,6 +367,7 @@
 <link rel="stylesheet" href="admin-mobile.css">
 
 <script src="admin-mobile.js"></script>
+<script src="perm.js"></script>
 <script src="nav.js"></script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#3C4A7C">
@@ -581,8 +582,9 @@ async function init() {
   if (!session) { window.location.href = 'index.html'; return; }
   _setHeaderUser(session.user.id);
 
-  const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+  const { data: roleRow } = await sb.from('user_roles').select('role, partner_tier').eq('user_id', session.user.id).maybeSingle();
   currentRole = roleRow?.role || 'partner';
+  const currentTier = roleRow?.partner_tier || null;
   if (currentRole === 'admin') {
     document.getElementById('nav-group-admin').style.display = '';
     const supportLink = document.getElementById('nav-link-support');
@@ -590,6 +592,13 @@ async function init() {
   } else {
     const { data: partnerRow } = await sb.from('partners').select('id').eq('user_id', session.user.id).maybeSingle();
     currentPartnerId = partnerRow?.id || null;
+  }
+  await window.initPerms(sb);
+  if (currentRole === 'admin') {
+    window.enforcePage('admin', null, 'verwaltung');
+  } else {
+    try { sessionStorage.setItem('_perm_ctx', JSON.stringify({ role: currentRole, tier: currentTier })); } catch (e) {}
+    window.applyNavPerms(currentRole, currentTier);
   }
 
   let kundenQ = sb.from('kunden').select('*, anfragen(id, produkte, created_at, status)').order('created_at', { ascending: false });

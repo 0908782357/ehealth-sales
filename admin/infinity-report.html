@@ -132,6 +132,7 @@
 <link rel="stylesheet" href="admin-mobile.css">
 
 <script src="admin-mobile.js"></script>
+<script src="perm.js"></script>
 <script src="nav.js"></script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#3C4A7C">
@@ -326,12 +327,20 @@ let allGruppenMap = {};
 // ── Supabase Auth ─────────────────────────────────────
 async function init() {
   const { data } = await sb.auth.getSession();
-  if (!data?.session) { window.location.href = 'login.html'; return; }
+  if (!data?.session) { window.location.href = 'index.html'; return; }
   session = data.session;
   document.getElementById('topbar-name').textContent = session.user.email;
 
-  // Apply nav permissions (re-use same logic as other pages)
-  applyPermissions();
+  const { data: ur } = await sb.from('user_roles').select('role, partner_tier').eq('user_id', session.user.id).maybeSingle();
+  const role = ur?.role || 'partner';
+  const tier = ur?.partner_tier || null;
+  if (role === 'admin') {
+    document.getElementById('nav-group-admin').style.display = '';
+    const supportLink = document.getElementById('nav-link-support');
+    if (supportLink) supportLink.href = 'support.html';
+  }
+  await window.initPerms(sb);
+  window.enforcePage(role, tier, 'infinity_report');
 
   const stored = sessionStorage.getItem(INF_TOKEN_KEY);
   if (stored) {
@@ -339,11 +348,6 @@ async function init() {
   } else {
     openLoginModal();
   }
-}
-
-function applyPermissions() {
-  // Simple perm check – show all links for now, hide what's not permitted
-  // (same logic as other pages, simplified)
 }
 
 function logout() {

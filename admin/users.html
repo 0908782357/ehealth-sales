@@ -110,6 +110,21 @@
   .badge-kunde { background: #fef3c7; color: #92400e; }
   .badge-active   { background: #f0fdf4; color: #16a34a; }
   .badge-pending  { background: #fef3c7; color: #92400e; }
+  .badge-navy     { background: var(--navy); color: #fff; }
+
+  .tier-quick {
+    appearance: none; -webkit-appearance: none;
+    background: var(--navy); color: #fff;
+    border: none; border-radius: 20px;
+    padding: 3px 22px 3px 10px; font-size: 0.7rem; font-weight: 700;
+    cursor: pointer; display: block; margin-top: 3px; font-family: inherit;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23fff'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 8px center; background-size: 8px;
+    transition: opacity .15s;
+  }
+  .tier-quick:hover { opacity: .85; }
+  .tier-quick:disabled { opacity: .5; cursor: default; }
+  .tier-quick.saved { background: #15803d; }
 
   .actions { display: flex; gap: 6px; }
   .empty { padding: 48px; text-align: center; color: var(--gray-400); font-size: 0.85rem; }
@@ -208,6 +223,7 @@
 <link rel="stylesheet" href="admin-mobile.css">
 
 <script src="admin-mobile.js"></script>
+<script src="perm.js"></script>
 <script src="nav.js"></script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#3C4A7C">
@@ -462,8 +478,9 @@
     if (roleRow?.role !== 'admin') { window.location.href = 'dashboard.html'; return; }
 
     document.getElementById('nav-group-admin').style.display = '';
+    await window.initPerms(sb);
+    window.enforcePage('admin', null, 'verwaltung');
     await loadUsers();
-    setupNavRole(roleRow?.role).catch(console.warn);
   }
 
   async function loadUsers() {
@@ -477,6 +494,38 @@
   }
 
   const ROLLE_LABELS = { admin: 'Admin', partner: 'Partner', kunde: 'Kunde' };
+
+  // Option A: Quick-Tier-Select im User-Row
+  function tierSelect(u) {
+    if (u.rolle !== 'partner') return '';
+    const tiers = ['standard', 'premium', 'strategisch'];
+    const cur = u.partner_tier || 'standard';
+    if (!u.user_id) {
+      return '<span class="badge badge-navy" style="margin-top:3px;display:block;">' + (TIER_LABELS[cur] || cur) + '</span>';
+    }
+    return '<select class="tier-quick" title="Alliance-Stufe ändern" onchange="quickTier(\'' + u.user_id + '\',\'' + u.id + '\',this)">' +
+      tiers.map(function(t) { return '<option value="' + t + '"' + (cur === t ? ' selected' : '') + '>' + TIER_LABELS[t] + '</option>'; }).join('') +
+      '</select>';
+  }
+
+  async function quickTier(authUid, profileId, select) {
+    const newTier = select.value;
+    select.disabled = true;
+    const { error } = await sb.from('user_roles')
+      .upsert({ user_id: authUid, role: 'partner', partner_tier: newTier }, { onConflict: 'user_id' });
+    select.disabled = false;
+    if (error) {
+      const u = allUsers.find(function(x) { return x.id === profileId; });
+      select.value = u ? (u.partner_tier || 'standard') : 'standard';
+      showMsg('Fehler: ' + error.message, 'error');
+    } else {
+      const u = allUsers.find(function(x) { return x.id === profileId; });
+      if (u) { u.partner_tier = newTier; }
+      sessionStorage.removeItem('_perm_data');
+      select.classList.add('saved');
+      setTimeout(function() { select.classList.remove('saved'); }, 800);
+    }
+  }
   const ROLLE_BADGE  = { admin: 'badge-admin', partner: 'badge-partner', kunde: 'badge-kunde' };
   const TIER_LABELS  = { standard: 'Standard', premium: 'Premium', strategisch: 'Strategisch' };
 
@@ -522,7 +571,7 @@
         </td>
         <td>
           <span class="badge ${rolleBadge}">${rolleLabel}</span>
-          ${u.rolle === 'partner' && u.partner_tier ? `<span class="badge badge-navy" style="margin-top:3px;display:block;">${TIER_LABELS[u.partner_tier] || u.partner_tier}</span>` : ''}
+          ${tierSelect(u)}
         </td>
         <td>
           ${isActive
@@ -889,30 +938,6 @@
 
   init();
 
-  async function setupNavRole(roleArg) {
-    const supportLink = document.getElementById('nav-link-support');
-    if (supportLink && roleArg !== 'admin') supportLink.style.display = 'none';
-    if (roleArg === 'kunde') {
-      ['nav-group-produkte','nav-link-anfragen','nav-link-kunden-mgmt','nav-link-rechner','nav-link-website'].forEach(id => {
-        const el = document.getElementById(id); if (el) el.style.display = 'none';
-      });
-      const adminGroup = document.getElementById('nav-group-admin');
-      if (adminGroup) adminGroup.style.display = 'none';
-    }
-    if (roleArg !== 'admin') {
-      const k = document.getElementById('nav-item-kunden');
-      if (k) k.style.display = 'none';
-      const { data: _s } = await sb.auth.getSession();
-      const _uid = _s?.session?.user?.id;
-      if (_uid) {
-        const { data: _p } = await sb.from('partners').select('abo_status').eq('user_id', _uid).maybeSingle();
-        const hasFinder = _p && (_p.abo_status === 'aktiv' || _p.abo_status === 'test');
-        const fg = document.getElementById('nav-subgroup-finder');
-        if (fg) fg.style.display = hasFinder ? '' : 'none';
-      }
-    }
-  }
-  
   async function _setHeaderUser(userId) {
     const [profileRes, roleRes] = await Promise.all([
       sb.from('user_profiles').select('vorname, nachname').eq('user_id', userId).maybeSingle(),

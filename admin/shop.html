@@ -503,7 +503,6 @@
       document.getElementById('nav-group-admin').style.display = '';
     }
         if (userRole === 'kunde') { document.getElementById('nav-item-products').style.display = 'none'; }
-    setupNavRole(userRole).catch(console.warn);
 
     if (userRole !== 'admin') {
       const { data: partner } = await sb.from('partners').select('id').eq('user_id', session.user.id).maybeSingle();
@@ -1338,8 +1337,7 @@
   async function logout() { await sb.auth.signOut(); window.location.href = 'index.html'; }
   init();
 
-  async function setupNavRole(roleArg) {
-    const supportLink = document.getElementById('nav-link-support');
+  async function    const supportLink = document.getElementById('nav-link-support');
     if (supportLink) supportLink.href = roleArg === 'admin' ? 'support.html' : 'tickets.html';
     if (roleArg === 'kunde') {
       ['nav-group-produkte','nav-link-anfragen','nav-link-kunden-mgmt','nav-link-rechner','nav-link-website'].forEach(id => {

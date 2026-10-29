@@ -204,7 +204,6 @@
     if (enforcePage(roleRow?.role || 'partner', roleRow?.partner_tier || null, 'support') === 'hidden') return;
     if (roleRow?.role !== 'admin') { window.location.href = 'tickets.html'; return; }
     document.getElementById('nav-group-admin').style.display = '';
-    setupNavRole('admin').catch(console.warn);
     await loadPartners();
     await loadTickets();
 
@@ -355,8 +354,7 @@
     el.className = 'msg ' + type; setTimeout(() => el.className = 'msg', 3000);
   }
 
-  async function setupNavRole(role) {
-    if (role !== 'admin') {
+  async function    if (role !== 'admin') {
       const k = document.getElementById('nav-item-kunden'); if (k) k.style.display = 'none';
     }
     const supportLink = document.getElementById('nav-link-support');

@@ -255,11 +255,10 @@
     userRole = roleRow?.role || 'kunde';
     userTier = roleRow?.partner_tier || null;
     await window.initPerms(sb);
-    applyNavPerms(userRole, userTier);
+    window.enforcePage(userRole, userTier, 'tickets');
 
     if (userRole === 'admin') { window.location.href = 'support.html'; return; }
 
-    setupNavRole(userRole).catch(console.warn);
     document.getElementById('view-spinner').style.display = 'none';
 
     if (userRole === 'kunde') {
@@ -418,8 +417,7 @@
     loadPartnerTickets();
   }
 
-  async function setupNavRole(role) {
-    if (role !== 'admin') {
+  async function    if (role !== 'admin') {
       const k = document.getElementById('nav-item-kunden');
       if (k) k.style.display = 'none';
     }

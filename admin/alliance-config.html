@@ -173,6 +173,7 @@
 <link rel="stylesheet" href="admin-mobile.css">
 
 <script src="admin-mobile.js"></script>
+<script src="perm.js"></script>
 <script src="nav.js"></script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#3C4A7C">
@@ -301,6 +302,7 @@ async function init() {
     badge.textContent = 'Admin'; badge.className = 'role-badge role-admin'; badge.style.display = '';
   }
 
+  await window.initPerms(sb);
   await Promise.all([loadTiers(), loadFeatures(), loadCommunityPerms()]);
 }
 

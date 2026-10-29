@@ -129,6 +129,7 @@
 <link rel="stylesheet" href="admin-mobile.css">
 
 <script src="admin-mobile.js"></script>
+<script src="perm.js"></script>
 <script src="nav.js"></script>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#3C4A7C">
@@ -253,6 +254,7 @@
   let TOPICS = [];
 
   let userRole = 'partner';
+  let userTier  = null;
   let currentPartnerId = null;
   let currentPartnerSlug = null;
 
@@ -261,8 +263,9 @@
     if (!session) { window.location.href = 'index.html'; return; }
     _setHeaderUser(session.user.id);
 
-    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', session.user.id).maybeSingle();
+    const { data: roleRow } = await sb.from('user_roles').select('role, partner_tier').eq('user_id', session.user.id).maybeSingle();
     userRole = roleRow?.role || 'partner';
+    userTier = roleRow?.partner_tier || null;
     if (userRole === 'kunde') { window.location.href = 'dashboard.html'; return; }
 
     const { data: themenData } = await sb.from('themengebiete')
@@ -294,7 +297,8 @@
       updateFinderUrl();
       await loadConfig(partner.id);
     }
-    setupNavRole(userRole).catch(console.warn);
+    await window.initPerms(sb);
+    window.enforcePage(userRole, userTier, 'produktfinder');
   }
 
   async function loadAdminPartnerList() {
@@ -427,8 +431,7 @@
 
   init();
 
-  async function setupNavRole(roleArg) {
-    const supportLink = document.getElementById('nav-link-support');
+  async function    const supportLink = document.getElementById('nav-link-support');
     if (supportLink) supportLink.href = roleArg === 'admin' ? 'support.html' : 'tickets.html';
     if (roleArg === 'kunde') {
       ['nav-group-produkte','nav-link-anfragen','nav-link-kunden-mgmt','nav-link-rechner','nav-link-website'].forEach(id => {
