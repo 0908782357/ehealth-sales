@@ -492,28 +492,6 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   init();
 
-  async function    const supportLink = document.getElementById('nav-link-support');
-    if (supportLink) supportLink.href = roleArg === 'admin' ? 'support.html' : 'tickets.html';
-    if (roleArg === 'kunde') {
-      ['nav-group-produkte','nav-link-anfragen','nav-link-kunden-mgmt','nav-link-rechner','nav-link-website'].forEach(id => {
-        const el = document.getElementById(id); if (el) el.style.display = 'none';
-      });
-      const adminGroup = document.getElementById('nav-group-admin');
-      if (adminGroup) adminGroup.style.display = 'none';
-    }
-    if (roleArg !== 'admin') {
-      const k = document.getElementById('nav-item-kunden');
-      if (k) k.style.display = 'none';
-      const { data: _s } = await sb.auth.getSession();
-      const _uid = _s?.session?.user?.id;
-      if (_uid) {
-        const { data: _p } = await sb.from('partners').select('abo_status').eq('user_id', _uid).maybeSingle();
-        const hasFinder = _p && (_p.abo_status === 'aktiv' || _p.abo_status === 'test');
-        const fg = document.getElementById('nav-subgroup-finder');
-        if (fg) fg.style.display = hasFinder ? '' : 'none';
-      }
-    }
-  }
   
   async function _setHeaderUser(userId) {
     const [profileRes, roleRes] = await Promise.all([

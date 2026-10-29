@@ -354,12 +354,6 @@
     el.className = 'msg ' + type; setTimeout(() => el.className = 'msg', 3000);
   }
 
-  async function    if (role !== 'admin') {
-      const k = document.getElementById('nav-item-kunden'); if (k) k.style.display = 'none';
-    }
-    const supportLink = document.getElementById('nav-link-support');
-    if (supportLink) supportLink.href = role === 'admin' ? 'support.html' : 'tickets.html';
-  }
 
   async function _setHeaderUser(userId) {
     const [profileRes, roleRes] = await Promise.all([

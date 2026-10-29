@@ -417,20 +417,6 @@
     loadPartnerTickets();
   }
 
-  async function    if (role !== 'admin') {
-      const k = document.getElementById('nav-item-kunden');
-      if (k) k.style.display = 'none';
-    }
-    if (role === 'kunde') {
-      ['nav-group-produkte','nav-link-anfragen','nav-link-kunden-mgmt','nav-link-rechner','nav-link-website'].forEach(id => {
-        const el = document.getElementById(id); if (el) el.style.display = 'none';
-      });
-      const adminGroup = document.getElementById('nav-group-admin');
-      if (adminGroup) adminGroup.style.display = 'none';
-    }
-    const supportLink = document.getElementById('nav-link-support');
-    if (supportLink) supportLink.href = role === 'admin' ? 'support.html' : 'tickets.html';
-  }
 
   async function _setHeaderUser(userId) {
     const [profileRes, roleRes] = await Promise.all([
