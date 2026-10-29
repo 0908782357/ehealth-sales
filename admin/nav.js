@@ -6,9 +6,7 @@
   (function() {
     var lnk = document.createElement('link');
     lnk.rel = 'stylesheet';
-    lnk.href = (document.currentScript && document.currentScript.src
-      ? document.currentScript.src.replace(/nav\.js[^/]*$/, '') : '')
-      + 'admin.css';
+    lnk.href = 'admin.css';
     document.head.appendChild(lnk);
   })();
 
