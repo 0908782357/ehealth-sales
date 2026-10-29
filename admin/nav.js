@@ -20,7 +20,6 @@
     '    <a class="nav-link nav-sub" href="berufsgruppen.html">Berufsgruppen</a>',
     '    <a class="nav-link nav-sub" href="themengebiete.html">Themengebiete</a>',
     '    <a class="nav-link nav-sub" href="alliance-config.html">Alliance-Stufen</a>',
-    '    <a class="nav-link nav-sub" href="rechte.html">Rechte &amp; Rollen</a>',
     '  </div>',
     '</div>',
 
