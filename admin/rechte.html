@@ -323,8 +323,8 @@ async function _setHeaderUser(userId) {
 }
 
 // ── Init ────────────────────────────────────────────────────────────────────
-sb.auth.onAuthStateChange(async (event, session) => {
-  if (event !== 'INITIAL_SESSION') return;
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
   if (!session) { window.location.href = 'index.html'; return; }
 
   const { data: roleRow } = await sb.from('user_roles')
@@ -336,7 +336,7 @@ sb.auth.onAuthStateChange(async (event, session) => {
   document.getElementById('nav-group-admin').style.display = '';
   _setHeaderUser(session.user.id);
   await window.initPerms(sb);
-  window.applyNavPerms(role, roleRow?.partner_tier || null);
+  window.enforcePage('admin', null, 'verwaltung');
 
   // Load all permissions from DB
   const { data, error } = await sb.from('portal_permissions')
@@ -354,7 +354,8 @@ sb.auth.onAuthStateChange(async (event, session) => {
   });
 
   renderMatrix();
-});
+}
+document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
