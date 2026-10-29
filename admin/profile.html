@@ -722,9 +722,6 @@
     setTimeout(() => { msg.className = 'msg'; }, 3000);
   }
 
-  // ── Nav helpers ────────────────────────────────────────────────────────────
-
-
   async function _setHeaderUser(userId) {
     const [profileRes, roleRes] = await Promise.all([
       sb.from('user_profiles').select('vorname, nachname').eq('user_id', userId).maybeSingle(),
