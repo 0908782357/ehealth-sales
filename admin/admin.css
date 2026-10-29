@@ -3,6 +3,22 @@
    Geladen via nav.js auf allen Admin-Seiten.
    ============================================================ */
 
+/* DIAGNOSE: erscheint unten rechts wenn admin.css geladen wird */
+body::after {
+  content: "\2713 Design v2";
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  background: #3C4A7C;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-family: sans-serif;
+  z-index: 99999;
+  pointer-events: none;
+}
+
 /* 1. Fog Canvas Seitenhintergrund */
 body {
   background: #f5f5f7 !important;
