@@ -1,0 +1,115 @@
+/* ============================================================
+   admin.css — Option A: Fog & Navy Design
+   Geladen via nav.js auf allen Admin-Seiten.
+   ============================================================ */
+
+/* 1. Fog Canvas Seitenhintergrund */
+body {
+  background: #f5f5f7 !important;
+}
+
+/* 2. Karten: kein Schatten, dezenterer Border */
+.stat-card,
+.section-card,
+.hl-card,
+.table-card,
+.card,
+.content-card,
+.form-card,
+.reg-card,
+.info-card {
+  box-shadow: none !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+/* 3. Seitentitel: dunkler, engeres Letter-Spacing */
+h1 {
+  color: #1d1d1f !important;
+  letter-spacing: -0.5px;
+}
+
+/* 4. Card-Überschriften: dunkel statt navy */
+.section-card h2,
+.section-card h3,
+.hl-card-title,
+.card-title,
+.table-card h2,
+.content-card h2 {
+  color: #1d1d1f !important;
+}
+
+/* 5. Stat-Werte: dunkel */
+.stat-value {
+  color: #1d1d1f !important;
+}
+
+/* 6. Pill-Buttons (Voll-Buttons, nicht sm) */
+.btn:not(.btn-sm):not(.btn-icon) {
+  border-radius: 9999px !important;
+}
+
+/* 7. Topbar: pill user-chip und logout */
+.user-chip {
+  border-radius: 9999px !important;
+}
+.btn-logout {
+  border-radius: 9999px !important;
+}
+
+/* 8. Nav: aktiver Link und Hover verfeinert */
+.nav-link.active {
+  background: #eef0f7 !important;
+  color: #3C4A7C !important;
+}
+.nav-link:hover:not(.active) {
+  background: #f0f1f6 !important;
+  color: #3C4A7C !important;
+}
+
+/* 9. Quick-Links */
+.quick-link {
+  border-radius: 9999px !important;
+  background: #eef0f7 !important;
+  border-color: rgba(60, 74, 124, 0.15) !important;
+}
+.quick-link:hover {
+  background: #e4e7f3 !important;
+}
+
+/* 10. Badges: pill-förmig */
+.role-badge,
+.tier-badge,
+.status-badge {
+  border-radius: 9999px !important;
+}
+
+/* 11. Sidebar bleibt weiß */
+.sidebar {
+  background: #ffffff !important;
+}
+
+/* 12. hl-footer */
+.hl-footer {
+  background: #f9f9fb !important;
+  border-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+/* 13. Formularfelder */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+select,
+textarea {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  border-radius: 10px !important;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: #3C4A7C !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(60, 74, 124, 0.1) !important;
+}
