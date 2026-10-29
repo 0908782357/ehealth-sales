@@ -891,7 +891,9 @@
       if (myPartnerId) {
         q = q.eq('partner_id', myPartnerId);
       } else if (myFirma) {
-        q = q.eq('unternehmen', myFirma);
+        // ilike: case-insensitive, toleriert "GmbH"-Varianten wie "eHealth Sales GmbH" vs "eHealth Sales"
+        const firmaBase = myFirma.replace(/\s+GmbH$/i, '').trim();
+        q = q.ilike('unternehmen', `${firmaBase}%`);
       } else {
         allProducts = []; renderTable([]); return;
       }

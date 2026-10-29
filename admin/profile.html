@@ -643,12 +643,16 @@
     currentUserId = user.id;
     _setHeaderUser(user.id);
 
-    const { data: roleRow } = await sb.from('user_roles').select('role').eq('user_id', user.id).maybeSingle();
+    const { data: roleRow } = await sb.from('user_roles').select('role, partner_tier').eq('user_id', user.id).maybeSingle();
     const role = roleRow?.role || 'partner';
+    const tier = roleRow?.partner_tier || null;
 
     const badge = document.getElementById('role-badge');
     badge.textContent = { admin: 'Admin', partner: 'Kunde', customer: 'Endkunde' }[role] || role;
     badge.className = `role-badge role-${role}`;
+
+    await window.initPerms(sb);
+    window.applyNavPerms(role, tier);
 
     if (role === 'admin') {
       document.getElementById('nav-group-admin').style.display = '';

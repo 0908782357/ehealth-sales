@@ -21,7 +21,7 @@
     { id: 'produkte',      kFixed:'hidden', sFixed:'hidden', prDef:'read',     stDef:'edit'     },
     { id: 'community',     kFixed:'hidden', sDef:'read',     prDef:'edit',     stDef:'edit'     },
     { id: 'tickets',       kDef:'edit',     sDef:'edit',     prDef:'edit',     stDef:'edit'     },
-    { id: 'anfragen',      kFixed:'hidden', sDef:'read',     prDef:'edit',     stDef:'edit'     },
+    { id: 'anfragen',      kFixed:'hidden', sDef:'hidden',   prDef:'edit',     stDef:'edit'     },
     { id: 'support',       kFixed:'hidden', sFixed:'hidden', prFixed:'hidden', stFixed:'hidden' },
     { id: 'tirechner',     kFixed:'hidden', sDef:'read',     prDef:'read',     stDef:'edit'     },
     { id: 'produktfinder', kFixed:'hidden', sDef:'read',     prDef:'edit',     stDef:'edit'     },
@@ -108,11 +108,13 @@
     return perm;
   };
 
-  // Auto-apply wenn BEIDE Contexts gecached sind (für Seiten ohne explizites initPerms/enforcePage)
+  // Auto-apply wenn CTX_KEY gecached ist — auch ohne DB-Daten (DEFS als Fallback)
+  // DATA_KEY wird nicht mehr als Pflicht geprüft, da Seiten ohne initPerms sonst
+  // gar keine Nav-Filterung erhalten (alle Links sichtbar bis erste initPerms-Seite).
   document.addEventListener('DOMContentLoaded', function () {
     try {
       var ctx = JSON.parse(sessionStorage.getItem(CTX_KEY) || 'null');
-      if (ctx && ctx.role && sessionStorage.getItem(DATA_KEY) !== null) {
+      if (ctx && ctx.role) {
         window.applyNavPerms(ctx.role, ctx.tier);
       }
     } catch (e) {}
