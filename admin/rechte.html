@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rechte & Rollen – eHealth Alliance Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="perm.js"></script>
+<style>
+  :root {
+    --navy:#3C4A7C; --green:#6DC52D; --green-dark:#5aad22;
+    --bg:#F7F8FC; --card:#fff; --border:#e5e7eb;
+    --text:#1e293b; --text-muted:#64748b; --text-light:#94a3b8;
+    --gray-100:#f1f5f9; --gray-200:#e2e8f0;
+    --red:#ef4444; --amber:#f59e0b;
+    --hidden-bg:#f1f5f9; --hidden-fg:#94a3b8;
+    --read-bg:#dbeafe; --read-fg:#1d4ed8;
+    --edit-bg:#dcfce7; --edit-fg:#15803d;
+    --lock-bg:#fef9c3; --lock-fg:#854d0e;
+    --radius:10px; --radius-sm:6px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); font-size:14px; }
+  .layout { display:flex; min-height:100vh; }
+
+  /* ── Sidebar ── */
+  .sidebar { width:220px; flex-shrink:0; background:var(--card); border-right:1px solid var(--border);
+    padding:20px 12px; display:flex; flex-direction:column; gap:2px; position:sticky; top:0; height:100vh; overflow-y:auto; }
+  .nav-link { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:var(--radius-sm);
+    color:var(--text-muted); text-decoration:none; font-size:13px; transition:background .15s,color .15s; }
+  .nav-link:hover { background:var(--gray-100); color:var(--navy); }
+  .nav-link.active { background:#eef0f7; color:var(--navy); font-weight:700; }
+  .nav-link svg { width:16px; height:16px; flex-shrink:0; }
+  .nav-group-header { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:var(--radius-sm);
+    color:var(--text-muted); cursor:pointer; font-size:13px; transition:background .15s,color .15s; }
+  .nav-group-header:hover { background:var(--gray-100); color:var(--navy); }
+  .nav-group-header > svg:first-child { width:16px; height:16px; flex-shrink:0; }
+  .nav-group-header > span { flex:1; }
+  .nav-chevron { width:14px!important; height:14px!important; transition:transform .2s; }
+  .nav-group.open .nav-chevron { transform:rotate(90deg); }
+  .nav-group-body { display:none; }
+  .nav-group.open .nav-group-body { display:block; }
+  .nav-sub { padding-left:32px; font-size:12.5px; }
+  .nav-sub2 { padding-left:44px; font-size:12px; }
+  .nav-subgroup { margin-top:2px; }
+  .nav-subgroup-label { padding:4px 10px 4px 32px; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-light); }
+
+  /* ── Main ── */
+  .main { flex:1; padding:32px 40px; max-width:1100px; }
+  .page-header { margin-bottom:28px; }
+  .page-header h1 { font-size:22px; font-weight:700; color:var(--navy); }
+  .page-header p { color:var(--text-muted); margin-top:4px; font-size:13.5px; }
+
+  /* ── Info banner ── */
+  .info-banner { background:#eef0f7; border-left:3px solid var(--navy); border-radius:var(--radius-sm);
+    padding:12px 16px; margin-bottom:24px; font-size:13px; color:var(--navy); display:flex; gap:8px; align-items:flex-start; }
+  .info-banner svg { flex-shrink:0; width:16px; height:16px; margin-top:1px; }
+
+  /* ── Legend ── */
+  .legend { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; align-items:center; }
+  .legend-item { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-muted); }
+  .chip { display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:20px;
+    font-size:12px; font-weight:600; white-space:nowrap; }
+  .chip-hidden { background:var(--hidden-bg); color:var(--hidden-fg); }
+  .chip-read   { background:var(--read-bg);   color:var(--read-fg); }
+  .chip-edit   { background:var(--edit-bg);   color:var(--edit-fg); }
+  .chip-lock   { background:var(--lock-bg);   color:var(--lock-fg); }
+
+  /* ── Matrix section ── */
+  .matrix-section { margin-bottom:36px; }
+  .matrix-title { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+    color:var(--text-light); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+  .matrix-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .matrix-table { width:100%; border-collapse:collapse; background:var(--card);
+    border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+  .matrix-table th { background:#f8fafc; color:var(--text-muted); font-size:12px; font-weight:600;
+    padding:10px 14px; text-align:left; border-bottom:1px solid var(--border); }
+  .matrix-table th:first-child { min-width:200px; }
+  .matrix-table th:not(:first-child) { text-align:center; min-width:130px; }
+  .matrix-table td { padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  .matrix-table tbody tr:last-child td { border-bottom:none; }
+  .matrix-table td:not(:first-child) { text-align:center; }
+  .matrix-table tbody tr:hover { background:#fafbfc; }
+
+  .perm-label { font-weight:500; font-size:13px; }
+  .perm-id-hint { font-size:11px; color:var(--text-light); margin-top:1px; font-family:monospace; }
+
+  /* ── Cell chips ── */
+  .cell-chip { cursor:pointer; transition:transform .1s, box-shadow .1s; user-select:none; }
+  .cell-chip:hover { transform:scale(1.05); box-shadow:0 1px 4px rgba(0,0,0,.15); }
+  .cell-chip:active { transform:scale(.97); }
+  .cell-locked { cursor:default; opacity:.8; }
+  .cell-locked:hover { transform:none; box-shadow:none; }
+
+  /* ── Saving state ── */
+  .cell-saving { opacity:.5; pointer-events:none; }
+
+  /* ── Toast ── */
+  .toast { position:fixed; bottom:24px; right:24px; background:#1e293b; color:#fff;
+    padding:10px 18px; border-radius:var(--radius-sm); font-size:13px; font-weight:500;
+    box-shadow:0 4px 16px rgba(0,0,0,.25); z-index:9999;
+    opacity:0; transform:translateY(8px); transition:opacity .2s,transform .2s; pointer-events:none; }
+  .toast.show { opacity:1; transform:translateY(0); }
+  .toast.success { background:#15803d; }
+  .toast.error { background:var(--red); }
+
+  /* ── Header user ── */
+  .header-user { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .user-info { display:flex; align-items:center; gap:10px; }
+  .role-badge { font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px;
+    background:var(--navy); color:#fff; }
+  .logout-btn { background:none; border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:5px 12px; font-size:12px; color:var(--text-muted); cursor:pointer; }
+  .logout-btn:hover { background:var(--gray-100); }
+
+  @media(max-width:768px) {
+    .layout { flex-direction:column; }
+    .sidebar { width:100%; height:auto; position:static; }
+    .main { padding:20px 16px; }
+    .matrix-table th:not(:first-child), .matrix-table td:not(:first-child) { min-width:90px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <nav class="sidebar">
+    <a class="nav-link" href="dashboard.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+      Dashboard
+    </a>
+
+    <div class="nav-group open" id="nav-group-admin">
+      <div class="nav-group-header" onclick="toggleNavGroup(this)">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        <span>Administration</span>
+        <svg class="nav-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="nav-group-body">
+        <a class="nav-link nav-sub" href="users.html">Nutzer</a>
+        <a class="nav-link nav-sub" href="orders.html">Bestellungen</a>
+        <a class="nav-link nav-sub" href="berufsgruppen.html">Berufsgruppen</a>
+        <a class="nav-link nav-sub" href="themengebiete.html">Themengebiete</a>
+        <a class="nav-link nav-sub" href="alliance-config.html">Alliance-Stufen</a>
+        <a class="nav-link nav-sub active" href="rechte.html">Rechte &amp; Rollen</a>
+      </div>
+    </div>
+
+    <div class="nav-group" id="nav-group-produkte">
+      <div class="nav-group-header" onclick="toggleNavGroup(this)">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <span>Produkte</span>
+        <svg class="nav-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="nav-group-body">
+        <a class="nav-link nav-sub" id="nav-item-products" data-perm="produkte" href="products.html">Verwaltung</a>
+        <div class="nav-subgroup" id="nav-subgroup-finder">
+          <div class="nav-subgroup-label">Produktfinder</div>
+          <a class="nav-link nav-sub nav-sub2" id="nav-item-kunden" data-perm="produktfinder" href="partners.html">Kunden</a>
+          <a class="nav-link nav-sub nav-sub2" href="finder-config.html">Finder-Konfiguration</a>
+        </div>
+      </div>
+    </div>
+
+    <a class="nav-link" id="nav-link-anfragen" data-perm="anfragen" href="anfragen.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      Anfragecenter
+    </a>
+    <a class="nav-link" id="nav-link-kunden-mgmt" data-perm="kunden_mgmt" href="kunden.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+      Kunden
+    </a>
+    <a class="nav-link" data-perm="events" href="events.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Events
+    </a>
+    <a class="nav-link" data-perm="shop" href="shop.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+      Shop
+    </a>
+    <a class="nav-link" data-perm="community" href="knowledge.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      Community
+    </a>
+    <a class="nav-link" data-perm="regulatorik" href="regulatorik.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"/></svg>
+      Regulatorik
+    </a>
+    <a class="nav-link" id="nav-link-rechner" data-perm="tirechner" href="rechner.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 19h16a2 2 0 002-2V7a2 2 0 00-2-2H4a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      TI-Rechner
+    </a>
+    <a class="nav-link" data-perm="ti_lagebild" href="ti-lagebild.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+      TI Lagebild
+    </a>
+    <a class="nav-link" data-perm="infinity_report" href="infinity-report.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/></svg>
+      Infinity Report
+    </a>
+    <a class="nav-link" id="nav-link-support" data-perm="support" href="support.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/></svg>
+      Support
+    </a>
+    <a class="nav-link" id="nav-link-tickets" data-perm="tickets" href="tickets.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 17h.01"/></svg>
+      Tickets
+    </a>
+    <div class="nav-group" id="nav-group-account">
+      <div class="nav-group-header" onclick="toggleNavGroup(this)">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        <span>Account</span>
+        <svg class="nav-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+      </div>
+      <div class="nav-group-body">
+        <a class="nav-link nav-sub" href="profile.html">Mein Konto</a>
+      </div>
+    </div>
+    <a class="nav-link" id="nav-link-website" href="../index.html">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      Zur Website
+    </a>
+  </nav>
+
+  <main class="main">
+    <div class="header-user">
+      <div></div>
+      <div class="user-info">
+        <span id="user-name" style="font-size:13px;color:var(--text-muted)"></span>
+        <button class="logout-btn" onclick="sb.auth.signOut().then(()=>location.href='index.html')">Abmelden</button>
+      </div>
+    </div>
+
+    <div class="page-header">
+      <h1>Rechte &amp; Rollen</h1>
+      <p>Konfiguriere welche Alliance-Stufe auf welche Seiten und Funktionen zugreift. Änderungen wirken sofort.</p>
+    </div>
+
+    <div class="info-banner">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <div>
+        <strong>Administratoren</strong> haben immer vollen Zugriff auf alle Bereiche — unabhängig von dieser Matrix.
+        Felder mit <strong>🔒</strong> sind systemseitig fixiert und nicht konfigurierbar.
+      </div>
+    </div>
+
+    <div class="legend">
+      <span style="font-size:12px;color:var(--text-muted);font-weight:600;margin-right:4px;">Legende:</span>
+      <span class="legend-item"><span class="chip chip-hidden">– Kein Zugriff</span></span>
+      <span class="legend-item"><span class="chip chip-read">👁 Lesen</span></span>
+      <span class="legend-item"><span class="chip chip-edit">✎ Bearbeiten</span></span>
+      <span class="legend-item"><span class="chip chip-lock">🔒 Fixiert</span>&nbsp;= nicht änderbar</span>
+    </div>
+
+    <div id="matrix-container">
+      <div style="color:var(--text-muted);padding:40px 0;text-align:center">Lade Berechtigungen…</div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://focysklymhmcfwgxdtuk.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjQ3Njg0MTAsImV4cCI6MjA0MDM0NDQxMH0.QBUP4a9iBn7X_BLEBFv6bVXfQIhIlbPBZw_-5K3WYe0';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── Berechtigungs-Definitionen ──────────────────────────────────────────────
+// kF/sF/prF/stF = Fixed-Werte (nicht in DB konfigurierbar)
+// Kein Fixed-Wert = aus DB laden und änderbar
+const TIER_COLS = [
+  { key: 'kunde',       label: 'Kunden',     fixedKey: 'kF'  },
+  { key: 'standard',    label: 'Standard',   fixedKey: 'sF'  },
+  { key: 'premium',     label: 'Premium',    fixedKey: 'prF' },
+  { key: 'strategisch', label: 'Strategisch',fixedKey: 'stF' },
+];
+
+const PERM_DEFS = [
+  // ── Immer sichtbar (alle Werte fixiert) ──────────────────────────────────
+  { id:'dashboard',       label:'Dashboard',         cat:'Immer sichtbar',    kF:'read',   sF:'read',   prF:'read',   stF:'read'   },
+  { id:'profil',          label:'Mein Konto',        cat:'Immer sichtbar',    kF:'edit',   sF:'edit',   prF:'edit',   stF:'edit'   },
+  { id:'ti_lagebild',     label:'TI-Lagebild',       cat:'Immer sichtbar',    kF:'read',   sF:'read',   prF:'read',   stF:'read'   },
+  { id:'infinity_report', label:'Infinity Report',   cat:'Immer sichtbar',    kF:'read',   sF:'read',   prF:'read',   stF:'read'   },
+  // ── Partner-Funktionen (teilweise konfigurierbar) ────────────────────────
+  { id:'regulatorik',     label:'Regulatorik',       cat:'Partner-Funktionen', kF:'hidden' },
+  { id:'tirechner',       label:'TI-Rechner',        cat:'Partner-Funktionen', kF:'hidden' },
+  { id:'produktfinder',   label:'Produktfinder',     cat:'Partner-Funktionen', kF:'hidden' },
+  { id:'community',       label:'Community / Wissen',cat:'Partner-Funktionen', kF:'hidden' },
+  { id:'shop',            label:'Shop',              cat:'Partner-Funktionen' },
+  { id:'events',          label:'Events',            cat:'Partner-Funktionen' },
+  { id:'anfragen',        label:'Anfragen',          cat:'Partner-Funktionen', kF:'hidden' },
+  { id:'tickets',         label:'Support-Tickets',   cat:'Partner-Funktionen' },
+  { id:'produkte',        label:'Produkte',          cat:'Partner-Funktionen', kF:'hidden', sF:'hidden' },
+  // ── Admin-only (alle Nicht-Admins: immer gesperrt) ───────────────────────
+  { id:'support',         label:'Support (Admin)',   cat:'Admin-only', kF:'hidden', sF:'hidden', prF:'hidden', stF:'hidden' },
+  { id:'kunden_mgmt',     label:'Kunden-Mgmt',       cat:'Admin-only', kF:'hidden', sF:'hidden', prF:'hidden', stF:'hidden' },
+  { id:'verwaltung',      label:'Rechte & Rollen',   cat:'Admin-only', kF:'hidden', sF:'hidden', prF:'hidden', stF:'hidden' },
+];
+
+const VAL_CYCLE  = ['hidden','read','edit'];
+const VAL_LABELS = { hidden:'– Kein Zugriff', read:'👁 Lesen', edit:'✎ Bearbeiten' };
+const VAL_CLASS  = { hidden:'chip-hidden',    read:'chip-read',  edit:'chip-edit' };
+
+let dbPerms = {}; // { perm_id: { kunde, standard, premium, strategisch } }
+
+// ── Toast ───────────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = 'toast'; }, 2200);
+}
+
+// ── Render ──────────────────────────────────────────────────────────────────
+function renderMatrix() {
+  const cats = [...new Set(PERM_DEFS.map(p => p.cat))];
+  const container = document.getElementById('matrix-container');
+  container.innerHTML = '';
+
+  cats.forEach(cat => {
+    const defs = PERM_DEFS.filter(p => p.cat === cat);
+    const section = document.createElement('div');
+    section.className = 'matrix-section';
+
+    const catIcons = {
+      'Immer sichtbar':      '👁',
+      'Partner-Funktionen':  '🤝',
+      'Admin-only':          '🔐',
+    };
+    section.innerHTML = `<div class="matrix-title">${catIcons[cat] || ''} ${cat}</div>`;
+
+    const table = document.createElement('table');
+    table.className = 'matrix-table';
+    table.innerHTML = `
+      <thead><tr>
+        <th>Funktion / Seite</th>
+        ${TIER_COLS.map(c => `<th>${c.label}</th>`).join('')}
+      </tr></thead>
+      <tbody id="tbody-${cat.replace(/[^a-z]/gi,'_')}"></tbody>`;
+    section.appendChild(table);
+    container.appendChild(section);
+
+    const tbody = table.querySelector('tbody');
+    defs.forEach(def => {
+      const tr = document.createElement('tr');
+      const dbRow = dbPerms[def.id] || {};
+      let cells = `<td><div class="perm-label">${def.label}</div><div class="perm-id-hint">${def.id}</div></td>`;
+
+      TIER_COLS.forEach(col => {
+        const fixedVal = def[col.fixedKey];
+        const isFixed  = fixedVal !== undefined;
+        const curVal   = isFixed ? fixedVal : (dbRow[col.key] || 'hidden');
+
+        if (isFixed) {
+          cells += `<td><span class="chip ${VAL_CLASS[curVal]} cell-locked" title="Systemfixiert">${VAL_LABELS[curVal]} 🔒</span></td>`;
+        } else {
+          cells += `<td><span class="chip ${VAL_CLASS[curVal]} cell-chip"
+            data-perm="${def.id}" data-col="${col.key}" data-val="${curVal}"
+            onclick="cycleCell(this)">${VAL_LABELS[curVal]}</span></td>`;
+        }
+      });
+
+      tr.innerHTML = cells;
+      tbody.appendChild(tr);
+    });
+  });
+}
+
+// ── Cycle cell value ────────────────────────────────────────────────────────
+async function cycleCell(el) {
+  const permId = el.dataset.perm;
+  const col    = el.dataset.col;
+  const curVal = el.dataset.val;
+  const nextVal = VAL_CYCLE[(VAL_CYCLE.indexOf(curVal) + 1) % VAL_CYCLE.length];
+
+  el.classList.add('cell-saving');
+  try {
+    const { error } = await sb.from('portal_permissions')
+      .update({ [col]: nextVal })
+      .eq('perm_id', permId);
+    if (error) throw error;
+
+    // Update local cache
+    if (!dbPerms[permId]) dbPerms[permId] = {};
+    dbPerms[permId][col] = nextVal;
+
+    // Update chip
+    el.className = `chip ${VAL_CLASS[nextVal]} cell-chip`;
+    el.textContent = VAL_LABELS[nextVal];
+    el.dataset.val = nextVal;
+    showToast(`✓ Gespeichert: ${permId} / ${col} → ${nextVal}`);
+
+    // Invalidate perm cache for all open tabs (force reload on next page visit)
+    try { sessionStorage.removeItem('_perm_data'); } catch(e) {}
+  } catch(err) {
+    showToast('Fehler beim Speichern', 'error');
+    console.error(err);
+  } finally {
+    el.classList.remove('cell-saving');
+  }
+}
+
+// ── Nav helpers ─────────────────────────────────────────────────────────────
+function toggleNavGroup(h) { h.closest('.nav-group').classList.toggle('open'); }
+
+async function _setHeaderUser(userId) {
+  const [pRes, rRes] = await Promise.all([
+    sb.from('user_profiles').select('vorname, nachname').eq('user_id', userId).maybeSingle(),
+    sb.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
+  ]);
+  const p = pRes.data;
+  const el = document.getElementById('user-name');
+  if (el) el.textContent = p ? [p.vorname, p.nachname].filter(Boolean).join(' ') : '–';
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+sb.auth.onAuthStateChange(async (event, session) => {
+  if (event !== 'INITIAL_SESSION') return;
+  if (!session) { window.location.href = 'index.html'; return; }
+
+  const { data: roleRow } = await sb.from('user_roles')
+    .select('role, partner_tier').eq('user_id', session.user.id).maybeSingle();
+  const role = roleRow?.role || 'partner';
+
+  if (role !== 'admin') { window.location.href = 'dashboard.html'; return; }
+
+  document.getElementById('nav-group-admin').style.display = '';
+  _setHeaderUser(session.user.id);
+  await window.initPerms(sb);
+  window.applyNavPerms(role, roleRow?.partner_tier || null);
+
+  // Load all permissions from DB
+  const { data, error } = await sb.from('portal_permissions')
+    .select('perm_id, kunde, standard, premium, strategisch');
+  if (error) { showToast('Fehler beim Laden', 'error'); return; }
+
+  dbPerms = {};
+  (data || []).forEach(row => {
+    dbPerms[row.perm_id] = {
+      kunde:        row.kunde,
+      standard:     row.standard,
+      premium:      row.premium,
+      strategisch:  row.strategisch,
+    };
+  });
+
+  renderMatrix();
+});
+</script>
+</body>
+</html>

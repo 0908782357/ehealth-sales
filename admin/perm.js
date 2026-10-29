@@ -14,8 +14,10 @@
 
   // Fallback-Defaults (solange DB noch nicht geladen) — muss mit PERM_DEFS in users.html synchron bleiben
   var DEFS = [
-    { id: 'dashboard',     kFixed:'read',   sFixed:'read',   prFixed:'read',   stFixed:'read'   },
-    { id: 'profil',        kFixed:'edit',   sFixed:'edit',   prFixed:'edit',   stFixed:'edit'   },
+    { id: 'dashboard',       kFixed:'read',   sFixed:'read',   prFixed:'read',   stFixed:'read'   },
+    { id: 'profil',          kFixed:'edit',   sFixed:'edit',   prFixed:'edit',   stFixed:'edit'   },
+    { id: 'ti_lagebild',     kFixed:'read',   sFixed:'read',   prFixed:'read',   stFixed:'read'   },
+    { id: 'infinity_report', kFixed:'read',   sFixed:'read',   prFixed:'read',   stFixed:'read'   },
     { id: 'events',        kDef:'read',     sDef:'read',     prDef:'read',     stDef:'edit'     },
     { id: 'shop',          kDef:'read',     sDef:'read',     prDef:'read',     stDef:'edit'     },
     { id: 'produkte',      kFixed:'hidden', sFixed:'hidden', prDef:'read',     stDef:'edit'     },
