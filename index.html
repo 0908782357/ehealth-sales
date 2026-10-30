@@ -684,8 +684,8 @@ p  { color: var(--slate); }
     .about-hero h1 { color: white; margin-bottom: 20px; }
     .about-hero p { color: rgba(255,255,255,0.75); font-size: 1.125rem; max-width: 640px; }
     .founder-card {
-      background: white; border-radius: var(--radius-lg);
-      padding: 40px; box-shadow: var(--shadow-md);
+      background: var(--navy-tint); border-radius: var(--radius-lg);
+      padding: 40px; box-shadow: var(--shadow-sm);
       display: flex; gap: 32px; align-items: flex-start;
     }
     .founder-avatar {
@@ -705,7 +705,7 @@ p  { color: var(--slate); }
     }
     .values-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
     .value-card {
-      background: white; border-radius: var(--radius); padding: 32px;
+      background: var(--navy-tint); border-radius: var(--radius); padding: 32px;
       border-left: 4px solid var(--green); box-shadow: var(--shadow-sm);
     }
     .value-card h4 { color: var(--navy); margin-bottom: 10px; }
@@ -713,12 +713,12 @@ p  { color: var(--slate); }
 
     /* ===== KONTAKT PAGE ===== */
     .kontakt-hero {
-      background: var(--gray-50); padding: 80px 0;
+      background: var(--navy-tint); padding: 80px 0;
     }
     .kontakt-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 56px; align-items: start; }
     .contact-form {
-      background: white; border-radius: var(--radius-lg);
-      padding: 44px; box-shadow: var(--shadow-md);
+      background: var(--navy-tint); border-radius: var(--radius-lg);
+      padding: 44px; box-shadow: var(--shadow-sm);
     }
     .contact-form h2 { color: var(--navy); margin-bottom: 8px; }
     .contact-form .form-lead { color: var(--gray-500); margin-bottom: 32px; }
@@ -1141,7 +1141,7 @@ p  { color: var(--slate); }
     .wiz2b-card-hersteller img { max-height: 24px; max-width: 80px; object-fit: contain; opacity: 0.7; }
     .wiz2b-card-hersteller .result-hersteller-name { font-size: 0.8rem; color: var(--gray-400); }
     /* Zieldesign Diagram */
-    .zieldesign-section { background: white; border-radius: var(--radius-lg); padding: 40px; box-shadow: var(--shadow-md); }
+    .zieldesign-section { background: var(--navy-tint); border-radius: var(--radius-lg); padding: 40px; box-shadow: var(--shadow-sm); }
     .zieldesign-section > h3 { color: var(--navy); font-size: 1.25rem; margin-bottom: 32px; text-align: center; }
     .zd-wrapper { max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
     .zd-top-banner { background: var(--navy); color: white; border-radius: var(--radius); padding: 12px 24px; text-align: center; }
@@ -2187,7 +2187,7 @@ p  { color: var(--slate); }
 
         <!-- CONTACT INFO -->
         <div>
-          <div style="background:white; border-radius:var(--radius-lg); padding:36px; box-shadow:var(--shadow-sm); border:1px solid var(--gray-200)">
+          <div style="background:var(--navy-tint); border-radius:var(--radius-lg); padding:36px; box-shadow:var(--shadow-sm); border:1px solid var(--gray-200)">
             <h3 style="color:var(--navy); margin-bottom:24px">Kontaktdaten</h3>
             <div class="contact-info-item">
               <div class="contact-info-icon">
@@ -2833,7 +2833,7 @@ p  { color: var(--slate); }
             <div id="wiz-summary-list"></div>
           </div>
 
-          <form onsubmit="wizSubmit(event)" style="background:white; border-radius:var(--radius-lg); padding:36px; box-shadow:var(--shadow-md);">
+          <form onsubmit="wizSubmit(event)" style="background:var(--navy-tint); border-radius:var(--radius-lg); padding:36px; box-shadow:var(--shadow-sm);">
             <div class="wiz-contact-grid" style="margin-bottom:16px;">
               <div class="form-group" style="margin:0;">
                 <label>Name *</label>
@@ -3625,14 +3625,14 @@ window.addEventListener('scroll', function() {
           </div>
         </div>
       </section>
-      <section id="detail-vorteile" style="padding:72px 0;background:white;">
+      <section id="detail-vorteile" style="padding:72px 0;background:var(--navy-tint);">
         <div class="container">
           <span class="overline">IHRE VORTEILE</span>
           <h2 style="margin-bottom:48px;">Warum ${d.produkt}?</h2>
           <div class="grid-3" style="gap:32px;">${vorteileHTML}</div>
         </div>
       </section>
-      <section style="padding:72px 0;background:var(--gray-50);">
+      <section style="padding:72px 0;background:var(--navy-tint);">
         <div class="container">
           <div class="grid-2" style="gap:64px;align-items:center;">
             <div>
@@ -3648,7 +3648,7 @@ window.addEventListener('scroll', function() {
           </div>
         </div>
       </section>
-      <section style="padding:56px 0;background:white;border-bottom:1px solid var(--gray-100);">
+      <section style="padding:56px 0;background:var(--navy-tint);border-bottom:1px solid var(--gray-200);">
         <div class="container">
           <div style="display:flex;align-items:center;gap:48px;flex-wrap:wrap;">
             <div>
