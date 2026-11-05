@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Praxis-Check für Zahnmedizin · Computer Konkret × eHealth Sales</title>
+<meta name="description" content="Der kostenlose Produktfinder für Zahnarztpraxen und Kieferorthopädie: TI, IT-Sicherheit und Digitalisierung in drei Minuten – präsentiert von Computer Konkret und eHealth Sales.">
+<meta name="theme-color" content="#0E2841">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Praxis-Check für Zahnarztpraxen & KFO">
+<meta property="og:description" content="In 3 Minuten zu passenden Lösungen für TI, IT-Sicherheit & Praxis-IT. Kostenlos und unverbindlich.">
+<meta property="og:locale" content="de_DE">
+<meta name="color-scheme" content="light">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Source+Sans+3:wght@400;500;600;700;800&display=swap">
+<style>
+/* ── Tokens: eHS-CI (Navy-Sandwich) × Computer-Konkret-Akzente ── */
+:root {
+  --navy:      #0E2841;   /* eHS */
+  --navy-2:    #17375A;   /* eHS Karten auf dunkel */
+  --ck-blue:   #002C5A;   /* Computer Konkret */
+  --terra:     #E55137;   /* Computer Konkret Terrakotta */
+  --terra-dk:  #C7402A;
+  --blonde:    #FFCE8C;   /* Computer Konkret */
+  --champ:     #FFF5E8;   /* Computer Konkret Champagner */
+  --green:     #7FD35B;   /* eHS Eyebrow */
+  --paper:     #F6F7F9;   /* eHS Inhaltsfläche */
+  --ink:       #1B2430;
+  --muted:     #4A5568;
+  --on-dark:   #F4F6F9;
+  --on-dark-2: #BFCCDB;
+  --on-dark-3: #8FA3BA;
+  --line:      rgba(14,40,65,.10);
+  --r-lg: 28px; --r-md: 20px; --r-sm: 14px;
+  --head: 'ADLaM Display', Georgia, serif;
+  --body: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+  --gutter: 20px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+body { font-family: var(--body); color: var(--ink); background: var(--champ); line-height: 1.55; font-size: 17px; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+img, svg { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; cursor: pointer; border: 0; background: none; color: inherit; }
+h1, h2, h3 { font-family: var(--head); font-weight: 400; line-height: 1.08; text-wrap: balance; letter-spacing: -.01em; }
+.wrap { width: 100%; max-width: 1160px; margin: 0 auto; padding: 0 var(--gutter); }
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: .78rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+.eyebrow::before { content: ''; width: 18px; height: 2px; background: currentColor; border-radius: 2px; }
+:focus-visible { outline: 3px solid var(--blonde); outline-offset: 3px; border-radius: 8px; }
+
+/* ── Topbar ── */
+.top { position: sticky; top: 0; z-index: 50; background: rgba(14,40,65,.92); backdrop-filter: saturate(160%) blur(14px); -webkit-backdrop-filter: saturate(160%) blur(14px); border-bottom: 1px solid rgba(255,255,255,.06); }
+.top .wrap { height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cobrand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ck-mark { display: flex; align-items: center; gap: 8px; color: var(--on-dark); font-weight: 800; font-size: .92rem; letter-spacing: -.01em; white-space: nowrap; }
+.ck-tiles { display: grid; grid-template-columns: repeat(2, 8px); gap: 2px; }
+.ck-tiles i { width: 8px; height: 8px; border-radius: 2.5px; background: var(--terra); }
+.ck-tiles i:nth-child(2) { background: var(--blonde); }
+.ck-tiles i:nth-child(3) { background: var(--on-dark-3); }
+.cobrand .x { color: var(--on-dark-3); font-size: .85rem; }
+.cobrand img { height: 20px; width: auto; flex-shrink: 0; }
+.top-cta { flex-shrink: 0; background: var(--terra); color: #fff; font-weight: 700; font-size: .88rem; padding: 9px 15px; border-radius: 999px; transition: background .15s; }
+.top-cta .long { display: none; }
+@media (min-width: 560px) { .cobrand img { height: 26px; } .top-cta .long { display: inline; } .ck-mark { font-size: .98rem; } }
+.top-cta:hover { background: var(--terra-dk); }
+
+/* ── Hero (dunkel) ── */
+.hero { background: var(--navy); color: var(--on-dark); position: relative; overflow: hidden; padding: 44px 0 0; }
+.hero::after { content: ''; position: absolute; inset: auto -20% -40% auto; width: 520px; height: 520px; background: radial-gradient(closest-side, rgba(229,81,55,.28), transparent); pointer-events: none; }
+.hero-grid { display: grid; gap: 36px; position: relative; z-index: 1; }
+.hero .eyebrow { color: var(--green); }
+.hero h1 { font-size: clamp(2.35rem, 9.5vw, 4.4rem); margin: 16px 0 18px; color: var(--on-dark); }
+.hero h1 .hl { color: var(--blonde); }
+.hero h1 .hl-2 { color: var(--terra); }
+.hero-sub { color: var(--on-dark-2); font-size: 1.1rem; max-width: 34em; }
+.choose-label { margin: 28px 0 12px; font-size: .82rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--on-dark-3); }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 460px; }
+.choice { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: 16px; border-radius: var(--r-md); background: var(--navy-2); border: 1.5px solid rgba(255,255,255,.08); text-align: left; transition: transform .15s, border-color .15s, background .15s; }
+.choice:hover { transform: translateY(-2px); border-color: var(--blonde); }
+.choice .ic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: var(--terra); color: #fff; }
+.choice:nth-child(2) .ic { background: var(--blonde); color: var(--ck-blue); }
+.choice .ic svg { width: 22px; height: 22px; }
+.choice b { font-size: 1.02rem; line-height: 1.2; color: var(--on-dark); }
+.choice span { font-size: .82rem; color: var(--on-dark-3); display: flex; align-items: center; gap: 4px; }
+.trust { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 22px; font-size: .88rem; color: var(--on-dark-2); }
+.trust li { list-style: none; display: flex; align-items: center; gap: 6px; }
+.trust svg { width: 16px; height: 16px; color: var(--green); flex-shrink: 0; }
+
+/* Mosaik im Computer-Konkret-Stil */
+.mosaic { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; gap: 8px; max-width: 520px; width: 100%; margin: 0 auto; }
+.mosaic .tile:nth-child(1) { grid-area: 1 / 1; }
+.mosaic .tile:nth-child(2) { grid-area: 1 / 2; }
+.mosaic .tile:nth-child(3) { grid-area: 1 / 3 / 3 / 4; }
+.mosaic .tile:nth-child(4) { grid-area: 1 / 4; }
+.mosaic .tile:nth-child(5) { grid-area: 3 / 1; }
+.mosaic .tile:nth-child(6) { grid-area: 2 / 1 / 3 / 3; }
+.mosaic .tile:nth-child(7) { grid-area: 2 / 4; }
+.mosaic .tile:nth-child(8) { grid-area: 3 / 2; }
+.mosaic .tile:nth-child(9) { grid-area: 3 / 3; }
+.mosaic .tile:nth-child(10) { grid-area: 3 / 4; }
+.tile { aspect-ratio: 1; border-radius: 22%; display: grid; place-items: center; color: var(--ck-blue); position: relative; }
+.tile svg { width: 42%; height: 42%; }
+.t-terra { background: var(--terra); color: #fff; }
+.t-blonde { background: var(--blonde); }
+.t-champ { background: var(--champ); }
+.t-navy { background: var(--navy-2); color: var(--blonde); }
+.t-ghost { background: transparent; border: 1.5px dashed rgba(255,255,255,.18); }
+.t-tall { grid-row: span 2; aspect-ratio: auto; border-radius: 999px; }
+.t-wide { grid-column: span 2; aspect-ratio: auto; border-radius: 999px; }
+.tile .lbl { position: absolute; bottom: 10%; left: 0; right: 0; text-align: center; font-size: .66rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.hero { padding-bottom: 48px; }
+@media (prefers-reduced-motion: no-preference) {
+  .tile { animation: pop .6s cubic-bezier(.2,.8,.2,1.2) both; }
+  .tile:nth-child(2){animation-delay:.05s}.tile:nth-child(3){animation-delay:.1s}.tile:nth-child(4){animation-delay:.15s}
+  .tile:nth-child(5){animation-delay:.2s}.tile:nth-child(6){animation-delay:.25s}.tile:nth-child(7){animation-delay:.3s}
+  .tile:nth-child(8){animation-delay:.35s}.tile:nth-child(9){animation-delay:.4s}.tile:nth-child(10){animation-delay:.45s}
+  @keyframes pop { from { opacity: 0; transform: scale(.6); } }
+}
+
+/* ── Sections (hell) ── */
+section { padding: 72px 0; }
+.sec-head { max-width: 640px; margin-bottom: 32px; }
+.sec-head .eyebrow { color: var(--terra-dk); }
+.sec-head h2 { font-size: clamp(1.95rem, 6.5vw, 3rem); margin: 12px 0 12px; color: var(--navy); }
+.sec-head p { color: var(--muted); font-size: 1.06rem; }
+.first { padding-top: 72px; }
+
+/* Story-Karten (Instagram-Feed-Feeling) */
+.stories { display: grid; grid-auto-flow: column; grid-auto-columns: 78%; gap: 14px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gutter); padding: 4px var(--gutter) 18px; margin: 0 calc(var(--gutter) * -1); scrollbar-width: none; }
+.stories::-webkit-scrollbar { display: none; }
+.story { scroll-snap-align: start; aspect-ratio: 4 / 5; border-radius: var(--r-lg); padding: 24px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; }
+.story .k { font-family: var(--head); font-size: clamp(3rem, 15vw, 4.4rem); line-height: .95; }
+.story h3 { font-family: var(--body); font-weight: 800; font-size: 1.2rem; line-height: 1.25; margin-bottom: 8px; }
+.story p { font-size: .96rem; opacity: .85; }
+.story .chip { align-self: flex-start; font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 6px 11px; border-radius: 999px; background: rgba(255,255,255,.16); }
+.s1 { background: var(--navy); color: var(--on-dark); }
+.s1 .k { color: var(--blonde); }
+.s2 { background: var(--terra); color: #fff; }
+.s3 { background: var(--blonde); color: var(--ck-blue); }
+.s3 .chip { background: rgba(0,44,90,.1); }
+.s4 { background: #fff; color: var(--navy); border: 1px solid var(--line); }
+.s4 .chip { background: var(--champ); }
+.s4 .k { color: var(--terra); }
+.story .deco { position: absolute; right: -18px; top: -18px; display: grid; grid-template-columns: repeat(2, 38px); gap: 6px; opacity: .22; }
+.story .deco i { width: 38px; height: 38px; border-radius: 10px; background: currentColor; }
+.swipe-hint { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: .85rem; margin-top: 4px; }
+.dots { display: flex; gap: 6px; }
+.dots i { width: 6px; height: 6px; border-radius: 99px; background: rgba(14,40,65,.2); transition: width .2s, background .2s; }
+.dots i.on { width: 18px; background: var(--terra); }
+
+/* Ablauf */
+.steps { display: grid; gap: 12px; counter-reset: s; }
+.step { background: #fff; border-radius: var(--r-md); padding: 20px 20px 20px 76px; position: relative; border: 1px solid var(--line); }
+.step::before { counter-increment: s; content: counter(s); position: absolute; left: 18px; top: 18px; width: 42px; height: 42px; border-radius: 13px; background: var(--navy); color: var(--blonde); font-family: var(--head); font-size: 1.3rem; display: grid; place-items: center; }
+.step:nth-child(2)::before { background: var(--terra); color: #fff; }
+.step:nth-child(3)::before { background: var(--blonde); color: var(--ck-blue); }
+.step b { display: block; font-size: 1.08rem; color: var(--navy); margin-bottom: 2px; }
+.step span { color: var(--muted); font-size: .96rem; }
+
+/* Finder */
+.finder-sec { background: var(--paper); padding-top: 72px; }
+.finder-card { background: #fff; border-radius: var(--r-lg); box-shadow: 0 24px 60px -24px rgba(14,40,65,.35); overflow: hidden; border: 1px solid var(--line); margin: 0 calc(var(--gutter) * -1 + 8px); }
+.finder-bar { background: var(--navy); color: var(--on-dark); display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; }
+.finder-bar b { font-size: .95rem; display: flex; align-items: center; gap: 8px; }
+.finder-bar .live { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px rgba(127,211,91,.2); }
+.finder-bar small { color: var(--on-dark-3); font-size: .78rem; white-space: nowrap; }
+@media (max-width: 420px) { .finder-bar small { display: none; } }
+#finder { display: block; width: 100%; border: 0; height: 900px; background: var(--paper); transition: height .2s; }
+.finder-note { text-align: center; color: var(--muted); font-size: .85rem; margin-top: 16px; }
+.finder-note a { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Partner */
+.duo { display: grid; gap: 12px; }
+.duo-card { border-radius: var(--r-md); padding: 24px; }
+.duo-card h3 { font-size: 1.5rem; margin: 10px 0 8px; }
+.duo-card p { font-size: .98rem; }
+.duo-ck { background: var(--ck-blue); color: var(--on-dark); }
+.duo-ck .eyebrow { color: var(--blonde); }
+.duo-ck p { color: var(--on-dark-2); }
+.duo-ehs { background: #fff; border: 1px solid var(--line); }
+.duo-ehs .eyebrow { color: #3E8A24; }
+.duo-ehs h3 { color: var(--navy); }
+.duo-ehs p { color: var(--muted); }
+.duo-plus { justify-self: center; width: 44px; height: 44px; border-radius: 50%; background: var(--terra); color: #fff; display: grid; place-items: center; font-size: 1.5rem; font-weight: 700; margin: -28px 0; position: relative; z-index: 1; box-shadow: 0 0 0 6px var(--champ); }
+
+/* FAQ */
+.faq { display: grid; gap: 10px; max-width: 760px; }
+.faq details { background: #fff; border-radius: var(--r-sm); border: 1px solid var(--line); }
+.faq summary { list-style: none; cursor: pointer; padding: 18px 52px 18px 20px; font-weight: 700; color: var(--navy); position: relative; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: '+'; position: absolute; right: 18px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; border-radius: 8px; background: var(--champ); color: var(--terra-dk); display: grid; place-items: center; font-size: 1.2rem; transition: transform .2s; }
+.faq details[open] summary::after { content: '–'; }
+.faq details p { padding: 0 20px 18px; color: var(--muted); }
+
+/* Abschluss (dunkel) */
+.outro { background: var(--navy); color: var(--on-dark); text-align: center; padding: 80px 0 72px; position: relative; overflow: hidden; }
+.outro .eyebrow { color: var(--green); }
+.outro h2 { font-size: clamp(2rem, 7vw, 3.2rem); margin: 14px auto 14px; max-width: 16em; }
+.outro p { color: var(--on-dark-2); max-width: 32em; margin: 0 auto 28px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: var(--terra); color: #fff; font-weight: 800; font-size: 1.05rem; padding: 16px 28px; border-radius: 999px; box-shadow: 0 10px 30px -10px rgba(229,81,55,.7); transition: transform .15s, background .15s; }
+.btn:hover { background: var(--terra-dk); transform: translateY(-1px); }
+.btn svg { width: 20px; height: 20px; }
+footer { background: var(--navy); border-top: 1px solid rgba(255,255,255,.08); color: var(--on-dark-3); font-size: .85rem; padding: 24px 0 calc(96px + env(safe-area-inset-bottom)); }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 18px; justify-content: space-between; align-items: center; }
+footer nav { display: flex; gap: 18px; }
+footer a:hover { color: var(--on-dark); }
+
+/* Sticky-CTA (mobil) */
+.dock { position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 60; display: flex; align-items: center; gap: 12px; background: rgba(14,40,65,.94); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-radius: 999px; padding: 8px 8px 8px 20px; color: var(--on-dark); box-shadow: 0 16px 40px -12px rgba(0,0,0,.5); transform: translateY(150%); transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+.dock.show { transform: none; }
+.dock span { font-size: .9rem; font-weight: 600; flex: 1; line-height: 1.2; }
+.dock span small { display: block; color: var(--on-dark-3); font-weight: 500; font-size: .76rem; }
+.dock a { background: var(--terra); color: #fff; font-weight: 800; padding: 12px 18px; border-radius: 999px; font-size: .92rem; white-space: nowrap; }
+
+/* ── Breakpoints ── */
+@media (max-width: 360px) {
+  .cobrand { gap: 8px; }
+  .ck-mark { font-size: .84rem; }
+  .cobrand img { height: 17px; }
+  .top-cta { padding: 8px 12px; font-size: .82rem; }
+}
+@media (min-width: 720px) {
+  :root { --gutter: 32px; }
+  .stories { grid-auto-flow: row; grid-template-columns: repeat(2, 1fr); overflow: visible; margin: 0; padding: 0; }
+  .swipe-hint { display: none; }
+  .story { aspect-ratio: auto; min-height: 380px; gap: 20px; }
+  .story .k { font-size: clamp(2.4rem, 4.2vw, 3.4rem); word-break: keep-all; }
+  .steps { grid-template-columns: repeat(3, 1fr); }
+  .duo { grid-template-columns: 1fr auto 1fr; align-items: stretch; }
+  .duo-plus { align-self: center; margin: 0 -28px; }
+  .finder-card { margin: 0; }
+  .dock { display: none; }
+  footer { padding-bottom: 28px; }
+}
+@media (min-width: 1000px) {
+  .hero { padding: 72px 0 0; }
+  .hero-grid { grid-template-columns: 1.1fr .9fr; align-items: center; gap: 48px; }
+  .hero { padding-bottom: 72px; }
+  .stories { grid-template-columns: repeat(4, 1fr); }
+  section { padding: 96px 0; }
+  .first { padding-top: 96px; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="cobrand" aria-label="Computer Konkret und eHealth Sales">
+      <span class="ck-mark"><span class="ck-tiles" aria-hidden="true"><i></i><i></i><i></i><i></i></span>computer konkret</span>
+      <span class="x" aria-hidden="true">×</span>
+      <img src="logos/ehs-logo-on-dark.png" alt="eHealth Sales">
+    </div>
+    <a class="top-cta" href="#finder-start"><span class="long">Check </span>starten</a>
+  </div>
+</header>
+
+<main>
+<!-- HERO -->
+<section class="hero" aria-labelledby="hero-title">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">Für Zahnarztpraxen &amp; Kieferorthopädie</span>
+      <h1 id="hero-title">Ihre Praxis.<br><span class="hl">Digital.</span> <span class="hl-2">Sicher.</span><br>TI-ready.</h1>
+      <p class="hero-sub">Der Praxis-Check von Computer Konkret und eHealth Sales: In drei Minuten zu den Lösungen, die zu Ihrer Praxis passen – für Telematikinfrastruktur, IT-Sicherheit und digitale Abläufe.</p>
+
+      <p class="choose-label">Was beschreibt Ihre Praxis?</p>
+      <div class="choices">
+        <a class="choice" href="#finder-start" data-pick="Zahnärzte">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 3C4.8 3 3 4.8 3 7.2c0 2.3.9 3.6 1.5 5.4.6 1.9.7 4.2 1.4 6.3.3.9.9 2.1 1.8 2.1 1.4 0 1.5-2.4 1.9-4 .3-1.2.7-2.5 2.4-2.5s2.1 1.3 2.4 2.5c.4 1.6.5 4 1.9 4 .9 0 1.5-1.2 1.8-2.1.7-2.1.8-4.4 1.4-6.3.6-1.8 1.5-3.1 1.5-5.4C21 4.8 19.2 3 17 3c-2 0-3 1.2-5 1.2S9 3 7 3z"/></svg></span>
+          <b>Zahnarzt&shy;praxis</b>
+          <span>Check starten →</span>
+        </a>
+        <a class="choice" href="#finder-start" data-pick="Kieferorthopäden">
+          <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10c3 2 6 3 9 3s6-1 9-3"/><path d="M5 11.4v3.2M9 12.6v3.4M15 12.6v3.4M19 11.4v3.2"/><rect x="4" y="13" width="2" height="2" rx=".5"/><rect x="8" y="14" width="2" height="2" rx=".5"/><rect x="14" y="14" width="2" height="2" rx=".5"/><rect x="18" y="13" width="2" height="2" rx=".5"/></svg></span>
+          <b>Kiefer&shy;orthopädie</b>
+          <span>Check starten →</span>
+        </a>
+      </div>
+      <ul class="trust">
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Kostenlos</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Unverbindlich</li>
+        <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>Inkl. TI-Finanzierungsrechner</li>
+      </ul>
+    </div>
+
+    <div class="mosaic" aria-hidden="true">
+      <div class="tile t-terra"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M7 3C4.8 3 3 4.8 3 7.2c0 2.3.9 3.6 1.5 5.4.6 1.9.7 4.2 1.4 6.3.3.9.9 2.1 1.8 2.1 1.4 0 1.5-2.4 1.9-4 .3-1.2.7-2.5 2.4-2.5s2.1 1.3 2.4 2.5c.4 1.6.5 4 1.9 4 .9 0 1.5-1.2 1.8-2.1.7-2.1.8-4.4 1.4-6.3.6-1.8 1.5-3.1 1.5-5.4C21 4.8 19.2 3 17 3c-2 0-3 1.2-5 1.2S9 3 7 3z"/></svg></div>
+      <div class="tile t-blonde"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <div class="tile t-navy t-tall"><span class="lbl">TI</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 7V3M15 7V3M7 7h10v4a5 5 0 01-10 0V7zM12 16v5"/></svg></div>
+      <div class="tile t-champ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 8l9 6 9-6"/></svg></div>
+      <div class="tile t-ghost"></div>
+      <div class="tile t-terra t-wide"><span class="lbl" style="position:static;font-size:.78rem;">§ 390 SGB V</span></div>
+      <div class="tile t-blonde"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3z"/><path d="M4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg></div>
+      <div class="tile t-champ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg></div>
+      <div class="tile t-navy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 100 18 9 9 0 000-18z"/><path d="M12 7v5l3 2"/></svg></div>
+      <div class="tile t-terra"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h4l2-5 4 10 2-5h4"/></svg></div>
+    </div>
+  </div>
+</section>
+
+<!-- STORIES -->
+<section class="first" aria-labelledby="themen-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Worauf es 2026 ankommt</span>
+      <h2 id="themen-title">Vier Themen, die jede Praxis betreffen.</h2>
+      <p>Der Check sortiert für Sie: was Pflicht ist, was gefördert wird und was den Praxisalltag leichter macht.</p>
+    </div>
+    <div class="stories" id="stories">
+      <article class="story s1">
+        <div class="deco" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <span class="chip">Telematik</span>
+        <div class="k">TI</div>
+        <div><h3>Angebunden und finanziert</h3><p>Welche TI-Komponenten Ihre Praxis braucht und was die TI-Pauschale abdeckt. Der Rechner im Check zeigt es Ihnen.</p></div>
+      </article>
+      <article class="story s2">
+        <div class="deco" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <span class="chip">IT-Sicherheit</span>
+        <div class="k">§ 390</div>
+        <div><h3>IT-Sicherheitsrichtlinie</h3><p>Die Anforderungen nach § 390 SGB V gelten für jede Zahnarztpraxis. Wir zeigen, welche Bausteine Ihnen noch fehlen.</p></div>
+      </article>
+      <article class="story s3">
+        <div class="deco" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <span class="chip">Datensicherung</span>
+        <div class="k">Backup</div>
+        <div><h3>Röntgen, 3D, Akte – gesichert</h3><p>Lokal und in deutschen Rechenzentren, damit ein Ausfall nicht den Praxistag kostet.</p></div>
+      </article>
+      <article class="story s4">
+        <div class="deco" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <span class="chip">Kommunikation</span>
+        <div class="k">KIM</div>
+        <div><h3>Sicher kommunizieren</h3><p>Befunde und Dokumente sicher austauschen – mit Kassen, Laboren und Kolleg:innen über KIM und TI-Messenger.</p></div>
+      </article>
+    </div>
+    <div class="swipe-hint"><div class="dots" id="dots"><i class="on"></i><i></i><i></i><i></i></div>Wischen für mehr</div>
+  </div>
+</section>
+
+<!-- ABLAUF -->
+<section style="padding-top:0" aria-labelledby="ablauf-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">So funktioniert's</span>
+      <h2 id="ablauf-title">Drei Schritte. Drei Minuten.</h2>
+    </div>
+    <div class="steps">
+      <div class="step"><b>Thema wählen</b><span>TI, Sicherheit, Infrastruktur oder Prozesse – oder Sie machen das kurze Assessment.</span></div>
+      <div class="step"><b>Praxis angeben</b><span>Zahnarztpraxis oder Kieferorthopädie. Bei der TI rechnet der Check Ihre Finanzierung direkt mit.</span></div>
+      <div class="step"><b>Empfehlung erhalten</b><span>Passende Lösungen auf einen Blick. Auf Wunsch fordern Sie direkt ein unverbindliches Angebot an.</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- FINDER -->
+<section class="finder-sec" id="finder-start" aria-labelledby="finder-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Ihr Praxis-Check</span>
+      <h2 id="finder-title">Los geht's.</h2>
+      <p>Wählen Sie unten Ihr Thema. Ihre Angaben bleiben bei uns, bis Sie selbst eine Anfrage absenden.</p>
+    </div>
+    <div class="finder-card">
+      <div class="finder-bar"><b><span class="live"></span>Produktfinder Zahnmedizin</b><small>powered by eHealth Sales</small></div>
+      <iframe id="finder" title="Produktfinder für Zahnarztpraxen und Kieferorthopädie" loading="lazy"></iframe>
+    </div>
+    <p class="finder-note">Probleme mit der Anzeige? <a id="finder-direct" href="#" target="_blank" rel="noopener">Finder in neuem Fenster öffnen</a></p>
+  </div>
+</section>
+
+<!-- PARTNER -->
+<section aria-labelledby="duo-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Gemeinsam für Ihre Praxis</span>
+      <h2 id="duo-title">Zwei Spezialisten. Ein Ansprechpartner pro Thema.</h2>
+    </div>
+    <div class="duo">
+      <div class="duo-card duo-ck">
+        <span class="eyebrow">Computer Konkret</span>
+        <h3>Ihre Praxissoftware</h3>
+        <p>ivoris® für Zahnmedizin und Kieferorthopädie – modular, flexibel und mit persönlichem Support.</p>
+      </div>
+      <div class="duo-plus" aria-hidden="true">+</div>
+      <div class="duo-card duo-ehs">
+        <span class="eyebrow">eHealth Sales</span>
+        <h3>TI, IT-Sicherheit &amp; Digitalisierung</h3>
+        <p>Wir stellen passende Lösungen zusammen, beraten zur Finanzierung und begleiten die Umsetzung.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section style="padding-top:0" aria-labelledby="faq-title">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="eyebrow">Gut zu wissen</span>
+      <h2 id="faq-title">Kurz gefragt.</h2>
+    </div>
+    <div class="faq">
+      <details><summary>Was kostet der Praxis-Check?</summary><p>Nichts. Der Check ist kostenlos und unverbindlich. Ein Angebot erhalten Sie nur, wenn Sie am Ende selbst eine Anfrage absenden.</p></details>
+      <details><summary>Ich bin Kieferorthopäd:in – passt das für mich?</summary><p>Ja. KFO-Praxen haben bei TI, IT-Sicherheit und Datensicherung dieselben Anforderungen wie Zahnarztpraxen. Der Check zeigt Ihnen die passenden Lösungen.</p></details>
+      <details><summary>Wer bekommt meine Anfrage?</summary><p>Ihre Anfrage geht an eHealth Sales. Wir melden uns persönlich bei Ihnen. Details stehen in unserer <a href="index.html?open=datenschutz" style="text-decoration:underline">Datenschutzerklärung</a>.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- OUTRO -->
+<section class="outro">
+  <div class="wrap">
+    <span class="eyebrow">Drei Minuten, die sich lohnen</span>
+    <h2>Machen Sie Ihre Praxis fit für die digitale Zahnmedizin.</h2>
+    <p>Starten Sie jetzt den Praxis-Check und sehen Sie sofort, was zu Ihrer Praxis passt.</p>
+    <a class="btn" href="#finder-start">Praxis-Check starten <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12l-7.5 7.5M21 12H3"/></svg></a>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>© 2026 eHealth Sales GmbH in Kooperation mit Computer Konkret</span>
+    <nav><a href="index.html?open=impressum">Impressum</a><a href="index.html?open=datenschutz">Datenschutz</a></nav>
+  </div>
+</footer>
+
+<div class="dock" id="dock" aria-hidden="true">
+  <span>Praxis-Check Zahnmedizin<small>Kostenlos · 3 Minuten</small></span>
+  <a href="#finder-start" tabindex="-1">Starten</a>
+</div>
+
+<script>
+(() => {
+  // Quelle für Anfragen: computer-konkret[-utm_source], z. B. computer-konkret-instagram / -newsletter
+  const qs = new URLSearchParams(location.search);
+  const utm = (qs.get('utm_source') || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20);
+  const src = 'computer-konkret' + (utm ? '-' + utm : '');
+  const finderUrl = 'index.html?embed=1&bg=' + encodeURIComponent('5:Zahnärzte,5:Kieferorthopäden') + '&src=' + src;
+  const frame = document.getElementById('finder');
+  frame.src = finderUrl;
+  document.getElementById('finder-direct').href = finderUrl.replace('embed=1&', '');
+
+  // iframe-Höhe + Scrollen vom Finder übernehmen
+  const topbarH = () => document.querySelector('.top').offsetHeight;
+  window.addEventListener('message', (e) => {
+    if (e.source !== frame.contentWindow || !e.data) return;
+    if (e.data.type === 'ehs-finder-height') frame.style.height = Math.max(520, e.data.height) + 'px';
+    if (e.data.type === 'ehs-finder-scroll') {
+      const y = frame.getBoundingClientRect().top + window.scrollY - topbarH() - 12 + (e.data.top || 0);
+      if (Math.abs(window.scrollY - y) > 40) window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  });
+
+  // Story-Dots (mobil)
+  const stories = document.getElementById('stories');
+  const dots = [...document.querySelectorAll('#dots i')];
+  stories.addEventListener('scroll', () => {
+    const w = stories.firstElementChild.getBoundingClientRect().width + 14;
+    const i = Math.min(dots.length - 1, Math.round(stories.scrollLeft / w));
+    dots.forEach((d, k) => d.classList.toggle('on', k === i));
+  }, { passive: true });
+
+  // Sticky-CTA: sichtbar nach dem Hero, ausgeblendet sobald der Finder im Bild ist
+  const dock = document.getElementById('dock');
+  let heroGone = false, finderIn = false;
+  const upd = () => dock.classList.toggle('show', heroGone && !finderIn);
+  new IntersectionObserver(([en]) => { heroGone = !en.isIntersecting; upd(); }, { threshold: 0 }).observe(document.querySelector('.hero'));
+  new IntersectionObserver(([en]) => { finderIn = en.isIntersecting; upd(); }, { threshold: 0.05 }).observe(document.getElementById('finder-start'));
+})();
+</script>
+</body>
+</html>

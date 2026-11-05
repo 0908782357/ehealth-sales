@@ -1002,6 +1002,16 @@ p  { color: var(--slate); }
     .wizard-hero p { color: rgba(255,255,255,0.75); font-size: 1.125rem; max-width: 640px; margin: 0; }
 
     .wizard-body { padding: 64px 0; background: var(--navy-tint); min-height: 500px; }
+
+    /* ===== EMBED-MODUS (?embed=1) – Finder ohne Website-Rahmen ===== */
+    body.embed-mode .site-header,
+    body.embed-mode .site-footer,
+    body.embed-mode #mobile-nav,
+    body.embed-mode .wizard-hero { display: none !important; }
+    body.embed-mode { background: var(--navy-tint); }
+    body.embed-mode .wizard-body { padding: 28px 0 40px; min-height: 0; }
+    .bg-grid--focus { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important; gap: 14px; }
+    .bg-grid--focus .bg-btn { width: 100%; padding: 26px 20px; font-size: 1.05rem; font-weight: 700; text-align: center; }
 /* === TOPIC FILTER STRIP (Ergebnisseite) === */
     .topic-filter-strip {
       display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
@@ -3858,6 +3868,20 @@ window.addEventListener('scroll', function() {
   let ASSESSMENT_TOPICS = []; // wird dynamisch aus themengebiete geladen
   let themaSlugToId = {};     // slug → UUID (für Bundle-Filter)
   let partnerThemenFilter = null; // gesetzt von loadPartnerConfig, angewendet in loadFromSupabase
+
+  // ===== EMBED-MODUS (Landingpages, z. B. computer-konkret.html) =====
+  // ?embed=1                 → nur Produktfinder, ohne Header/Footer/Hero, Höhe per postMessage an Parent
+  // ?bg=5:Zahnärzte,5:Kieferorthopäden → Berufsgruppen auf diese Nummern beschränken (optional eigenes Label)
+  // ?src=computer-konkret    → Quelle wird in Anfrage + Benachrichtigungs-Mail vermerkt
+  const _EMBED_PARAMS = new URLSearchParams(window.location.search);
+  const EMBED_MODE = _EMBED_PARAMS.get('embed') === '1';
+  const EMBED_SRC  = (_EMBED_PARAMS.get('src') || '').replace(/[^a-z0-9-]/gi, '').slice(0, 40) || null;
+  const BG_FILTER  = (_EMBED_PARAMS.get('bg') || '').split(',').map(s => {
+    const [nr, ...label] = s.split(':');
+    const n = parseInt(nr, 10);
+    const clean = label.join(':').replace(/[<>"'`&\\]/g, '').trim().slice(0, 60);
+    return Number.isFinite(n) ? { nr: n, label: clean || null } : null;
+  }).filter(Boolean);
   const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   let ASSESSMENT_QUESTIONS = []; // wird dynamisch aus assessment_questions geladen
@@ -4925,8 +4949,16 @@ window.addEventListener('scroll', function() {
   function renderBerufsgruppen(bgData) {
     const container = document.getElementById('bg-step1-grid');
     if (!container) return;
-    const hasGruppen = bgData.some(bg => bg.gruppe);
     const esc = s => s.replace(/'/g, "\\'");
+    if (BG_FILTER.length) {
+      // Landingpage-Modus: nur freigegebene Berufsgruppen, ggf. mit eigenem Label (z. B. KFO → Zahnärzte-Produkte)
+      const byNr = Object.fromEntries(bgData.map(bg => [bg.nr, bg]));
+      const items = BG_FILTER.filter(f => byNr[f.nr]).map(f => ({ nr: f.nr, name: f.label || byNr[f.nr].name }));
+      container.innerHTML = `<div class="bg-grid bg-grid--focus">${items.map(bg =>
+        `<button class="bg-btn" onclick="selectBG(${bg.nr}, '${esc(bg.name)}')">${bg.name}</button>`).join('')}</div>`;
+      return;
+    }
+    const hasGruppen = bgData.some(bg => bg.gruppe);
     if (hasGruppen) {
       const order = ['Arztpraxen & Einrichtungen','Heilmittelerbringer','Hilfsmittelerbringer','Pflege','Sonstige Leistungserbringer'];
       const grouped = {};
@@ -5399,6 +5431,7 @@ window.addEventListener('scroll', function() {
       nachricht: document.getElementById('w2-nachricht').value.trim() || null,
       berufsgruppe: wizBGName,
       produkte:  products,
+      ...(EMBED_SRC ? { nachricht: `[Quelle: Landingpage ${EMBED_SRC}]` + (document.getElementById('w2-nachricht').value.trim() ? '\n' + document.getElementById('w2-nachricht').value.trim() : '') } : {}),
       partner_id: currentPartner?.id || null,
       created_at: new Date().toISOString(),
     };
@@ -5426,7 +5459,7 @@ window.addEventListener('scroll', function() {
       fetch(_MAIL_URL, { ..._eOpts,
         body: JSON.stringify({
           to: ['anfrage@ehealth-sales.de'],
-          subject: `Neue Anfrage: ${name} – ${payload.berufsgruppe || 'Produktfinder'}`,
+          subject: `Neue Anfrage${EMBED_SRC ? ' [' + EMBED_SRC + ']' : ''}: ${name} – ${payload.berufsgruppe || 'Produktfinder'}`,
           html: `<div style="font-family:Inter,sans-serif;max-width:600px">
             <h2 style="color:#3C4A7C;margin-bottom:16px">Neue Produktanfrage</h2>
             <p><strong>Name:</strong> ${name}${firma}${telefon}<br>
@@ -5795,7 +5828,30 @@ window.addEventListener('scroll', function() {
     }
   }
 
+  function initEmbedMode() {
+    if (!EMBED_MODE) return;
+    document.body.classList.add('embed-mode');
+    showPage('produktfinder');
+    if (window.parent === window) return;
+    // Höhe an die einbettende Seite melden (iframe ohne eigenen Scrollbalken)
+    let lastH = 0;
+    const postHeight = () => {
+      const h = document.documentElement.scrollHeight;
+      if (Math.abs(h - lastH) > 2) { lastH = h; window.parent.postMessage({ type: 'ehs-finder-height', height: h }, '*'); }
+    };
+    new ResizeObserver(postHeight).observe(document.body);
+    window.addEventListener('load', postHeight);
+    // Schrittwechsel scrollen im iframe ins Leere → Parent soll zum Finder-Anfang scrollen
+    const _scrollTo = window.scrollTo.bind(window);
+    window.scrollTo = function(opts) {
+      const top = (opts && typeof opts === 'object') ? opts.top : arguments[1];
+      window.parent.postMessage({ type: 'ehs-finder-scroll', top: top || 0 }, '*');
+      return _scrollTo.apply(window, arguments);
+    };
+  }
+
   document.addEventListener('DOMContentLoaded', async () => {
+    initEmbedMode();
     await loadPartnerConfig();
     loadFromSupabase();
     // ?open=shop URL-Parameter (Redirect von Compass-Gate) — nur außerhalb Partner-Modus
