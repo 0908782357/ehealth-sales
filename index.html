@@ -1846,6 +1846,96 @@ button, input, select, textarea { font-family: inherit; }
 :root{--navy-text:#0E2841}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--navy-text:#C9D7E6}}
 :root[data-theme="dark"]{--navy-text:#C9D7E6}
+
+/* ══ Produktfinder im Lösungsdesign ═══════════════════════════════ */
+.wizard-step.active{animation:pfStep .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes pfStep{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes pfIn{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+
+/* Schritt 0: Themen-Kacheln */
+.topic-grid{max-width:960px;gap:16px;grid-template-columns:repeat(5,minmax(0,1fr))}
+@media (max-width:980px){.topic-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:600px){.topic-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .topic-card > div:first-child{color:color-mix(in srgb,var(--tc,#156082) 55%,#fff)!important;background:color-mix(in srgb,var(--tc,#156082) 24%,transparent)}}
+:root[data-theme="dark"] .topic-card > div:first-child{color:color-mix(in srgb,var(--tc,#156082) 55%,#fff)!important;background:color-mix(in srgb,var(--tc,#156082) 24%,transparent)}
+.topic-card{position:relative;overflow:hidden;isolation:isolate;gap:12px;padding:26px 18px 20px;background:var(--surface);border:1px solid var(--border-mid);border-radius:18px;box-shadow:0 1px 2px rgba(14,40,65,.04);transition:transform .25s cubic-bezier(.2,.8,.2,1),border-color .25s,box-shadow .25s}
+.topic-card::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(260px circle at var(--mx,50%) var(--my,0%),color-mix(in srgb,var(--tc,#156082) 16%,transparent),transparent 65%);opacity:0;transition:opacity .3s}
+.topic-card::after{content:"";position:absolute;left:18px;right:18px;bottom:0;height:3px;border-radius:3px 3px 0 0;background:var(--tc,#156082);transform:scaleX(0);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.topic-card:hover,.topic-card:focus-visible{transform:translateY(-4px);border-color:color-mix(in srgb,var(--tc,#156082) 55%,transparent);box-shadow:0 14px 34px color-mix(in srgb,var(--tc,#156082) 22%,transparent)}
+.topic-card:hover::before,.topic-card:focus-visible::before{opacity:1}
+.topic-card:hover::after,.topic-card:focus-visible::after{transform:scaleX(1)}
+.topic-card:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+.topic-card > div:first-child{width:60px;height:60px;border-radius:16px;display:grid;place-items:center;background:color-mix(in srgb,var(--tc,#156082) 13%,transparent);transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.topic-card:hover > div:first-child{transform:scale(1.08) rotate(-4deg)}
+.topic-card svg{width:32px;height:32px}
+.topic-card .topic-card-name{font-size:.98rem;font-weight:600;color:var(--ink)}
+.pf-count{font-size:.8rem;color:var(--slate);margin-top:-6px}
+.wizard-step.active .topic-card{animation:pfIn .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 45ms + 80ms)}
+
+/* Schritt 1: Berufsgruppen */
+.bg-section-label{display:flex;align-items:center;gap:10px;color:var(--accent);margin:34px 0 14px}
+.bg-section-label::before{content:"";width:28px;height:2px;border-radius:2px;background:var(--accent)}
+.bg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.bg-btn{position:relative;display:grid;gap:2px;background:var(--surface);color:var(--ink);border:1px solid var(--border-mid);border-radius:12px;padding:13px 40px 13px 16px;font-size:.98rem;font-weight:600;line-height:1.25;transition:transform .2s cubic-bezier(.2,.8,.2,1),border-color .2s,box-shadow .2s,background .2s}
+.bg-btn small{font-size:.78rem;font-weight:500;color:var(--slate)}
+.bg-btn::after{content:"→";position:absolute;right:14px;top:50%;translate:0 -50%;color:var(--slate);transition:transform .2s,color .2s}
+.bg-btn:hover{background:var(--surface);color:var(--ink);border-color:var(--teal);transform:translateY(-2px);box-shadow:0 10px 24px rgba(14,40,65,.10)}
+.bg-btn:hover::after{transform:translateX(3px);color:var(--teal)}
+.bg-btn:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.bg-btn.selected{background:var(--navy);border-color:var(--accent);color:#F4F6F9;box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent)}
+.bg-btn.selected small{color:rgba(244,246,249,.75)}
+.bg-btn.selected::after{content:"✓";color:var(--green-light)}
+.wizard-step.active .bg-btn{animation:pfIn .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 22ms + 60ms)}
+
+/* Seitenleiste „Ihre Auswahl“ */
+#wiz-summary{background:var(--surface);border:1px solid var(--border-mid);border-radius:18px;padding:0;overflow:hidden;box-shadow:0 10px 30px rgba(14,40,65,.10)}
+#wiz-summary .wiz-sum-title{display:none}
+.pf-progress{display:flex;align-items:center;gap:14px;background:var(--navy);color:#F4F6F9;padding:16px 18px;position:relative;overflow:hidden}
+.pf-progress::after{content:"";position:absolute;inset:0;background:radial-gradient(160px circle at 15% 50%,rgba(127,211,91,.18),transparent 70%);pointer-events:none}
+.pf-mark{height:44px;color:#F4F6F9}
+.pf-mark i{opacity:.16;transition:opacity .3s}
+.pf-mark i.on{opacity:1}
+.pf-mark i.pop{animation:pfPiece .8s cubic-bezier(.2,.8,.2,1) both}
+.pf-mark i:nth-child(1).pop{--fx:20%;--fy:-80%;--fr:14deg}.pf-mark i:nth-child(2).pop{--fx:-90%;--fy:30%;--fr:-12deg}.pf-mark i:nth-child(3).pop{--fx:80%;--fy:60%;--fr:10deg}
+.pf-mark i:nth-child(3).on{color:var(--green-light)}
+@keyframes pfPiece{from{transform:translate(var(--fx),var(--fy)) rotate(var(--fr));opacity:0}to{transform:none;opacity:1}}
+.pf-progress b{display:block;font-family:'ADLaM Display','Avenir Next',system-ui,sans-serif;font-weight:400;font-size:1.05rem}
+.pf-progress small{display:block;color:rgba(244,246,249,.72);font-size:.8rem;margin-top:2px}
+.pf-bar{position:absolute;left:0;bottom:0;height:3px;background:var(--green-light);width:calc(var(--p,0) * 100% / 3);transition:width .6s cubic-bezier(.2,.8,.2,1)}
+#wiz-sum-items{padding:14px 18px 6px}
+#wiz-sum-spider{margin:0 18px 16px}
+.wiz-sum-item{border-bottom:1px solid var(--border)}
+.wiz-sum-label{color:var(--slate)}
+.wiz-sum-value{color:var(--ink);font-size:.95rem}
+.wiz-sum-gesetz-row{background:var(--bg);border-color:var(--border-mid);color:var(--ink)}
+.wiz-sum-gesetz-row span{color:var(--ink)}
+#wiz-summary .topic-filter-pill:not(.active){background:var(--bg);color:var(--ink);border-color:var(--border-mid)}
+.wiz-sum-item.pf-new{animation:pfIn .45s cubic-bezier(.2,.8,.2,1) both}
+
+@media (prefers-reduced-motion: reduce){
+  .wizard-step.active,.wizard-step.active .topic-card,.wizard-step.active .bg-btn,.pf-mark i.pop,.wiz-sum-item.pf-new{animation:none!important}
+  .topic-card,.bg-btn,.topic-card > div:first-child{transition:none}
+}
+
+/* ── Produktfinder: Dark Mode für Ergebnis- und Angebotsschritte ── */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --gray-50:#122A40;--gray-100:#17324C;--gray-200:#24435F;--gray-300:#34587A;--gray-400:#8FA3BA;
+  --gray-500:#A4B4C6;--gray-600:#BFCCDB;--gray-700:#D5DEE8;--gray-900:#E6ECF2;--navy-bg:rgba(108,184,218,.12)}}
+:root[data-theme="dark"]{
+  --gray-50:#122A40;--gray-100:#17324C;--gray-200:#24435F;--gray-300:#34587A;--gray-400:#8FA3BA;
+  --gray-500:#A4B4C6;--gray-600:#BFCCDB;--gray-700:#D5DEE8;--gray-900:#E6ECF2;--navy-bg:rgba(108,184,218,.12)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) :is(.offer-table-wrap,.offer-form-wrap){background:var(--surface);color:var(--ink)}
+  :root:not([data-theme="light"]) :is(.offer-qty-btn,.offer-qty-val){background:var(--bg);color:var(--ink)}
+  :root:not([data-theme="light"]) #page-produktfinder :is(input,textarea,select){background:var(--bg)!important;color:var(--ink)!important}
+  :root:not([data-theme="light"]) #page-produktfinder [style*="#f0fdf4"]{background:rgba(127,211,91,.12)!important}}
+:root[data-theme="dark"] :is(.offer-table-wrap,.offer-form-wrap){background:var(--surface);color:var(--ink)}
+:root[data-theme="dark"] :is(.offer-qty-btn,.offer-qty-val){background:var(--bg);color:var(--ink)}
+:root[data-theme="dark"] #page-produktfinder :is(input,textarea,select){background:var(--bg)!important;color:var(--ink)!important}
+:root[data-theme="dark"] #page-produktfinder [style*="#f0fdf4"]{background:rgba(127,211,91,.12)!important}
+
+/* Ergebnistabelle: Spaltenköpfe und Beschreibungen besser lesbar */
+.offer-table-wrap th,.offer-prod-desc{color:var(--slate)}
+#wiz-step2 [style*="gray-400"]{color:var(--slate)!important}
 </style>
 </head>
 <body>
@@ -6602,6 +6692,85 @@ window.addEventListener('scroll', function() {
     if (id === 'loesungen') { size(); build(); replay(); }
   };
 
+})();
+// ── Produktfinder im Lösungsdesign: Zähler, Lichtschein, Puzzle-Fortschritt ─────
+(function() {
+  const plural = n => n === 1 ? '1 Produkt' : n + ' Produkte';
+  const products = () => (typeof LOESUNGEN_DATA !== 'undefined' ? LOESUNGEN_DATA : []).filter(p => p.produkt && !/finder/i.test(p.detailPage || ''));
+  const inTheme = (p, slug) => (p.themen || []).some(t => t.slug === slug);
+
+  // Zähler auf Kacheln und Berufsgruppen (läuft nach jedem Rendern und nach dem Laden der Produkte)
+  function counts() {
+    const list = products();
+    document.querySelectorAll('#topic-grid .topic-card').forEach((card, i) => {
+      card.style.setProperty('--i', i);
+      const m = (card.getAttribute('onclick') || '').match(/selectTopic\('([^']+)'\)/); if (!m) return;
+      const n = list.filter(p => inTheme(p, m[1])).length, txt = n ? plural(n) : 'Individuelle Beratung';
+      const el = card.querySelector('.pf-count');
+      if (el) el.textContent = txt; else card.insertAdjacentHTML('beforeend', `<span class="pf-count">${txt}</span>`);
+    });
+    document.querySelectorAll('.bg-btn').forEach((b, i) => {
+      b.style.setProperty('--i', i);
+      const m = (b.getAttribute('onclick') || '').match(/selectBG\((\d+)/); if (!m) return;
+      const topic = typeof wizStep0TopicId !== 'undefined' ? wizStep0TopicId : null;
+      const base = topic ? list.filter(p => inTheme(p, topic)) : list;
+      const nr = Number(m[1]), n = base.filter(p => (p.verfuegbar || []).includes(nr)).length, txt = n ? plural(n) + (topic ? ' im Thema' : '') : 'Lösungen auf Anfrage';
+      const el = b.querySelector('small');
+      if (el) el.textContent = txt; else b.innerHTML = `<span>${b.textContent.trim()}</span><small>${txt}</small>`;
+    });
+  }
+  const origTopics = renderTopicGrid;
+  renderTopicGrid = function() { origTopics.apply(this, arguments); counts(); };
+  const origRL = renderLoesungen;
+  renderLoesungen = function() { origRL.apply(this, arguments); counts(); };
+  // Lichtschein folgt der Maus
+  document.addEventListener('pointermove', e => {
+    const card = e.target.closest && e.target.closest('.topic-card'); if (!card) return;
+    const r = card.getBoundingClientRect();
+    card.style.setProperty('--mx', (e.clientX - r.left) + 'px'); card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+  }, { passive: true });
+
+  // Schritt 1: Berufsgruppen mit Produktzahl
+  const origBG = renderBerufsgruppen;
+  renderBerufsgruppen = function() { origBG.apply(this, arguments); counts(); };
+
+  // Seitenleiste: Puzzle-Fortschritt (Thema → Berufsgruppe → Ergebnis)
+  const box = document.getElementById('wiz-summary');
+  if (box && !box.querySelector('.pf-progress')) {
+    box.insertAdjacentHTML('afterbegin', `<div class="pf-progress" aria-live="polite">
+      <span class="ehs-mark pf-mark" aria-hidden="true"><i style="--m:var(--pc-top)"></i><i style="--m:var(--pc-bl)"></i><i style="--m:var(--pc-br)"></i></span>
+      <div><b class="pf-step">Ihre Auswahl</b><small class="pf-hint"></small></div><span class="pf-bar"></span></div>`);
+  }
+  const HINTS = ['Wählen Sie ein Thema', 'Wählen Sie Ihre Berufsgruppe', 'Passende Lösungen werden angezeigt', 'Ihre Lösung ist komplett'];
+  let done = 0, seen = new Set();
+  const origSum = renderWizSummary;
+  renderWizSummary = function() {
+    origSum.apply(this, arguments);
+    counts();
+    if (!box) return;
+    const onResults = ['wiz-step2', 'wiz-step3'].some(id => document.getElementById(id)?.classList.contains('active'));
+    const now = (typeof wizStep0TopicId !== 'undefined' && wizStep0TopicId) || (typeof wizSelectedTopics !== 'undefined' && wizSelectedTopics.size) ? 1 : 0;
+    const n = now + (typeof wizBGName !== 'undefined' && wizBGName ? 1 : 0) + (onResults ? 1 : 0);
+    const pieces = box.querySelectorAll('.pf-mark i');
+    pieces.forEach((p, i) => {
+      const on = i < n; p.classList.toggle('on', on);
+      if (on && i >= done) { p.classList.remove('pop'); void p.offsetWidth; p.classList.add('pop'); }
+      if (!on) p.classList.remove('pop');
+    });
+    done = n;
+    box.querySelector('.pf-progress').style.setProperty('--p', n);
+    box.querySelector('.pf-hint').textContent = `${n} von 3 · ${HINTS[n]}`;
+    // neue Zeilen sanft einblenden
+    box.querySelectorAll('#wiz-sum-items > .wiz-sum-item').forEach(row => {
+      const key = (row.querySelector('.wiz-sum-label') || {}).textContent;
+      if (key && !seen.has(key)) { seen.add(key); row.classList.add('pf-new'); }
+    });
+    if (!n) seen = new Set();
+  };
+
+  // Bereits gerenderte Inhalte nachrüsten
+  try { counts(); } catch (e) {}
+  try { renderWizSummary(); } catch (e) {}
 })();
 </script>
 </body>
