@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Praxis-Check für Zahnmedizin · Computer Konkret × eHealth Sales</title>
-<meta name="description" content="Der kostenlose Produktfinder für Zahnarztpraxen und Kieferorthopädie: TI, IT-Sicherheit und Digitalisierung in drei Minuten – präsentiert von Computer Konkret und eHealth Sales.">
+<title>Praxis-Check für Zahnmedizin · ivoris® × eHealth Sales</title>
+<meta name="description" content="Der kostenlose Produktfinder für Zahnarztpraxen und Kieferorthopädie: TI, IT-Sicherheit und Digitalisierung in drei Minuten – präsentiert von ivoris® und eHealth Sales.">
 <meta name="theme-color" content="#0E2841">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Praxis-Check für Zahnarztpraxen & KFO">
@@ -15,15 +15,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=ADLaM+Display&family=Source+Sans+3:wght@400;500;600;700;800&display=swap">
 <style>
-/* ── Tokens: eHS-CI (Navy-Sandwich) × Computer-Konkret-Akzente ── */
+/* ── Tokens: eHS-CI (Navy-Sandwich) × ivoris-Akzente (Computer Konkret AG) ── */
 :root {
   --navy:      #0E2841;   /* eHS */
   --navy-2:    #17375A;   /* eHS Karten auf dunkel */
-  --ck-blue:   #002C5A;   /* Computer Konkret */
-  --terra:     #E55137;   /* Computer Konkret Terrakotta */
+  --ck-blue:   #002C5A;   /* ivoris */
+  --terra:     #E55137;   /* ivoris Terrakotta */
   --terra-dk:  #C7402A;
-  --blonde:    #FFCE8C;   /* Computer Konkret */
-  --champ:     #FFF5E8;   /* Computer Konkret Champagner */
+  --blonde:    #FFCE8C;   /* ivoris */
+  --champ:     #FFF5E8;   /* ivoris Champagner */
   --green:     #7FD35B;   /* eHS Eyebrow */
   --paper:     #F6F7F9;   /* eHS Inhaltsfläche */
   --ink:       #1B2430;
@@ -53,7 +53,8 @@ h1, h2, h3 { font-family: var(--head); font-weight: 400; line-height: 1.08; text
 .top { position: sticky; top: 0; z-index: 50; background: rgba(14,40,65,.92); backdrop-filter: saturate(160%) blur(14px); -webkit-backdrop-filter: saturate(160%) blur(14px); border-bottom: 1px solid rgba(255,255,255,.06); }
 .top .wrap { height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .cobrand { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.ck-mark { display: flex; align-items: center; gap: 8px; color: var(--on-dark); font-weight: 800; font-size: .92rem; letter-spacing: -.01em; white-space: nowrap; }
+.ck-mark { display: flex; align-items: center; gap: 8px; color: var(--on-dark); font-weight: 700; font-size: 1.32rem; letter-spacing: -.02em; line-height: 1; white-space: nowrap; }
+.ck-mark sup { font-size: .45em; font-weight: 600; margin-left: 1px; position: relative; top: -.55em; }
 .ck-tiles { display: grid; grid-template-columns: repeat(2, 8px); gap: 2px; }
 .ck-tiles i { width: 8px; height: 8px; border-radius: 2.5px; background: var(--terra); }
 .ck-tiles i:nth-child(2) { background: var(--blonde); }
@@ -62,7 +63,7 @@ h1, h2, h3 { font-family: var(--head); font-weight: 400; line-height: 1.08; text
 .cobrand img { height: 20px; width: auto; flex-shrink: 0; }
 .top-cta { flex-shrink: 0; background: var(--terra); color: #fff; font-weight: 700; font-size: .88rem; padding: 9px 15px; border-radius: 999px; transition: background .15s; }
 .top-cta .long { display: none; }
-@media (min-width: 560px) { .cobrand img { height: 26px; } .top-cta .long { display: inline; } .ck-mark { font-size: .98rem; } }
+@media (min-width: 560px) { .cobrand img { height: 26px; } .top-cta .long { display: inline; } .ck-mark { font-size: 1.45rem; } }
 .top-cta:hover { background: var(--terra-dk); }
 
 /* ── Hero (dunkel) ── */
@@ -87,7 +88,7 @@ h1, h2, h3 { font-family: var(--head); font-weight: 400; line-height: 1.08; text
 .trust li { list-style: none; display: flex; align-items: center; gap: 6px; }
 .trust svg { width: 16px; height: 16px; color: var(--green); flex-shrink: 0; }
 
-/* Mosaik im Computer-Konkret-Stil */
+/* Mosaik im ivoris-Stil */
 .mosaic { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 1fr; gap: 8px; max-width: 520px; width: 100%; margin: 0 auto; }
 .mosaic .tile:nth-child(1) { grid-area: 1 / 1; }
 .mosaic .tile:nth-child(2) { grid-area: 1 / 2; }
@@ -216,7 +217,7 @@ footer a:hover { color: var(--on-dark); }
 /* ── Breakpoints ── */
 @media (max-width: 360px) {
   .cobrand { gap: 8px; }
-  .ck-mark { font-size: .84rem; }
+  .ck-mark { font-size: 1.2rem; }
   .cobrand img { height: 17px; }
   .top-cta { padding: 8px 12px; font-size: .82rem; }
 }
@@ -247,8 +248,8 @@ footer a:hover { color: var(--on-dark); }
 
 <header class="top">
   <div class="wrap">
-    <div class="cobrand" aria-label="Computer Konkret und eHealth Sales">
-      <span class="ck-mark"><span class="ck-tiles" aria-hidden="true"><i></i><i></i><i></i><i></i></span>computer konkret</span>
+    <div class="cobrand" aria-label="ivoris und eHealth Sales">
+      <span class="ck-mark"><span class="ck-tiles" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="ck-word">ivoris<sup>®</sup></span></span>
       <span class="x" aria-hidden="true">×</span>
       <img src="logos/ehs-logo-on-dark.png" alt="eHealth Sales">
     </div>
@@ -263,7 +264,7 @@ footer a:hover { color: var(--on-dark); }
     <div>
       <span class="eyebrow">Für Zahnarztpraxen &amp; Kieferorthopädie</span>
       <h1 id="hero-title">Ihre Praxis.<br><span class="hl">Digital.</span> <span class="hl-2">Sicher.</span><br>TI-ready.</h1>
-      <p class="hero-sub">Der Praxis-Check von Computer Konkret und eHealth Sales: In drei Minuten zu den Lösungen, die zu Ihrer Praxis passen – für Telematikinfrastruktur, IT-Sicherheit und digitale Abläufe.</p>
+      <p class="hero-sub">Der Praxis-Check von ivoris® und eHealth Sales: In drei Minuten zu den Lösungen, die zu Ihrer Praxis passen – für Telematikinfrastruktur, IT-Sicherheit und digitale Abläufe.</p>
 
       <p class="choose-label">Was beschreibt Ihre Praxis?</p>
       <div class="choices">
@@ -378,7 +379,7 @@ footer a:hover { color: var(--on-dark); }
     </div>
     <div class="duo">
       <div class="duo-card duo-ck">
-        <span class="eyebrow">Computer Konkret</span>
+        <span class="eyebrow">ivoris®</span>
         <h3>Ihre Praxissoftware</h3>
         <p>ivoris® für Zahnmedizin und Kieferorthopädie – modular, flexibel und mit persönlichem Support.</p>
       </div>
@@ -420,7 +421,7 @@ footer a:hover { color: var(--on-dark); }
 
 <footer>
   <div class="wrap">
-    <span>© 2026 eHealth Sales GmbH in Kooperation mit Computer Konkret</span>
+    <span>© 2026 eHealth Sales GmbH in Kooperation mit ivoris®</span>
     <nav><a href="index.html?open=impressum">Impressum</a><a href="index.html?open=datenschutz">Datenschutz</a></nav>
   </div>
 </footer>
@@ -432,10 +433,10 @@ footer a:hover { color: var(--on-dark); }
 
 <script>
 (() => {
-  // Quelle für Anfragen: computer-konkret[-utm_source], z. B. computer-konkret-instagram / -newsletter
+  // Quelle für Anfragen: ivoris[-utm_source], z. B. ivoris-instagram / ivoris-newsletter
   const qs = new URLSearchParams(location.search);
   const utm = (qs.get('utm_source') || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20);
-  const src = 'computer-konkret' + (utm ? '-' + utm : '');
+  const src = 'ivoris' + (utm ? '-' + utm : '');
   const finderUrl = 'index.html?embed=1&bg=' + encodeURIComponent('5:Zahnärzte,5:Kieferorthopäden') + '&src=' + src;
   const frame = document.getElementById('finder');
   frame.src = finderUrl;
