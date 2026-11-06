@@ -2163,6 +2163,106 @@ button, input, select, textarea { font-family: inherit; }
   .lv-map-lists > div{display:grid;gap:8px}
 }
 @media (prefers-reduced-motion: reduce){.lv-link,.lv-pulse{animation:none!important}.lv-spark{display:none}}
+
+/* ══ Partnerseite (Präfix pt-) ════════════════════════════════════ */
+.pt-hero{background:radial-gradient(ellipse at 75% 45%,rgba(108,184,218,.14),transparent 55%),var(--navy);color:#F4F6F9;overflow:hidden}
+.pt-hero-inner{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;padding-block:64px 72px}
+.pt-copy{display:grid;gap:20px;justify-items:start;min-width:0}
+.pt-copy .section-label{margin:0}
+.pt-copy h1{color:#F4F6F9;margin:0;font-size:clamp(2.1rem,4vw,3.2rem)}
+.pt-copy p{color:rgba(244,246,249,.78);font-size:1.12rem;max-width:34em}
+.pt-actions{display:flex;flex-wrap:wrap;gap:12px}
+.pt-play .pt-copy > *{animation:lvRise .8s cubic-bezier(.2,.8,.2,1) both}
+.pt-play .pt-copy > :nth-child(2){animation-delay:.08s}.pt-play .pt-copy > :nth-child(3){animation-delay:.16s}.pt-play .pt-copy > :nth-child(4){animation-delay:.24s}
+
+/* Orbit */
+.pt-orbit{--size:min(86vw,460px);position:relative;width:var(--size);height:var(--size);justify-self:center}
+.pt-ring{position:absolute;left:50%;top:50%;border-radius:50%;border:1.5px dashed rgba(255,255,255,.16);translate:-50% -50%}
+.pt-ring.r1{width:calc(var(--size) * .52);height:calc(var(--size) * .52)}
+.pt-ring.r2{width:calc(var(--size) * .82);height:calc(var(--size) * .82)}
+.pt-track{position:absolute;inset:0;list-style:none;margin:0;padding:0;animation:ptSpin 60s linear infinite}
+.pt-track.t2{animation-duration:90s;animation-direction:reverse}
+.pt-planet{position:absolute;left:50%;top:50%;width:0;height:0;transform:rotate(var(--a)) translateX(var(--r)) rotate(calc(var(--a) * -1))}
+.t1 .pt-planet{--r:calc(var(--size) * .26)}
+.t2 .pt-planet{--r:calc(var(--size) * .41)}
+.pt-planet .pt-logo{position:absolute;left:0;top:0;translate:-50% -50%;animation:ptSpin 60s linear infinite reverse}
+.t2 .pt-planet .pt-logo{animation-duration:90s;animation-direction:normal}
+.pt-orbit:hover .pt-track,.pt-orbit:hover .pt-logo{animation-play-state:paused}
+.pt-orbit .pt-logo{width:calc(var(--size) * .16);height:calc(var(--size) * .16);border-radius:50%;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.25),0 0 0 4px rgba(255,255,255,.08);transition:box-shadow .25s,scale .25s}
+.pt-orbit .pt-logo:hover{scale:1.12;box-shadow:0 10px 30px rgba(0,0,0,.3),0 0 0 4px #7FD35B}
+.pt-logo{display:grid;place-items:center;overflow:hidden}
+.pt-logo img{width:76%;height:76%;object-fit:contain}
+.pt-sun{position:absolute;left:50%;top:50%;translate:-50% -50%;width:calc(var(--size) * .26);height:calc(var(--size) * .26);border-radius:50%;display:grid;place-items:center;background:#17375A;border:3px solid #7FD35B;box-shadow:0 0 0 10px rgba(127,211,91,.10),0 0 60px rgba(127,211,91,.35)}
+.pt-sun .ehs-mark{height:52%;color:#F4F6F9}
+.pt-sun .ehs-mark i:nth-child(3){color:#7FD35B}
+.pt-sun::before,.pt-sun::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:2px solid #7FD35B;opacity:0;animation:lvRing 3s ease-out infinite}
+.pt-sun::after{animation-delay:1.5s}
+.pt-play .pt-planet{animation:ptIn .7s cubic-bezier(.2,.8,.2,1.3) both;animation-delay:calc(.3s + var(--n,0) * 90ms)}
+@keyframes ptSpin{to{rotate:360deg}}
+@keyframes ptIn{from{opacity:0;scale:.2}to{opacity:1;scale:1}}
+@media (max-width:900px){.pt-hero-inner{grid-template-columns:1fr;padding-block:48px 56px}}
+
+/* Karten */
+.pt-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+.pt-chip{display:inline-flex;align-items:center;gap:8px;font-family:inherit;font-weight:600;font-size:.9rem;line-height:1;color:var(--ink);background:var(--surface);border:1px solid var(--border-mid);border-radius:999px;padding:9px 14px;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
+.pt-chip i{width:9px;height:9px;border-radius:50%}
+.pt-chip:hover{border-color:var(--teal)}
+.pt-chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#F4F6F9}
+.pt-chip:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.pt-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+@media (max-width:960px){.pt-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:620px){.pt-grid{grid-template-columns:1fr}}
+.pt-card{position:relative;overflow:hidden;isolation:isolate;display:flex;flex-direction:column;gap:10px;background:var(--surface);border:1px solid var(--border-mid);border-radius:18px;padding:22px;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s,border-color .25s}
+.pt-card[hidden]{display:none}
+.pt-card::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(300px circle at var(--mx,50%) var(--my,0%),color-mix(in srgb,var(--tc) 13%,transparent),transparent 65%);opacity:0;transition:opacity .3s}
+.pt-card:hover{transform:translateY(-4px);border-color:color-mix(in srgb,var(--tc) 50%,transparent);box-shadow:0 16px 36px color-mix(in srgb,var(--tc) 18%,transparent)}
+.pt-card:hover::before{opacity:1}
+.pt-card-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.pt-card .pt-logo{width:120px;height:56px;border-radius:12px;background:#fff;border:1px solid var(--border);padding:6px 10px;transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+.pt-card .pt-logo{display:flex;align-items:center;justify-content:center}
+.pt-card .pt-logo img{width:auto;height:auto;max-width:100%;max-height:40px;object-fit:contain}
+.pt-card:hover .pt-logo{transform:scale(1.05)}
+.pt-cat{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;font-weight:600;color:var(--slate);background:var(--bg);border:1px solid var(--border);border-radius:999px;padding:4px 9px;white-space:nowrap}
+.pt-cat i{width:7px;height:7px;border-radius:50%;background:var(--tc)}
+.pt-card h3{margin:6px 0 0;color:var(--ink);font-size:1.2rem}
+.pt-card p{font-size:.95rem;flex:1}
+.pt-card-foot{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;border-top:1px solid var(--border);padding-top:12px;margin-top:4px}
+.pt-link,.pt-prod{font-family:inherit;font-weight:600;font-size:.92rem;line-height:1;color:var(--accent);background:none;border:0;padding:6px 0;cursor:pointer;text-decoration:none}
+.pt-link:hover,.pt-prod:hover{text-decoration:underline;text-underline-offset:3px}
+.pt-link:focus-visible,.pt-prod:focus-visible{outline:3px solid var(--teal);outline-offset:3px;border-radius:4px}
+@supports (animation-timeline: view()){.pt-card,.pt-reveal,.pt-benefits li{animation:lvIn linear both;animation-timeline:view();animation-range:entry 0% entry 75%}}
+
+/* Partner werden */
+.pt-why{display:grid;grid-template-columns:1fr 1.1fr;gap:40px;align-items:center;margin-bottom:48px}
+.pt-why h2{margin:0 0 12px;color:var(--ink)}
+.pt-why p{font-size:1.06rem;max-width:38em}
+.pt-why .section-label{margin-bottom:10px}
+.pt-benefits{list-style:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.pt-benefits li{display:grid;gap:4px;background:var(--bg);border:1px solid var(--border-mid);border-radius:16px;padding:18px}
+.pt-benefits b{font-family:'ADLaM Display','Avenir Next',system-ui,sans-serif;font-weight:400;font-size:2.2rem;line-height:1;color:var(--accent);font-variant-numeric:tabular-nums}
+.pt-benefits span{color:var(--ink);font-size:.95rem}
+@media (max-width:900px){.pt-why{grid-template-columns:1fr}}
+@media (max-width:520px){.pt-benefits{grid-template-columns:1fr}}
+.pt-steps{position:relative;list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.pt-steps::before,.pt-steps::after{content:"";position:absolute;left:24px;right:24px;top:23px;height:3px;border-radius:3px}
+.pt-steps::before{background:var(--border-mid)}
+.pt-steps::after{background:linear-gradient(90deg,var(--teal),var(--accent));transform-origin:left}
+.pt-steps li{position:relative;display:grid;gap:8px;z-index:1}
+.pt-step-no{width:48px;height:48px;border-radius:50%;display:grid;place-items:center;background:var(--surface);border:3px solid var(--accent);color:var(--accent);font:400 1.15rem 'ADLaM Display','Avenir Next',system-ui,sans-serif}
+.pt-steps h3{margin:4px 0 0;color:var(--ink);font-size:1.08rem}
+.pt-steps p{font-size:.93rem}
+@supports (animation-timeline: view()){.pt-steps::after{animation:lvGrowX linear both;animation-timeline:view();animation-range:entry 30% cover 55%}.pt-steps li{animation:lvIn linear both;animation-timeline:view();animation-range:entry 0% entry 80%}}
+@media (max-width:860px){
+  .pt-steps{grid-template-columns:1fr;gap:22px}
+  .pt-steps::before,.pt-steps::after{left:22px;right:auto;top:24px;bottom:24px;width:3px;height:auto;transform-origin:top}
+  .pt-steps li{grid-template-columns:48px 1fr;column-gap:16px}
+  .pt-step-no{grid-row:span 2}
+  @supports (animation-timeline: view()){.pt-steps::after{animation-name:lvGrowY}}
+}
+#pt-netzwerk,#pt-werden{scroll-margin-top:84px}
+@media (prefers-reduced-motion: reduce){
+  #page-partner *,#page-partner *::before,#page-partner *::after{animation:none!important;transition:none!important}
+}
 </style>
 </head>
 <body>
@@ -2965,104 +3065,136 @@ button, input, select, textarea { font-family: inherit; }
 <!-- ======================================================= -->
 <div id="page-partner" class="page">
 
-  <!-- HERO -->
-  <section class="partner-hero">
+  <!-- PARTNER: Kopfbereich mit Orbit -->
+  <section class="pt-hero" aria-labelledby="pt-h1">
     <div class="container">
-      <span class="section-label">Unser Netzwerk</span>
-      <h1 style="margin-bottom:16px;">Unsere Partner</h1>
-      <p>Gemeinsam mit führenden Unternehmen im Gesundheitswesen schaffen wir ganzheitliche Lösungen für Ihre digitale Transformation in der Telematik Infrastruktur.</p>
+      <div class="pt-hero-inner">
+        <div class="pt-copy">
+          <span class="section-label" style="color:var(--green-light)">Unser Netzwerk</span>
+          <h1 id="pt-h1">Starke Partner. Ein Ansprechpartner.</h1>
+          <p>Gemeinsam mit spezialisierten Herstellern und Dienstleistern decken wir das Spektrum der digitalen Gesundheitsversorgung ab. Für Sie bleibt es einfach: ein Vertrag, ein Kontakt.</p>
+          <div class="pt-actions">
+            <a href="#pt-netzwerk" class="btn btn-primary">Partner entdecken</a>
+            <a href="#pt-werden" class="btn btn-outline-white">Partner werden</a>
+          </div>
+        </div>
+        <div class="pt-orbit" aria-label="Partner im Netzwerk von ehealth Sales">
+          <div class="pt-ring r1"></div><div class="pt-ring r2"></div>
+          <ul class="pt-track t1"><li class="pt-planet" style="--a:0deg"><span class="pt-logo"><img src="logos/ti-healthcare.png" alt="TI-Healthcare" loading="lazy"></span></li><li class="pt-planet" style="--a:90deg"><span class="pt-logo"><img src="logos/ehex.png" alt="eHealth Experts" loading="lazy"></span></li><li class="pt-planet" style="--a:180deg"><span class="pt-logo"><img src="logos/infinity.svg" alt="infinity" loading="lazy"></span></li><li class="pt-planet" style="--a:270deg"><span class="pt-logo"><img src="logos/ehc.jpeg" alt="ehealth Connect" loading="lazy"></span></li></ul>
+          <ul class="pt-track t2"><li class="pt-planet" style="--a:0deg"><span class="pt-logo"><img src="logos/cherry.svg" alt="Cherry" loading="lazy"></span></li><li class="pt-planet" style="--a:72deg"><span class="pt-logo"><img src="logos/pitnas-new.jpg" alt="PITNAS" loading="lazy"></span></li><li class="pt-planet" style="--a:144deg"><span class="pt-logo"><img src="logos/profvalmed.jpg" alt="Prof. Valmed" loading="lazy"></span></li><li class="pt-planet" style="--a:216deg"><span class="pt-logo"><img src="logos/concat.png" alt="Concat" loading="lazy"></span></li><li class="pt-planet" style="--a:288deg"><span class="pt-logo"><img src="logos/bechtle.svg" alt="Bechtle" loading="lazy"></span></li></ul>
+          <div class="pt-sun"><span class="ehs-mark" aria-hidden="true"><i style="--m:var(--pc-top)"></i><i style="--m:var(--pc-bl)"></i><i style="--m:var(--pc-br)"></i></span></div>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- PARTNER GRID -->
-  <section class="section" style="background: var(--navy-tint);">
+  <!-- Partnerkarten -->
+  <section class="section fog" id="pt-netzwerk" aria-labelledby="pt-h-net">
     <div class="container">
-      <div class="section-header centered">
+      <div class="section-header pt-reveal">
         <span class="section-label">Starkes Netzwerk</span>
-        <h2>Vertrauen durch Partnerschaft</h2>
-        <p>Unsere Partner sind führende Unternehmen und Spezialisten der Gesundheits-IT – gemeinsam decken wir das gesamte Spektrum moderner TI-Lösungen ab.</p>
+        <h2 id="pt-h-net">Unsere Partner im Überblick.</h2>
+        <p>Jeder Partner bringt seine Stärke ein. Wir stellen daraus die Lösung zusammen, die zu Ihrer Einrichtung passt.</p>
       </div>
-
-      <div class="partner-ticker-outer">
-        <div class="partner-ticker-track">
-          <!-- Set 1 -->
-          <a href="https://www.bechtle.com/public-sector/healthcare" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="Bechtle AG">
-            <img src="logos/bechtle.svg" alt="Bechtle">
-          </a>
-          <a href="https://www.cherry.de/de-de/produkte/software-services/cherry-tms" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="Cherry GmbH">
-            <img src="logos/cherry.svg" alt="Cherry">
-          </a>
-          <a href="https://profvalmed.com" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="Prof. Valmed">
-            <img src="logos/profvalmed.jpg" alt="Prof. Valmed">
-          </a>
-          <a href="https://www.concat.de" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="Concat AG">
-            <img src="logos/concat.png" alt="Concat AG">
-          </a>
-          <a href="https://www.ti-healthcare.de" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="TI Healthcare GmbH">
-            <img src="logos/ti-healthcare.png" alt="TI Healthcare">
-          </a>
-          <a href="https://ehex.de" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="ehex GmbH">
-            <img src="logos/ehex.png" alt="ehex" class="partner-img-icon">
-          </a>
-          <a href="https://infinity-managed.services" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="infinity managed Service GmbH">
-            <img src="logos/infinity.svg" alt="infinity" class="partner-img-icon">
-          </a>
-          <a href="https://www.ehealth-connect.de" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="ehealth Connect GmbH">
-            <img src="logos/ehc.jpeg" alt="ehealth Connect" style="height:48px;width:auto;max-width:160px;">
-          </a>
-          <a href="https://pitnas.de" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="PITNAS®">
-            <img src="logos/pitnas-new.jpg" alt="PITNAS">
-          </a>
-          <!-- Set 2 (duplicate for seamless loop) -->
-          <a href="https://www.bechtle.com/public-sector/healthcare" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="Bechtle AG">
-            <img src="logos/bechtle.svg" alt="Bechtle">
-          </a>
-          <a href="https://www.cherry.de/de-de/produkte/software-services/cherry-tms" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="Cherry GmbH">
-            <img src="logos/cherry.svg" alt="Cherry">
-          </a>
-          <a href="https://profvalmed.com" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="Prof. Valmed">
-            <img src="logos/profvalmed.jpg" alt="Prof. Valmed">
-          </a>
-          <a href="https://www.concat.de" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="Concat AG">
-            <img src="logos/concat.png" alt="Concat AG">
-          </a>
-          <a href="https://www.ti-healthcare.de" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="TI Healthcare GmbH">
-            <img src="logos/ti-healthcare.png" alt="TI Healthcare">
-          </a>
-          <a href="https://ehex.de" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="ehex GmbH">
-            <img src="logos/ehex.png" alt="ehex" class="partner-img-icon">
-          </a>
-          <a href="https://infinity-managed.services" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="infinity managed Service GmbH">
-            <img src="logos/infinity.svg" alt="infinity" class="partner-img-icon">
-          </a>
-          <a href="https://www.ehealth-connect.de" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="ehealth Connect GmbH">
-            <img src="logos/ehc.jpeg" alt="ehealth Connect" style="height:48px;width:auto;max-width:160px;">
-          </a>
-          <a href="https://pitnas.de" target="_blank" rel="noopener noreferrer" class="partner-ticker-item" title="PITNAS®">
-            <img src="logos/pitnas-new.jpg" alt="PITNAS">
-          </a>
-        </div>
+      <div class="pt-chips" role="group" aria-label="Nach Kategorie filtern"><button type="button" class="pt-chip" data-cat="alle" aria-pressed="true">Alle Partner</button><button type="button" class="pt-chip" data-cat="ti" aria-pressed="false"><i style="background:#156082"></i>Telematikinfrastruktur</button><button type="button" class="pt-chip" data-cat="security" aria-pressed="false"><i style="background:#DC2626"></i>IT-Sicherheit</button><button type="button" class="pt-chip" data-cat="hardware" aria-pressed="false"><i style="background:#475569"></i>Hardware</button><button type="button" class="pt-chip" data-cat="ki" aria-pressed="false"><i style="background:#7C3AED"></i>Künstliche Intelligenz</button><button type="button" class="pt-chip" data-cat="it" aria-pressed="false"><i style="background:#3A7F22"></i>IT &amp; Systemhaus</button><button type="button" class="pt-chip" data-cat="vernetzung" aria-pressed="false"><i style="background:#0891B2"></i>Vernetzung</button></div>
+      <div class="pt-grid" id="ptGrid">
+        <article class="pt-card" data-cat="ti" data-maker="" style="--tc:#156082">
+          <div class="pt-card-top"><span class="pt-logo"><img src="logos/ti-healthcare.png" alt="" loading="lazy"></span><span class="pt-cat"><i></i>Telematikinfrastruktur</span></div>
+          <h3>TI-Healthcare</h3>
+          <p>gematik-zugelassener TI-Gateway-Anbieter mit 24/7-Support und Beratung für Kliniken, Praxen und Pflege.</p>
+          <div class="pt-card-foot"><a href="https://www.ti-healthcare.de" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+        </article>
+        <article class="pt-card" data-cat="ti" data-maker="ehex" style="--tc:#156082">
+          <div class="pt-card-top"><span class="pt-logo"><img src="logos/ehex.png" alt="" loading="lazy"></span><span class="pt-cat"><i></i>Telematikinfrastruktur</span></div>
+          <h3>eHealth Experts</h3>
+          <p>Hersteller von TI-Lösungen wie easyTI und easyTI Hub für Einrichtungen jeder Größe.</p>
+          <div class="pt-card-foot"><a href="https://ehex.de" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+        </article>
+        <article class="pt-card" data-cat="ti" data-maker="" style="--tc:#156082">
+          <div class="pt-card-top"><span class="pt-logo"><img src="logos/infinity.svg" alt="" loading="lazy"></span><span class="pt-cat"><i></i>Telematikinfrastruktur</span></div>
+          <h3>infinity</h3>
+          <p>Betreibt das TI-Gateway im zertifizierten Rechenzentrum und sorgt für einen stabilen Betrieb.</p>
+          <div class="pt-card-foot"><a href="https://infinity-managed.services" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+        </article>
+        <article class="pt-card" data-cat="vernetzung" data-maker="" style="--tc:#0891B2">
+          <div class="pt-card-top"><span class="pt-logo"><img src="logos/ehc.jpeg" alt="" loading="lazy"></span><span class="pt-cat"><i></i>Vernetzung</span></div>
+          <h3>ehealth Connect</h3>
+          <p>Verknüpft eHealth-Anwendungen zu durchgängigen Abläufen zwischen Einrichtungen.</p>
+          <div class="pt-card-foot"><a href="https://www.ehealth-connect.de" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+        </article>
+        <article class="pt-card" data-cat="hardware" data-maker="cherry" style="--tc:#475569">
+          <div class="pt-card-top"><span class="pt-logo"><img src="logos/cherry.svg" alt="" loading="lazy"></span><span class="pt-cat"><i></i>Hardware</span></div>
+          <h3>Cherry</h3>
+          <p>eHealth-Kartenterminals und das Terminal-Management-System Cherry TMS.</p>
+          <div class="pt-card-foot"><a href="https://www.cherry.de/de-de/produkte/software-services/cherry-tms" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+        </article>
+        <article class="pt-card" data-cat="security" data-maker="pitnas" style="--tc:#DC2626">
+          <div class="pt-card-top"><span class="pt-logo"><img src="logos/pitnas-new.jpg" alt="" loading="lazy"></span><span class="pt-cat"><i></i>IT-Sicherheit</span></div>
+          <h3>PITNAS</h3>
+          <p>UTM-Firewall, Backup und IT-Sicherheit für Praxen, als Security Box monatlich mietbar.</p>
+          <div class="pt-card-foot"><a href="https://pitnas.de" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+        </article>
+        <article class="pt-card" data-cat="ki" data-maker="prof. valmed" style="--tc:#7C3AED">
+          <div class="pt-card-top"><span class="pt-logo"><img src="logos/profvalmed.jpg" alt="" loading="lazy"></span><span class="pt-cat"><i></i>Künstliche Intelligenz</span></div>
+          <h3>Prof. Valmed</h3>
+          <p>KI-gestützte medizinische Dokumentation, zum Beispiel für den Arztbrief.</p>
+          <div class="pt-card-foot"><a href="https://profvalmed.com" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+        </article>
+        <article class="pt-card" data-cat="it" data-maker="" style="--tc:#3A7F22">
+          <div class="pt-card-top"><span class="pt-logo"><img src="logos/concat.png" alt="" loading="lazy"></span><span class="pt-cat"><i></i>IT &amp; Systemhaus</span></div>
+          <h3>Concat</h3>
+          <p>IT-Systemhaus für Infrastruktur, Netzwerke und Sicherheit.</p>
+          <div class="pt-card-foot"><a href="https://www.concat.de" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+        </article>
+        <article class="pt-card" data-cat="it" data-maker="" style="--tc:#3A7F22">
+          <div class="pt-card-top"><span class="pt-logo"><img src="logos/bechtle.svg" alt="" loading="lazy"></span><span class="pt-cat"><i></i>IT &amp; Systemhaus</span></div>
+          <h3>Bechtle</h3>
+          <p>IT-Dienstleister mit Schwerpunkt auf Public Sector und Gesundheitswesen.</p>
+          <div class="pt-card-foot"><a href="https://www.bechtle.com/public-sector/healthcare" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+        </article>
       </div>
     </div>
   </section>
 
-  <!-- CTA -->
-  <section style="padding: 80px 0; background: var(--navy-tint);">
+  <!-- Partner werden -->
+  <section class="section surface" id="pt-werden" aria-labelledby="pt-h-w">
     <div class="container">
-      <div class="cta-banner">
-        <div class="cta-inner">
-          <div class="cta-content">
-            <h2 style="color:white;">Werden Sie Teil unseres Netzwerks</h2>
-            <p style="color:rgba(255,255,255,0.75); margin:0;">Interessiert an einer Partnerschaft mit ehealth Sales? Sprechen Sie uns an – wir freuen uns auf die Zusammenarbeit.</p>
-          </div>
-          <div class="cta-actions">
-            <a href="#" class="btn btn-white" onclick="showPage('kontakt'); return false;">Kontakt aufnehmen</a>
-          </div>
+      <div class="pt-why">
+        <div class="pt-reveal">
+          <span class="section-label">Für Hersteller</span>
+          <h2 id="pt-h-w">Werden Sie Teil unseres Netzwerks.</h2>
+          <p>Wir bringen Ihre Lösung zu den Einrichtungen, die sie brauchen, mit Branchenkenntnis, eigenen Werkzeugen und einem direkten Draht in den Markt.</p>
+        </div>
+        <ul class="pt-benefits">
+          <li><b data-pt="groups">25</b><span>Berufsgruppen, die wir gezielt ansprechen</span></li>
+          <li><b data-pt="products">28</b><span>Produkte im gemeinsamen Katalog</span></li>
+          <li><b>1</b><span>eigener Produktfinder für Ihre Website, im Design Ihrer Marke</span></li>
+          <li><b>∞</b><span>Kampagnen-Landingpages nach Zielgruppe, mit anonymer Auswertung</span></li>
+        </ul>
+      </div>
+      <ol class="pt-steps">
+        <li><span class="pt-step-no">1</span><h3>Kennenlernen</h3><p>Wir sprechen über Ihre Lösung, Ihre Zielgruppen und Ihre Ziele.</p></li>
+        <li><span class="pt-step-no">2</span><h3>Ins Portfolio aufnehmen</h3><p>Ihre Produkte erscheinen im Katalog und im Produktfinder.</p></li>
+        <li><span class="pt-step-no">3</span><h3>Kampagnen starten</h3><p>Wir sprechen passende Berufsgruppen über Landingpages und Newsletter an.</p></li>
+        <li><span class="pt-step-no">4</span><h3>Gemeinsam wachsen</h3><p>Anfragen landen direkt bei uns, wir begleiten sie bis zum Abschluss.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- Abschluss -->
+  <section class="cta-banner">
+    <div class="container">
+      <div class="cta-inner">
+        <div class="cta-text">
+          <h2>Interessiert an einer Partnerschaft?</h2>
+          <p>Sprechen Sie uns an. Wir freuen uns auf die Zusammenarbeit.</p>
+        </div>
+        <div class="cta-actions">
+          <a href="#" class="btn btn-primary" onclick="showPage('kontakt'); return false;">Kontakt aufnehmen</a>
         </div>
       </div>
     </div>
   </section>
-
 </div><!-- /page-partner -->
 
 <!-- ======================================================= -->
@@ -7202,6 +7334,65 @@ window.addEventListener('scroll', function() {
   window.lvBuildMap = build;
   window.lvCustomers = CUSTOMERS;
   if (window.lvFill) window.lvFill();
+})();
+// ── Partnerseite: Orbit, Filter, Produktzahlen ─────
+(function() {
+  const page = document.getElementById('page-partner');
+  if (!page) return;
+  const rm = matchMedia('(prefers-reduced-motion: reduce)');
+  const hero = page.querySelector('.pt-hero'), grid = document.getElementById('ptGrid');
+  const cards = [...grid.querySelectorAll('.pt-card')];
+  page.querySelectorAll('.pt-planet').forEach((p, i) => p.style.setProperty('--n', i));
+
+  // Produktzahl je Partner aus dem Katalog
+  function counts() {
+    const list = (typeof LOESUNGEN_DATA !== 'undefined' ? LOESUNGEN_DATA : []).filter(p => p.produkt && !/finder/i.test(p.detailPage || ''));
+    cards.forEach(c => {
+      const key = (c.dataset.maker || '').toLowerCase(), btn = c.querySelector('.pt-prod');
+      if (!key) return;
+      const n = list.filter(p => (p.hersteller || '').toLowerCase().startsWith(key)).length;
+      btn.hidden = !n; btn.textContent = n === 1 ? '1 Produkt ansehen' : `${n} Produkte ansehen`;
+    });
+    const set = (k, v) => { const el = page.querySelector(`[data-pt="${k}"]`); if (el && v) el.textContent = v; };
+    set('products', list.length);
+  }
+  grid.addEventListener('click', e => { if (e.target.closest('.pt-prod')) showPage('loesungen'); });
+  if (typeof _sb !== 'undefined') _sb.from('berufsgruppen').select('nr', { count: 'exact', head: true }).then(({ count }) => { const el = page.querySelector('[data-pt="groups"]'); if (el && count) el.textContent = count; });
+
+  // Filter nach Kategorie mit weichem Umsortieren
+  page.querySelector('.pt-chips').addEventListener('click', e => {
+    const chip = e.target.closest('.pt-chip'); if (!chip) return;
+    const cat = chip.dataset.cat;
+    page.querySelectorAll('.pt-chip').forEach(c => c.setAttribute('aria-pressed', String(c === chip)));
+    const anim = !rm.matches, before = new Map();
+    if (anim) cards.forEach(c => { if (!c.hidden) before.set(c, c.getBoundingClientRect()); });
+    cards.forEach(c => { c.hidden = !(cat === 'alle' || c.dataset.cat === cat); });
+    if (!anim) return;
+    cards.forEach(c => {
+      if (c.hidden) return;
+      const a = before.get(c), b = c.getBoundingClientRect();
+      if (a) { const dx = a.left - b.left, dy = a.top - b.top; if (dx || dy) c.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: 380, easing: 'cubic-bezier(.2,.8,.2,1)' }); }
+      else c.animate([{ opacity: 0, transform: 'translateY(12px) scale(.97)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: 'ease-out' });
+    });
+  });
+  // Lichtschein auf den Karten
+  grid.addEventListener('pointermove', e => {
+    const c = e.target.closest && e.target.closest('.pt-card'); if (!c) return;
+    const r = c.getBoundingClientRect(); c.style.setProperty('--mx', (e.clientX - r.left) + 'px'); c.style.setProperty('--my', (e.clientY - r.top) + 'px');
+  }, { passive: true });
+  // Sprunglinks weich scrollen
+  page.querySelectorAll('.pt-actions a[href^="#"]').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault(); const t = document.querySelector(a.getAttribute('href'));
+    if (t) t.scrollIntoView({ behavior: rm.matches ? 'auto' : 'smooth', block: 'start' });
+  }));
+
+  function replay() { hero.classList.remove('pt-play'); void hero.offsetWidth; hero.classList.add('pt-play'); }
+  counts();
+  const prevRL = renderLoesungen;
+  renderLoesungen = function() { prevRL.apply(this, arguments); counts(); };
+  const prevShow = showPage;
+  showPage = function(id) { prevShow(id); if (id === 'partner') { counts(); replay(); } };
+  if (page.classList.contains('active')) replay();
 })();
 </script>
 </body>
