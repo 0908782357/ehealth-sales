@@ -1936,6 +1936,35 @@ button, input, select, textarea { font-family: inherit; }
 /* Ergebnistabelle: Spaltenköpfe und Beschreibungen besser lesbar */
 .offer-table-wrap th,.offer-prod-desc{color:var(--slate)}
 #wiz-step2 [style*="gray-400"]{color:var(--slate)!important}
+
+/* ── Seitenleiste „Ihre Auswahl“: breiter, nie höher als das Fenster ── */
+#wiz-summary{width:300px;top:96px;max-height:calc(100vh - 112px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+#wiz-summary.visible{display:block}
+@media (max-width:1180px){#wiz-summary{width:270px}}
+.pf-progress{position:sticky;top:0;z-index:2}
+#wiz-sum-items{padding:12px 18px 4px}
+.wiz-sum-item{padding:10px 0}
+.wiz-sum-gesetz-row{font-size:.8rem;line-height:1.35;padding:8px 10px}
+/* Themen als Symbole, Name erscheint darunter */
+.pf-icons{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:6px!important;width:100%}
+.pf-ic{width:100%!important;aspect-ratio:1;height:auto;padding:0!important;display:grid!important;place-items:center;border-radius:11px!important;border:1.5px solid var(--border-mid)!important;background:var(--bg)!important;color:var(--tc)!important;transition:transform .18s cubic-bezier(.2,.8,.2,1),box-shadow .18s,background .18s!important}
+.pf-ic svg{width:20px;height:20px}
+.pf-ic:hover,.pf-ic:focus-visible{transform:translateY(-2px);box-shadow:0 6px 16px color-mix(in srgb,var(--tc) 30%,transparent)}
+.pf-ic:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.pf-ic.active{background:var(--tc)!important;border-color:var(--tc)!important;color:#fff!important;box-shadow:0 0 0 3px color-mix(in srgb,var(--tc) 25%,transparent)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .pf-ic:not(.active){color:color-mix(in srgb,var(--tc) 55%,#fff)!important}}
+:root[data-theme="dark"] .pf-ic:not(.active){color:color-mix(in srgb,var(--tc) 55%,#fff)!important}
+.pf-cap{min-height:2.6em;margin-top:8px;font-size:.82rem;line-height:1.3;color:var(--slate)}
+.pf-cap b{color:var(--ink);font-weight:600}
+
+/* Hinweis-Zeilen und Info-Kästen im Finder: Hover und Dark Mode */
+.wiz-sum-gesetz-row:hover{background:var(--navy-tint);border-color:var(--teal)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #page-produktfinder [style*="#eff6ff"]{background:rgba(108,184,218,.10)!important;border-color:rgba(108,184,218,.30)!important}}
+:root[data-theme="dark"] #page-produktfinder [style*="#eff6ff"]{background:rgba(108,184,218,.10)!important;border-color:rgba(108,184,218,.30)!important}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) #page-produktfinder [style*="#eff6ff"] *{color:var(--ink)!important;border-color:rgba(108,184,218,.25)!important}
+  :root:not([data-theme="light"]) #page-produktfinder [style*="#eff6ff"] [style*="background"]{background:rgba(108,184,218,.08)!important}}
+:root[data-theme="dark"] #page-produktfinder [style*="#eff6ff"] *{color:var(--ink)!important;border-color:rgba(108,184,218,.25)!important}
+:root[data-theme="dark"] #page-produktfinder [style*="#eff6ff"] [style*="background"]{background:rgba(108,184,218,.08)!important}
 </style>
 </head>
 <body>
@@ -6770,6 +6799,54 @@ window.addEventListener('scroll', function() {
 
   // Bereits gerenderte Inhalte nachrüsten
   try { counts(); } catch (e) {}
+  try { renderWizSummary(); } catch (e) {}
+})();
+// ── Seitenleiste: Hinweise nach oben, Themen als Symbole mit Namenszeile ─────
+(function() {
+  const box = document.getElementById('wiz-summary');
+  if (!box) return;
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const labelOf = row => ((row.querySelector('.wiz-sum-label') || {}).textContent || '').trim();
+  let cap = null;
+  function activeText() {
+    const act = ALL_THEMEN.filter(t => wizSelectedTopics.has(t.id)).map(t => t.label);
+    return act.length ? `Aktiv: <b>${esc(act.join(', '))}</b>` : 'Fahren Sie über ein Symbol, um das Thema zu sehen.';
+  }
+  const prev = renderWizSummary;
+  renderWizSummary = function() {
+    prev.apply(this, arguments);
+    const items = document.getElementById('wiz-sum-items'); if (!items) return;
+    const rows = [...items.children];
+    const themen = rows.find(r => labelOf(r) === 'Themen');
+    const gesetze = rows.find(r => labelOf(r) === 'Gesetzliche Hinweise');
+    // Gesetzliche Hinweise direkt nach Schwerpunkt/Berufsgruppe
+    if (gesetze && themen) items.insertBefore(gesetze, themen);
+    if (!themen) return;
+    const pills = [...themen.querySelectorAll('.topic-filter-pill')];
+    if (!pills.length) return;
+    pills[0].parentElement.classList.add('pf-icons');
+    pills.forEach(p => {
+      const m = (p.getAttribute('onclick') || '').match(/toggleResultTopic\('([^']+)'/); if (!m) return;
+      const t = ALL_THEMEN.find(x => x.id === m[1]); if (!t) return;
+      const on = wizSelectedTopics.has(t.id);
+      p.classList.add('pf-ic');
+      p.style.setProperty('--tc', t.color || '#156082');
+      p.innerHTML = t.icon || (typeof defaultTopicIcon === 'function' ? defaultTopicIcon() : '');
+      p.setAttribute('aria-label', t.label + (on ? ' (aktiv)' : ''));
+      p.setAttribute('aria-pressed', String(on));
+      p.dataset.name = t.label;
+      p.title = t.label;
+    });
+    cap = document.createElement('div');
+    cap.className = 'pf-cap'; cap.setAttribute('aria-live', 'polite');
+    cap.innerHTML = activeText();
+    themen.appendChild(cap);
+  };
+  // Name des Themas beim Überfahren oder Fokussieren
+  const show = e => { const p = e.target.closest && e.target.closest('.pf-ic'); if (p && cap) cap.innerHTML = `<b>${esc(p.dataset.name)}</b>${p.classList.contains('active') ? ' · aktiv, Klick blendet aus' : ' · Klick blendet ein'}`; };
+  const reset = e => { if (cap && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.pf-ic'))) cap.innerHTML = activeText(); };
+  box.addEventListener('pointerover', show); box.addEventListener('focusin', show);
+  box.addEventListener('pointerout', reset); box.addEventListener('focusout', reset);
   try { renderWizSummary(); } catch (e) {}
 })();
 </script>
