@@ -3335,9 +3335,9 @@ button, input, select, textarea { font-family: inherit; }
         <div class="lx-stage" aria-hidden="true">
           <div class="lx-glow"></div>
           <span class="ehs-mark"><i class="lx-p-top" style="--m:var(--pc-top)"></i><i class="lx-p-bl" style="--m:var(--pc-bl)"></i><i class="lx-p-br" style="--m:var(--pc-br)"></i></span>
-          <span class="lx-tag lx-t1">Telematikinfrastruktur</span>
-          <span class="lx-tag lx-t2">Cybersecurity</span>
-          <span class="lx-tag lx-t3">IT-Infrastruktur</span>
+          <span class="lx-tag lx-t1">Beratung</span>
+          <span class="lx-tag lx-t2">Umsetzung</span>
+          <span class="lx-tag lx-t3">Begleitung</span>
         </div>
       </div>
     </div>
@@ -6679,7 +6679,6 @@ window.addEventListener('scroll', function() {
     }
     renderTabs(); renderLefts(); renderOrgSelect(); renderChips(); renderCards();
     const lead = THEMES.filter(x => productsOf(x.slug).length);
-    page.querySelectorAll('.lx-tag').forEach((tag, i) => { if (lead[i]) tag.textContent = lead[i].name; });
     if (!nrsOf(state.org) && state.org !== 'alle') state.org = 'alle';
     if (state.theme !== 'alle' && !themeOf(state.theme)) state.theme = 'alle';
     if (sel.kind === 'group' && GROUPS.some(g => g.key === sel.id)) showGroup(sel.id);
