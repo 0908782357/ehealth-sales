@@ -5437,8 +5437,12 @@ window.addEventListener('scroll', function() {
     };
 
     try {
-      await _sb.from('anfragen').insert(payload);
-    } catch(e) { console.warn('Anfrage-Insert fehlgeschlagen:', e); }
+      const { error: insErr } = await _sbPublic.from('anfragen').insert(payload);
+      if (insErr) throw insErr;
+    } catch(e) {
+      console.error('Anfrage-Insert fehlgeschlagen:', e);
+      payload._speicherFehler = (e && e.message) || String(e);
+    }
 
     {
       const firma   = payload.firma   ? `<br><strong>Einrichtung:</strong> ${payload.firma}`   : '';
@@ -5467,6 +5471,7 @@ window.addEventListener('scroll', function() {
                <strong>Berufsgruppe:</strong> ${payload.berufsgruppe || '–'}<br>
                <strong>Interesse:</strong> ${products}</p>
             ${notiz}
+            ${payload._speicherFehler ? `<p style="background:#fee2e2;color:#991b1b;padding:10px 12px;border-radius:8px"><strong>Achtung:</strong> Diese Anfrage konnte nicht im Anfragecenter gespeichert werden (${payload._speicherFehler}). Bitte manuell erfassen.</p>` : ''}
             ${signatur}
           </div>`,
         }),
@@ -5590,6 +5595,11 @@ window.addEventListener('scroll', function() {
   const _SB_URL  = 'https://focysklymhmcfwgxdtuk.supabase.co';
   const _SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
   const _sb = window.supabase.createClient(_SB_URL, _SB_ANON);
+  // Eigener anonymer Client nur für öffentliche Anfragen: Ist im selben Browser jemand im Portal
+  // angemeldet, würde _sb dessen Session mitschicken und die RLS (INSERT nur für anon) lehnt ab.
+  const _sbPublic = window.supabase.createClient(_SB_URL, _SB_ANON, {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: 'ehs-public-anon' }
+  });
   const RESEND_API_KEY = window.RESEND_API_KEY || '';
 
   // ===== PARTNER-CONFIG =====
