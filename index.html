@@ -1804,6 +1804,13 @@ button.lx-node:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 .lx-x{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;border:1px solid var(--border-mid);background:var(--bg);color:var(--ink);font-size:1.4rem;line-height:1;cursor:pointer}
 .lx-x:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 #lx-katalog{scroll-margin-top:84px}
+.lx-right.lx-many{gap:8px}
+.lx-right.lx-many .lx-sol{padding:10px 14px}
+.lx-right.lx-many .lx-sol b{font-size:.98rem}
+.lx-right.lx-many .lx-sol .lx-cnt{font-size:.8rem}
+.lx-detail .lx-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.lx-detail .lx-actions .btn{margin-top:0}
+
 
 </style>
 </head>
@@ -6208,6 +6215,7 @@ window.addEventListener('scroll', function() {
   const moving = () => !rm.matches && page.classList.contains('active');
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const plural = n => n === 1 ? '1 Produkt' : n + ' Produkte';
+  const cntLabel = n => n ? plural(n) : 'Individuelle Beratung';
 
   // Einrichtungen → Berufsgruppen-Nummern (Tabelle berufsgruppen)
   const ORGS = {
@@ -6278,6 +6286,7 @@ window.addEventListener('scroll', function() {
   function orgsFor(theme) {
     if (!PRODUCTS.length) return Object.keys(ORGS);
     const list = productsOf(theme);
+    if (!list.length) return Object.keys(ORGS);
     return Object.keys(ORGS).filter(o => list.some(p => fitsOrg(p, o)));
   }
   function mark() {
@@ -6291,6 +6300,15 @@ window.addEventListener('scroll', function() {
     detail.setAttribute('aria-labelledby', 'lx-tab-' + id);
     const t = THEMES.find(x => x.slug === id), list = productsOf(id);
     if (!t) { detail.innerHTML = ''; mark(); return; }
+    if (!list.length) {
+      detail.innerHTML = `<div class="lx-swap"><h3>${esc(t.name)}</h3>
+          <p>Für dieses Thema stellen wir Ihnen die passende Lösung individuell zusammen. Der Produktfinder fragt Ihre Anforderungen ab, oder Sie sprechen direkt mit uns.</p>
+          <div class="lx-actions"><button type="button" class="btn btn-primary" onclick="showPage('produktfinder')">Zum Produktfinder</button><button type="button" class="btn btn-ghost" onclick="showPage('kontakt')">Beratung anfragen</button></div></div>
+        <ul class="lx-swap"><li><span>Analyse Ihrer Ausgangslage</span></li><li><span>Auswahl passender Anbieter aus unserem Partnernetzwerk</span></li><li><span>Ein Ansprechpartner von der Auswahl bis zur Einführung</span></li></ul>`;
+      mark();
+      if (focus) tabs.find(tb => tb.dataset.id === id).focus();
+      return;
+    }
     const makers = [...new Set(list.map(p => p.hersteller).filter(Boolean))];
     detail.innerHTML = `<div class="lx-swap"><h3>${esc(t.name)}</h3>
         <p>${plural(list.length)} von ${makers.length === 1 ? '1 Hersteller' : makers.length + ' Herstellern'}: ${esc(makers.slice(0, 4).join(', '))}${makers.length > 4 ? ' und weitere' : ''}.</p>
@@ -6411,7 +6429,7 @@ window.addEventListener('scroll', function() {
       .map(p => ({ id: p.id != null ? p.id : 'nr' + p.nr, dbId: p.id, produkt: p.produkt, hersteller: p.hersteller, beschreibung: p.beschreibung,
         verfuegbar: p.verfuegbar || [], loesungAktiv: !!p.loesungAktiv, detailPage: p.detailPage, image: p.imageUrl || null,
         themes: (p.themen && p.themen.length) ? p.themen.map(x => x.slug) : themesAll.filter(x => x.pref && p[x.pref]).map(x => x.slug) }));
-    THEMES = themesAll.filter(x => PRODUCTS.some(p => p.themes.includes(x.slug)));
+    THEMES = themesAll;
     const s = JSON.stringify([THEMES.map(x => x.slug), PRODUCTS.map(p => p.id)]);
     if (s === sig) return;
     sig = s;
@@ -6420,9 +6438,11 @@ window.addEventListener('scroll', function() {
       grid.innerHTML = `<div class="lx-error"><b>Die Produkte konnten gerade nicht geladen werden.</b> Bitte laden Sie die Seite neu, oder nutzen Sie den Produktfinder.</div>`;
       return;
     }
-    tabBox.innerHTML = THEMES.map((x, i) => `<button class="lx-sol" role="tab" id="lx-tab-${esc(x.slug)}" data-id="${esc(x.slug)}" aria-selected="false" aria-controls="lxDetail" tabindex="-1"><span class="ehs-mark" aria-hidden="true"><i style="--m:var(${PIECES[i % 3]})"></i></span><span><b>${esc(x.name)}</b><small class="lx-cnt">${plural(productsOf(x.slug).length)}</small></span><span class="lx-arr" aria-hidden="true">→</span></button>`).join('');
+    tabBox.innerHTML = THEMES.map((x, i) => `<button class="lx-sol" role="tab" id="lx-tab-${esc(x.slug)}" data-id="${esc(x.slug)}" aria-selected="false" aria-controls="lxDetail" tabindex="-1"><span class="ehs-mark" aria-hidden="true"><i style="--m:var(${PIECES[i % 3]})"></i></span><span><b>${esc(x.name)}</b><small class="lx-cnt">${cntLabel(productsOf(x.slug).length)}</small></span><span class="lx-arr" aria-hidden="true">→</span></button>`).join('');
     tabs = [...tabBox.querySelectorAll('.lx-sol')]; wireTabs();
-    page.querySelectorAll('.lx-tag').forEach((tag, i) => { if (THEMES[i]) tag.textContent = THEMES[i].name; });
+      tabBox.classList.toggle('lx-many', THEMES.length > 5);
+    const lead = THEMES.filter(x => productsOf(x.slug).length);
+      page.querySelectorAll('.lx-tag').forEach((tag, i) => { if (lead[i]) tag.textContent = lead[i].name; });
     Object.keys(ORGS).forEach(o => { const el = page.querySelector(`[data-sub="${o}"]`); if (el) el.textContent = plural(PRODUCTS.filter(p => fitsOrg(p, o)).length); });
     if (state.theme !== 'alle' && !THEMES.some(x => x.slug === state.theme)) state.theme = 'alle';
     renderChips(); renderCards();
