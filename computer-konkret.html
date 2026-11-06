@@ -439,6 +439,21 @@ footer a:hover { color: var(--on-dark); }
   const src = 'ivoris' + (utm ? '-' + utm : '');
   const finderUrl = 'index.html?embed=1&bg=' + encodeURIComponent('5:Zahnärzte,5:Kieferorthopäden') + '&src=' + src;
   const frame = document.getElementById('finder');
+
+  // Anonyme Besuchszählung (1× pro Sitzung, keine Cookies/IP) → admin/kampagnen-report.html
+  try {
+    const local = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+    const key = 'ehs-visit-' + src;
+    if (!local && !sessionStorage.getItem(key)) {
+      sessionStorage.setItem(key, '1');
+      const K = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvY3lza2x5bWhtY2Z3Z3hkdHVrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1NTY1NTUsImV4cCI6MjEwMzEzMjU1NX0.VxgHwrnFUd-_7Q3pZx0L-7xY5roBZ__rUnLc5W7lOgg';
+      fetch('https://focysklymhmcfwgxdtuk.supabase.co/rest/v1/kampagnen_besuche', {
+        method: 'POST', keepalive: true,
+        headers: { apikey: K, Authorization: 'Bearer ' + K, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+        body: JSON.stringify({ kampagne: 'ivoris', kanal: utm || 'direkt', ereignis: 'besuch' })
+      }).catch(() => {});
+    }
+  } catch (e) { /* Zählung ist optional */ }
   frame.src = finderUrl;
   document.getElementById('finder-direct').href = finderUrl.replace('embed=1&', '');
 

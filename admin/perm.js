@@ -29,6 +29,7 @@
     { id: 'produktfinder', kFixed:'hidden', sDef:'read',     prDef:'edit',     stDef:'edit'     },
     { id: 'regulatorik',   kFixed:'hidden', sDef:'read',     prDef:'read',     stDef:'read'     },
     { id: 'kunden_mgmt',   kFixed:'hidden', sFixed:'hidden', prFixed:'hidden', stFixed:'hidden' },
+    { id: 'kampagnen_report', kFixed:'hidden', sFixed:'hidden', prFixed:'hidden', stFixed:'hidden' }, // nur Admins
     { id: 'verwaltung',    kFixed:'hidden', sFixed:'hidden', prFixed:'hidden', stFixed:'hidden' },
   ];
 

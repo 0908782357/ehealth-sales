@@ -3913,7 +3913,23 @@ window.addEventListener('scroll', function() {
     `).join('');
   }
 
+  // Kampagnen-Zählung: erster Finder-Klick je Sitzung (nur im Embed-Modus mit ?src=kampagne[-kanal])
+  function trackFinderStart() {
+    if (!EMBED_SRC) return;
+    try {
+      if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return;
+      const key = 'ehs-finder-start-' + EMBED_SRC;
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+      const [kampagne, ...rest] = EMBED_SRC.toLowerCase().split('-');
+      _sbPublic.from('kampagnen_besuche')
+        .insert({ kampagne, kanal: rest.join('-') || 'direkt', ereignis: 'finder_start' })
+        .then(({ error }) => { if (error) console.warn('Kampagnen-Zählung:', error.message); });
+    } catch (e) { /* optional */ }
+  }
+
   function selectTopic(topicId) {
+    trackFinderStart();
     const topic = ALL_THEMEN.find(t => t.id === topicId) || ASSESSMENT_TOPICS.find(t => t.id === topicId);
     wizStep0Pref = topic ? topic.pref : null;
     wizStep0TopicId = topicId;
@@ -3934,6 +3950,7 @@ window.addEventListener('scroll', function() {
   }
 
   function startAssessment() {
+    trackFinderStart();
     assessmentAnswers = [];
     assessmentCurrentQ = 0;
     renderAssessmentQuestion();
