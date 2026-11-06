@@ -1965,6 +1965,34 @@ button, input, select, textarea { font-family: inherit; }
   :root:not([data-theme="light"]) #page-produktfinder [style*="#eff6ff"] [style*="background"]{background:rgba(108,184,218,.08)!important}}
 :root[data-theme="dark"] #page-produktfinder [style*="#eff6ff"] *{color:var(--ink)!important;border-color:rgba(108,184,218,.25)!important}
 :root[data-theme="dark"] #page-produktfinder [style*="#eff6ff"] [style*="background"]{background:rgba(108,184,218,.08)!important}
+
+/* Berufsgruppen-Karte: Klick trifft immer die Karte, nicht die Textzeile */
+.bg-btn > *{pointer-events:none}
+
+/* ── Angebot: Kosten mit großen, hochzählenden Beträgen ───────────── */
+#wiz-offer-summary{background:var(--surface);border:1px solid var(--border-mid);border-radius:18px;overflow:hidden;box-shadow:0 14px 40px rgba(14,40,65,.12);animation:pfIn .5s cubic-bezier(.2,.8,.2,1) both}
+.pf-offer-head{position:relative;overflow:hidden;background:linear-gradient(135deg,#0E2841 0%,#17375A 100%);color:#F4F6F9;padding:22px 24px 24px}
+.pf-offer-head::before{content:"";position:absolute;inset:-40%;background:radial-gradient(closest-side,rgba(127,211,91,.22),transparent 70%) 80% 20%/60% 60% no-repeat;animation:pfDrift 9s ease-in-out infinite alternate;pointer-events:none}
+@keyframes pfDrift{to{transform:translate(-18%,12%)}}
+.pf-offer-head .pf-eyebrow{position:relative;display:flex;align-items:center;gap:10px;font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7FD35B}
+.pf-offer-head .pf-eyebrow .ehs-mark{height:22px;color:#F4F6F9}
+.pf-tiles{position:relative;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:14px}
+.pf-tile{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);border-radius:14px;padding:14px 16px;display:grid;gap:2px}
+.pf-tile small{font-size:.75rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(244,246,249,.7)}
+.pf-tile b{font-family:'ADLaM Display','Avenir Next',system-ui,sans-serif;font-weight:400;font-size:clamp(1.7rem,3vw,2.3rem);line-height:1.1;color:#fff;font-variant-numeric:tabular-nums}
+.pf-tile span{font-size:.82rem;color:rgba(244,246,249,.72)}
+.pf-tile.pulse{animation:pfPulse .9s ease-out}
+@keyframes pfPulse{0%{box-shadow:0 0 0 0 rgba(127,211,91,.55);border-color:#7FD35B}100%{box-shadow:0 0 0 14px rgba(127,211,91,0);border-color:rgba(255,255,255,.14)}}
+#wiz-offer-summary .offer-sum-section{padding:18px 24px}
+#wiz-offer-summary .offer-sum-label{color:var(--accent)}
+#wiz-offer-summary .offer-sum-row{color:var(--ink);border-bottom-color:var(--border)}
+#wiz-offer-summary .offer-sum-row.pf-new{animation:pfRow .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes pfRow{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+#wiz-offer-summary .offer-sum-total{color:var(--ink)}
+#wiz-offer-summary .offer-sum-total > span:last-child{color:var(--accent)}
+#wiz-offer-summary .offer-price-sub{color:var(--slate)}
+#wiz-offer-summary .offer-sum-divider{background:var(--border-mid);height:1px}
+@media (prefers-reduced-motion: reduce){#wiz-offer-summary,.pf-offer-head::before,.pf-tile.pulse,#wiz-offer-summary .offer-sum-row.pf-new{animation:none!important}}
 </style>
 </head>
 <body>
@@ -6848,6 +6876,54 @@ window.addEventListener('scroll', function() {
   box.addEventListener('pointerover', show); box.addEventListener('focusin', show);
   box.addEventListener('pointerout', reset); box.addEventListener('focusout', reset);
   try { renderWizSummary(); } catch (e) {}
+})();
+// ── Angebot: Kopf mit hochzählenden Gesamtbeträgen ─────
+(function() {
+  const box = document.getElementById('wiz-offer-summary');
+  if (!box || typeof updateOfferTotal !== 'function') return;
+  const rm = matchMedia('(prefers-reduced-motion: reduce)');
+  const money = new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' });
+  const parse = s => { const m = String(s).replace(/\s/g, '').match(/-?[\d.]+(,\d+)?/); return m ? Number(m[0].replace(/\./g, '').replace(',', '.')) : 0; };
+  const last = { m: 0, o: 0 };
+  const seenRows = new Set();
+  function count(el, from, to) {
+    if (rm.matches || from === to) { el.textContent = money.format(to); return; }
+    const t0 = performance.now(), d = 750;
+    (function step(t) {
+      const p = Math.min(1, (t - t0) / d), e = 1 - Math.pow(1 - p, 3);
+      el.textContent = money.format(from + (to - from) * e);
+      if (p < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+  const prev = updateOfferTotal;
+  updateOfferTotal = function() {
+    const r = prev.apply(this, arguments);
+    if (box.style.display === 'none' || !box.innerHTML.trim()) { last.m = 0; last.o = 0; seenRows.clear(); return r; }
+    const sections = [...box.querySelectorAll('.offer-sum-section')];
+    const totalOf = label => { const s = sections.find(x => (x.querySelector('.offer-sum-label') || {}).textContent === label); if (!s) return null;
+      const span = s.querySelector('.offer-sum-total > span:last-child'); return span ? parse(span.firstChild ? span.firstChild.textContent : span.textContent) : 0; };
+    const m = totalOf('Monatliche Kosten'), o = totalOf('Einmalige Kosten');
+    const tiles = [];
+    if (m !== null) tiles.push(`<div class="pf-tile" data-k="m"><small>Monatlich</small><b>${money.format(last.m)}</b><span>pro Monat, netto</span></div>`);
+    if (o !== null) tiles.push(`<div class="pf-tile" data-k="o"><small>Einmalig</small><b>${money.format(last.o)}</b><span>einmalig, netto</span></div>`);
+    box.insertAdjacentHTML('afterbegin', `<div class="pf-offer-head"><div class="pf-eyebrow"><span class="ehs-mark" aria-hidden="true"><i style="--m:var(--pc-top)"></i><i style="--m:var(--pc-bl)"></i><i style="--m:var(--pc-br)"></i></span>Ihr Angebot</div><div class="pf-tiles" aria-live="polite">${tiles.join('')}</div></div>`);
+    const run = (k, val) => {
+      const tile = box.querySelector(`.pf-tile[data-k="${k}"]`); if (!tile || val === null) return;
+      if (val !== last[k] && !rm.matches) { tile.classList.remove('pulse'); void tile.offsetWidth; tile.classList.add('pulse'); }
+      count(tile.querySelector('b'), last[k], val); last[k] = val;
+    };
+    run('m', m); run('o', o);
+    if (m === null) last.m = 0; if (o === null) last.o = 0;
+    // neue Positionen gleiten herein
+    const now = new Set();
+    box.querySelectorAll('.offer-sum-row').forEach((row, i) => {
+      const key = (row.firstElementChild || row).textContent.replace(/\s×\s\d+$/, '').trim();
+      now.add(key);
+      if (!seenRows.has(key)) { row.classList.add('pf-new'); row.style.animationDelay = (i * 40) + 'ms'; }
+    });
+    seenRows.clear(); now.forEach(k => seenRows.add(k));
+    return r;
+  };
 })();
 </script>
 </body>
