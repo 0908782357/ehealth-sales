@@ -1803,6 +1803,23 @@ button.lx-node:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 .lx-dlg-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
 .lx-x{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;border:1px solid var(--border-mid);background:var(--bg);color:var(--ink);font-size:1.4rem;line-height:1;cursor:pointer}
 .lx-x:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+/* ── Lösungsseite: Berufsgruppen in der Verbindungsgrafik ───────── */
+.lx-node[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+.lx-sol.dim{opacity:.5}
+.lx-sol.lx-hit{border-color:var(--accent)}
+.lx-sol.lx-hit .ehs-mark{color:var(--accent)}
+.lx-kicker{display:block;font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.lx-bgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;align-content:start}
+.lx-bg{display:grid;gap:2px;text-align:left;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--border-mid);border-radius:10px;padding:10px 12px;cursor:pointer;transition:border-color .2s}
+.lx-bg:hover{border-color:var(--teal)}
+.lx-bg:focus-visible,.lx-back:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.lx-bg b{font-weight:600;font-size:.95rem}
+.lx-bg small{color:var(--slate);font-size:.8rem}
+.lx-back{font:inherit;font-size:.9rem;font-weight:600;color:var(--accent);background:none;border:0;padding:0;cursor:pointer;margin-bottom:8px}
+.lx-ti{display:grid;gap:12px;margin:0;background:var(--bg);border:1px solid var(--border-mid);border-radius:12px;padding:16px 18px}
+.lx-ti dt{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--slate)}
+.lx-ti dd{margin:2px 0 0;color:var(--ink)}
+.lx-note{color:var(--slate)}
 #lx-katalog{scroll-margin-top:84px}
 .lx-right.lx-many{gap:8px}
 .lx-right.lx-many .lx-sol{padding:10px 14px}
@@ -3185,16 +3202,11 @@ button, input, select, textarea { font-family: inherit; }
       <div class="section-header lx-reveal">
         <span class="section-label">Für alle Leistungserbringer</span>
         <h2 id="lx-h-hub">Wir verbinden Ihre Einrichtung mit der passenden Lösung.</h2>
-        <p>Wählen Sie ein Thema oder Ihre Einrichtung. Die Verbindung zeigt, was es dafür gibt, und führt Sie direkt zu den passenden Produkten.</p>
+        <p>Wählen Sie links Ihre Berufsgruppe oder rechts ein Thema. Die Verbindung zeigt, was zusammenpasst, und führt Sie direkt zu den passenden Produkten.</p>
       </div>
       <div class="lx-hub" id="lxHub">
         <svg class="lx-wires" id="lxWires" aria-hidden="true"></svg>
-        <ul class="lx-col lx-left" aria-label="Einrichtungen">
-          <li><button type="button" class="lx-node" data-id="praxis"><span class="lx-ic"><svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg></span><span><b>Arztpraxen &amp; MVZ</b><span class="lx-sub" data-sub="praxis">Niederlassung</span></span></button></li>
-          <li><button type="button" class="lx-node" data-id="klinik"><span class="lx-ic"><svg viewBox="0 0 24 24"><path d="M4 20V8l8-4 8 4v12M9 20v-5h6v5M12 8v4M10 10h4"/></svg></span><span><b>Kliniken &amp; Reha</b><span class="lx-sub" data-sub="klinik">Stationär</span></span></button></li>
-          <li><button type="button" class="lx-node" data-id="apo"><span class="lx-ic"><svg viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="2"/><path d="M8 9V6a4 4 0 0 1 8 0v3M12 12v5M9.5 14.5h5"/></svg></span><span><b>Apotheken</b><span class="lx-sub" data-sub="apo">Offizin</span></span></button></li>
-          <li><button type="button" class="lx-node" data-id="pflege"><span class="lx-ic"><svg viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg></span><span><b>Pflege</b><span class="lx-sub" data-sub="pflege">Einrichtungen &amp; Dienste</span></span></button></li>
-        </ul>
+        <ul class="lx-col lx-left" id="lxOrgs" aria-label="Berufsgruppen"></ul>
         <div class="lx-core">
           <div class="lx-ring" id="lxCore"><span class="ehs-mark" aria-hidden="true"><i style="--m:var(--pc-top)"></i><i style="--m:var(--pc-bl)"></i><i style="--m:var(--pc-br)"></i></span></div>
           <div><b>ehealth Sales</b><span>Ein Ansprechpartner</span></div>
@@ -3215,21 +3227,15 @@ button, input, select, textarea { font-family: inherit; }
       <div class="section-header lx-reveal">
         <span class="section-label">Produktkatalog</span>
         <h2 id="lx-h-cat">Alle Produkte im Überblick.</h2>
-        <p>Filtern Sie nach Thema und Einrichtung oder suchen Sie direkt nach Produkt und Hersteller.</p>
+        <p>Filtern Sie nach Thema und Berufsgruppe oder suchen Sie direkt nach Produkt und Hersteller.</p>
       </div>
       <div class="lx-bar" role="search">
         <div class="lx-chips" id="lxThemeChips" role="group" aria-label="Thema">
           <button type="button" class="lx-chip" data-theme="alle" aria-pressed="true">Alle Themen</button>
         </div>
         <div class="lx-bar-row">
-          <label class="lx-field"><span class="lx-vh">Einrichtung</span>
-            <select id="lxOrg">
-              <option value="alle">Alle Einrichtungen</option>
-              <option value="praxis">Arztpraxen &amp; MVZ</option>
-              <option value="klinik">Kliniken &amp; Reha</option>
-              <option value="apo">Apotheken</option>
-              <option value="pflege">Pflege</option>
-            </select>
+          <label class="lx-field"><span class="lx-vh">Berufsgruppe</span>
+            <select id="lxOrg"><option value="alle">Alle Berufsgruppen</option></select>
           </label>
           <label class="lx-field lx-search"><span class="lx-vh">Suche</span>
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
@@ -6221,6 +6227,7 @@ window.addEventListener('scroll', function() {
     }
   });
 // ── Lösungsseite: Puzzle-Hero, Verbindungsgrafik und Produktkatalog ─────
+// Alle Inhalte (Themen, Berufsgruppen, Produkte) kommen aus Supabase; neue Einträge erscheinen automatisch.
 (function() {
   const page = document.getElementById('page-loesungen');
   if (!page) return;
@@ -6229,17 +6236,40 @@ window.addEventListener('scroll', function() {
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const plural = n => n === 1 ? '1 Produkt' : n + ' Produkte';
   const cntLabel = n => n ? plural(n) : 'Individuelle Beratung';
-
-  // Einrichtungen → Berufsgruppen-Nummern (Tabelle berufsgruppen)
-  const ORGS = {
-    praxis: { label: 'Arztpraxen & MVZ', bg: [4, 5, 6] },
-    klinik: { label: 'Kliniken & Reha', bg: [8, 23] },
-    apo:    { label: 'Apotheken', bg: [7] },
-    pflege: { label: 'Pflege', bg: [21, 22] }
-  };
   const PIECES = ['--pc-top', '--pc-bl', '--pc-br'];
-  let THEMES = [], PRODUCTS = [], BG = BERUFSGRUPPEN_NAMES, sig = '';
-  const fitsOrg = (p, org) => org === 'alle' || ORGS[org].bg.some(n => p.verfuegbar.includes(n));
+
+  // Daten: THEMES [{slug,name,farbe}], PRODUCTS [{id,produkt,…,verfuegbar:[nr],themes:[slug]}], BGROWS [{nr,name,gruppe,ti_*}]
+  let THEMES = [], PRODUCTS = [], BGROWS = [], GROUPS = [];
+  const BGNAME = nr => (BGROWS.find(b => b.nr === nr) || {}).name;
+  const slugify = s => String(s).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  function buildGroups() {
+    const map = new Map();
+    for (const b of BGROWS) {
+      const name = b.gruppe || 'Weitere Leistungserbringer';
+      if (!map.has(name)) map.set(name, { key: 'g:' + slugify(name), name, bgs: [] });
+      map.get(name).bgs.push(b);
+    }
+    GROUPS = [...map.values()];
+  }
+  // Filterschlüssel: 'alle' | 'g:<gruppe>' | 'b:<nr>'
+  function nrsOf(key) {
+    if (!key || key === 'alle') return null;
+    if (key.startsWith('b:')) return [Number(key.slice(2))];
+    const g = GROUPS.find(x => x.key === key);
+    return g ? g.bgs.map(b => b.nr) : null;
+  }
+  const fitsOrg = (p, key) => { const n = nrsOf(key); return !n || n.some(x => p.verfuegbar.includes(x)); };
+  const productsOf = theme => PRODUCTS.filter(p => p.themes.includes(theme));
+  const countFor = key => PRODUCTS.filter(p => fitsOrg(p, key)).length;
+
+  const ICONS = {
+    arzt: '<path d="M12 4v16M4 12h16"/>',
+    heil: '<path d="M7 20c0-4 2-6 5-6s5 2 5 6M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM4 9l3 2M20 9l-3 2"/>',
+    hilf: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/>',
+    pfleg: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+    other: '<circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/>'
+  };
+  const iconFor = name => { const n = name.toLowerCase(); return ICONS[n.includes('arzt') || n.includes('praxen') ? 'arzt' : n.includes('heil') ? 'heil' : n.includes('hilf') ? 'hilf' : n.includes('pfleg') ? 'pfleg' : 'other']; };
 
   /* ---------- Hero ---------- */
   const hero = page.querySelector('.lx-hero');
@@ -6267,15 +6297,15 @@ window.addEventListener('scroll', function() {
 
   /* ---------- Verbindungsgrafik ---------- */
   const hub = document.getElementById('lxHub'), svg = document.getElementById('lxWires'), core = document.getElementById('lxCore');
-  const tabBox = document.getElementById('lxTabs'), detail = document.getElementById('lxDetail');
-  const lefts = [...hub.querySelectorAll('.lx-node')];
+  const orgBox = document.getElementById('lxOrgs'), tabBox = document.getElementById('lxTabs'), detail = document.getElementById('lxDetail');
   const NS = 'http://www.w3.org/2000/svg';
-  let tabs = [...tabBox.querySelectorAll('.lx-sol')], sel = 'ti', wires = [];
+  let lefts = [...orgBox.querySelectorAll('.lx-node')], tabs = [...tabBox.querySelectorAll('.lx-sol')], wires = [];
+  let sel = { kind: 'theme', id: 'ti' };
   function rel(el) { const h = hub.getBoundingClientRect(), r = el.getBoundingClientRect(); return { l: r.left - h.left, t: r.top - h.top, r: r.right - h.left, b: r.bottom - h.top, cx: r.left - h.left + r.width / 2, cy: r.top - h.top + r.height / 2 }; }
   function build() {
-    if (!hub.offsetWidth) return;
+    if (!hub.offsetWidth || !lefts.length) return;
     svg.innerHTML = ''; wires = [];
-    const c = rel(core), vertical = rel(lefts[0]).b < c.t;
+    const c = rel(core), vertical = getComputedStyle(hub).gridTemplateColumns.trim().split(/\s+/).length === 1;
     const mk = (d, kind, id) => {
       const p = document.createElementNS(NS, 'path'); p.setAttribute('d', d); svg.appendChild(p);
       const dot = document.createElementNS(NS, 'circle'); dot.setAttribute('r', kind === 'out' ? 4 : 3.2); svg.appendChild(dot);
@@ -6295,21 +6325,31 @@ window.addEventListener('scroll', function() {
     }
     mark();
   }
-  const productsOf = theme => PRODUCTS.filter(p => p.themes.includes(theme));
-  function orgsFor(theme) {
-    if (!PRODUCTS.length) return Object.keys(ORGS);
-    const list = productsOf(theme);
-    if (!list.length) return Object.keys(ORGS);
-    return Object.keys(ORGS).filter(o => list.some(p => fitsOrg(p, o)));
+  // Welche Gruppen/Themen leuchten bei der aktuellen Auswahl?
+  function links() {
+    const groupKey = sel.kind === 'group' ? sel.id : sel.kind === 'bg' ? (GROUPS.find(g => g.bgs.some(b => b.nr === sel.id)) || {}).key : null;
+    if (groupKey) {
+      const key = sel.kind === 'bg' ? 'b:' + sel.id : groupKey;
+      return { ins: [groupKey], outs: THEMES.filter(t => productsOf(t.slug).some(p => fitsOrg(p, key))).map(t => t.slug) };
+    }
+    const list = productsOf(sel.id);
+    const ins = list.length ? GROUPS.filter(g => list.some(p => fitsOrg(p, g.key))).map(g => g.key) : GROUPS.map(g => g.key);
+    return { ins: ins.length ? ins : lefts.map(n => n.dataset.id), outs: [sel.id] };
   }
   function mark() {
-    const to = orgsFor(sel);
-    for (const w of wires) { const on = w.kind === 'out' ? w.id === sel : to.includes(w.id); w.on = on; w.p.classList.toggle('on', on); w.dot.style.display = on ? '' : 'none'; }
-    for (const n of lefts) n.classList.toggle('dim', !to.includes(n.dataset.id));
+    const { ins, outs } = links();
+    for (const w of wires) { const on = w.kind === 'out' ? outs.includes(w.id) : ins.includes(w.id); w.on = on; w.p.classList.toggle('on', on); w.dot.style.display = on ? '' : 'none'; }
+    for (const n of lefts) { n.classList.toggle('dim', !ins.includes(n.dataset.id)); n.setAttribute('aria-pressed', String(sel.kind !== 'theme' && ins.includes(n.dataset.id))); }
+    for (const tb of tabs) {
+      const on = sel.kind === 'theme' && tb.dataset.id === sel.id;
+      tb.setAttribute('aria-selected', String(on));
+      tb.tabIndex = on || (sel.kind !== 'theme' && tb === tabs[0]) ? 0 : -1;
+      tb.classList.toggle('lx-hit', sel.kind !== 'theme' && outs.includes(tb.dataset.id));
+      tb.classList.toggle('dim', sel.kind !== 'theme' && !outs.includes(tb.dataset.id));
+    }
   }
   function showTheme(id, focus) {
-    sel = id;
-    tabs.forEach(tb => { const on = tb.dataset.id === id; tb.setAttribute('aria-selected', String(on)); tb.tabIndex = on ? 0 : -1; });
+    sel = { kind: 'theme', id };
     detail.setAttribute('aria-labelledby', 'lx-tab-' + id);
     const t = THEMES.find(x => x.slug === id), list = productsOf(id);
     if (!t) { detail.innerHTML = ''; mark(); return; }
@@ -6318,17 +6358,50 @@ window.addEventListener('scroll', function() {
           <p>Für dieses Thema stellen wir Ihnen die passende Lösung individuell zusammen. Der Produktfinder fragt Ihre Anforderungen ab, oder Sie sprechen direkt mit uns.</p>
           <div class="lx-actions"><button type="button" class="btn btn-primary" onclick="showPage('produktfinder')">Zum Produktfinder</button><button type="button" class="btn btn-ghost" onclick="showPage('kontakt')">Beratung anfragen</button></div></div>
         <ul class="lx-swap"><li><span>Analyse Ihrer Ausgangslage</span></li><li><span>Auswahl passender Anbieter aus unserem Partnernetzwerk</span></li><li><span>Ein Ansprechpartner von der Auswahl bis zur Einführung</span></li></ul>`;
-      mark();
-      if (focus) tabs.find(tb => tb.dataset.id === id).focus();
-      return;
+    } else {
+      const makers = [...new Set(list.map(p => p.hersteller).filter(Boolean))];
+      detail.innerHTML = `<div class="lx-swap"><h3>${esc(t.name)}</h3>
+          <p>${plural(list.length)} von ${makers.length === 1 ? '1 Hersteller' : makers.length + ' Herstellern'}: ${esc(makers.slice(0, 4).join(', '))}${makers.length > 4 ? ' und weitere' : ''}.</p>
+          <button type="button" class="btn btn-primary lx-go" data-theme="${esc(id)}" data-org="alle">Alle ${plural(list.length)} ansehen</button></div>
+        <ul class="lx-swap">${list.slice(0, 5).map(p => `<li><span><b>${esc(p.produkt)}</b>${p.hersteller ? ` · ${esc(p.hersteller)}` : ''}</span></li>`).join('')}${list.length > 5 ? `<li class="lx-more"><span>und ${list.length - 5} weitere</span></li>` : ''}</ul>`;
     }
-    const makers = [...new Set(list.map(p => p.hersteller).filter(Boolean))];
-    detail.innerHTML = `<div class="lx-swap"><h3>${esc(t.name)}</h3>
-        <p>${plural(list.length)} von ${makers.length === 1 ? '1 Hersteller' : makers.length + ' Herstellern'}: ${esc(makers.slice(0, 4).join(', '))}${makers.length > 4 ? ' und weitere' : ''}.</p>
-        <button type="button" class="btn btn-primary lx-go" data-theme="${esc(id)}">Alle ${plural(list.length)} ansehen</button></div>
-      <ul class="lx-swap">${list.slice(0, 5).map(p => `<li><span><b>${esc(p.produkt)}</b>${p.hersteller ? ` · ${esc(p.hersteller)}` : ''}</span></li>`).join('')}${list.length > 5 ? `<li class="lx-more"><span>und ${list.length - 5} weitere</span></li>` : ''}</ul>`;
     mark();
     if (focus) tabs.find(tb => tb.dataset.id === id).focus();
+  }
+  function showGroup(key) {
+    const g = GROUPS.find(x => x.key === key); if (!g) return;
+    sel = { kind: 'group', id: key };
+    detail.removeAttribute('aria-labelledby');
+    const n = countFor(key);
+    detail.innerHTML = `<div class="lx-swap"><span class="lx-kicker">Berufsgruppen</span><h3>${esc(g.name)}</h3>
+        <p>${g.bgs.length === 1 ? '1 Berufsgruppe' : g.bgs.length + ' Berufsgruppen'}, ${n ? plural(n) + ' im Katalog' : 'Lösungen auf Anfrage'}. Wählen Sie Ihre Berufsgruppe für Details zur TI-Förderung.</p>
+        ${n ? `<button type="button" class="btn btn-primary lx-go" data-theme="alle" data-org="${esc(key)}">Alle ${plural(n)} ansehen</button>` : `<button type="button" class="btn btn-primary" onclick="showPage('kontakt')">Beratung anfragen</button>`}</div>
+      <div class="lx-swap lx-bgs" role="group" aria-label="Berufsgruppen in ${esc(g.name)}">${g.bgs.map(b => { const c = countFor('b:' + b.nr); return `<button type="button" class="lx-bg" data-nr="${b.nr}"><b>${esc(b.name)}</b><small>${cntLabel(c)}</small></button>`; }).join('')}</div>`;
+    mark();
+  }
+  function showBg(nr) {
+    const b = BGROWS.find(x => x.nr === nr); if (!b) return;
+    const g = GROUPS.find(x => x.bgs.includes(b));
+    sel = { kind: 'bg', id: nr };
+    const n = countFor('b:' + nr);
+    const ti = b.ti_foerderbetrag ? `<dl class="lx-ti">
+        <div><dt>TI-Förderung</dt><dd>${esc(b.ti_foerderbetrag)}</dd></div>
+        ${b.ti_foerdergeber ? `<div><dt>Fördergeber</dt><dd>${esc(b.ti_foerdergeber)}</dd></div>` : ''}
+        ${b.ti_rechtsgrundlage ? `<div><dt>Rechtsgrundlage</dt><dd>${esc(b.ti_rechtsgrundlage)}</dd></div>` : ''}</dl>` : `<p class="lx-note">Zur TI-Förderung für diese Berufsgruppe beraten wir Sie individuell.</p>`;
+    detail.innerHTML = `<div class="lx-swap"><button type="button" class="lx-back" data-group="${esc(g ? g.key : '')}">← ${esc(g ? g.name : 'Zurück')}</button><h3>${esc(b.name)}</h3>
+        <p>${n ? `${plural(n)} sind für ${esc(b.name)} geeignet.` : 'Passende Lösungen stellen wir Ihnen individuell zusammen.'}</p>
+        <div class="lx-actions">${n ? `<button type="button" class="btn btn-primary lx-go" data-theme="alle" data-org="b:${nr}">Passende Produkte ansehen</button>` : ''}<button type="button" class="btn btn-ghost" onclick="showPage('produktfinder')">Zum Produktfinder</button></div></div>
+      <div class="lx-swap">${ti}</div>`;
+    mark();
+  }
+  function wireLefts() {
+    lefts.forEach((n, i) => {
+      n.addEventListener('click', () => showGroup(n.dataset.id));
+      n.addEventListener('keydown', e => {
+        if (!['ArrowDown', 'ArrowUp'].includes(e.key)) return;
+        e.preventDefault(); const k = lefts[(i + (e.key === 'ArrowDown' ? 1 : lefts.length - 1)) % lefts.length]; k.focus();
+      });
+    });
   }
   function wireTabs() {
     tabs.forEach((tb, i) => {
@@ -6341,8 +6414,11 @@ window.addEventListener('scroll', function() {
       });
     });
   }
-  detail.addEventListener('click', e => { const b = e.target.closest('.lx-go'); if (b) { setFilter({ theme: b.dataset.theme, org: 'alle', q: '' }); toCatalog(); } });
-  lefts.forEach(n => n.addEventListener('click', () => { setFilter({ theme: 'alle', org: n.dataset.id, q: '' }); toCatalog(); }));
+  detail.addEventListener('click', e => {
+    const go = e.target.closest('.lx-go'); if (go) { setFilter({ theme: go.dataset.theme, org: go.dataset.org, q: '' }); toCatalog(); return; }
+    const bg = e.target.closest('.lx-bg'); if (bg) { showBg(Number(bg.dataset.nr)); return; }
+    const back = e.target.closest('.lx-back'); if (back && back.dataset.group) showGroup(back.dataset.group);
+  });
 
   /* ---------- Katalog ---------- */
   const grid = document.getElementById('lxGrid'), chips = document.getElementById('lxThemeChips');
@@ -6355,7 +6431,7 @@ window.addEventListener('scroll', function() {
   const badge = slug => { const t = themeOf(slug); return t ? `<span class="lx-badge"><i style="background:${esc(t.farbe || '#156082')}"></i>${esc(t.name)}</span>` : ''; };
   function groups(p, max) {
     if (p.verfuegbar.length >= 20) return 'Alle Leistungserbringer';
-    const names = p.verfuegbar.map(n => BG[n]).filter(Boolean);
+    const names = p.verfuegbar.map(BGNAME).filter(Boolean);
     if (!names.length) return 'Auf Anfrage';
     return names.slice(0, max).join(', ') + (names.length > max ? ` und ${names.length - max} weitere` : '');
   }
@@ -6379,6 +6455,20 @@ window.addEventListener('scroll', function() {
     chips.innerHTML = `<button type="button" class="lx-chip" data-theme="alle">Alle Themen</button>` +
       THEMES.map(t => `<button type="button" class="lx-chip" data-theme="${esc(t.slug)}"><i style="background:${esc(t.farbe || '#156082')}"></i>${esc(t.name)} <small>${productsOf(t.slug).length}</small></button>`).join('');
   }
+  function renderOrgSelect() {
+    orgSel.innerHTML = `<option value="alle">Alle Berufsgruppen</option>` + GROUPS.map(g =>
+      `<optgroup label="${esc(g.name)}"><option value="${esc(g.key)}">Alle: ${esc(g.name)}</option>${g.bgs.map(b => `<option value="b:${b.nr}">${esc(b.name)}</option>`).join('')}</optgroup>`).join('');
+  }
+  function renderLefts() {
+    if (!GROUPS.length) return;
+    orgBox.innerHTML = GROUPS.map(g => `<li><button type="button" class="lx-node" data-id="${esc(g.key)}" aria-pressed="false"><span class="lx-ic"><svg viewBox="0 0 24 24">${iconFor(g.name)}</svg></span><span><b>${esc(g.name)}</b><span class="lx-sub">${g.bgs.length === 1 ? '1 Berufsgruppe' : g.bgs.length + ' Berufsgruppen'} · ${cntLabel(countFor(g.key))}</span></span></button></li>`).join('');
+    lefts = [...orgBox.querySelectorAll('.lx-node')]; wireLefts();
+  }
+  function renderTabs() {
+    tabBox.innerHTML = THEMES.map((t, i) => `<button class="lx-sol" role="tab" id="lx-tab-${esc(t.slug)}" data-id="${esc(t.slug)}" aria-selected="false" aria-controls="lxDetail" tabindex="-1"><span class="ehs-mark" aria-hidden="true"><i style="--m:var(${PIECES[i % 3]})"></i></span><span><b>${esc(t.name)}</b><small class="lx-cnt">${cntLabel(productsOf(t.slug).length)}</small></span><span class="lx-arr" aria-hidden="true">→</span></button>`).join('');
+    tabs = [...tabBox.querySelectorAll('.lx-sol')]; wireTabs();
+    tabBox.classList.toggle('lx-many', THEMES.length > 5);
+  }
   function matches(p) {
     if (state.theme !== 'alle' && !p.themes.includes(state.theme)) return false;
     if (!fitsOrg(p, state.org)) return false;
@@ -6387,10 +6477,10 @@ window.addEventListener('scroll', function() {
   }
   function apply() {
     chips.querySelectorAll('.lx-chip').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.theme === state.theme)));
-    orgSel.value = state.org; if (search.value !== state.q) search.value = state.q;
+    if ([...orgSel.options].some(o => o.value === state.org)) orgSel.value = state.org;
+    if (search.value !== state.q) search.value = state.q;
     if (!PRODUCTS.length) return;
-    const before = new Map();
-    const anim = moving();
+    const before = new Map(), anim = moving();
     if (anim) cards.forEach(el => { if (!el.hidden) before.set(el, el.getBoundingClientRect()); });
     let n = 0;
     for (const p of PRODUCTS) { const el = cards.get(p.id), show = matches(p); el.hidden = !show; if (show) n++; }
@@ -6414,15 +6504,11 @@ window.addEventListener('scroll', function() {
   // Details als Dialog
   function openDetails(id) {
     const p = PRODUCTS.find(x => String(x.id) === String(id)); if (!p) return;
-    const links = [];
-    if (p.loesungAktiv && p.dbId) links.push(`<a class="btn btn-ghost" href="loesung-public.html?id=${encodeURIComponent(p.dbId)}">Ausführliche Lösungsseite</a>`);
-    else if (/^https?:\/\//.test(p.detailPage || '')) links.push(`<a class="btn btn-ghost" href="${esc(p.detailPage)}" target="_blank" rel="noopener">Mehr erfahren</a>`);
-    else if (p.detailPage && typeof DETAIL_SLUGS !== 'undefined' && DETAIL_SLUGS.includes(p.detailPage)) links.push(`<button type="button" class="btn btn-ghost lx-page" data-page="${esc(p.detailPage)}">Mehr erfahren</button>`);
     dlgBody.innerHTML = `<button type="button" class="lx-x" aria-label="Schließen">×</button>
       <div class="lx-dlg-head">${p.image ? `<img src="${esc(p.image)}" alt="" onerror="this.remove()">` : ''}<div><div class="lx-badges">${p.themes.map(badge).join('')}</div><h3 id="lxDlgTitle">${esc(p.produkt)}</h3>${p.hersteller ? `<div class="lx-maker">${esc(p.hersteller)}</div>` : ''}</div></div>
       <p>${esc(p.beschreibung || 'Eine Beschreibung folgt. Sprechen Sie uns gern direkt an.')}</p>
       <div class="lx-fit"><span>Geeignet für</span>${esc(groups(p, 99))}</div>
-      <div class="lx-dlg-actions"><button type="button" class="btn btn-primary lx-ask">Anfrage stellen</button>${links.join('')}</div>`;
+      <div class="lx-dlg-actions"><button type="button" class="btn btn-primary lx-ask">Anfrage stellen</button>${detailLinks(p)}</div>`;
     dlg.showModal();
   }
   grid.addEventListener('click', e => { const b = e.target.closest('.lx-more-btn'); if (b) openDetails(b.dataset.id); });
@@ -6432,35 +6518,60 @@ window.addEventListener('scroll', function() {
     const pg = e.target.closest('.lx-page'); if (pg) { dlg.close(); showPage(pg.dataset.page); }
   });
 
-  /* ---------- Daten aus der Live-Seite übernehmen ---------- */
-  function sync() {
-    const themesAll = (typeof ALL_THEMEN !== 'undefined' && ALL_THEMEN.length)
-      ? ALL_THEMEN.map(x => ({ slug: x.id, name: x.label, farbe: x.color, pref: x.pref }))
-      : Object.entries(KATEGORIE_LABELS).map(([k, v]) => ({ slug: k, name: v, farbe: '#156082', pref: k }));
-    PRODUCTS = (LOESUNGEN_DATA || [])
-      .filter(p => p.produkt && !/finder/i.test(p.detailPage || ''))
-      .map(p => ({ id: p.id != null ? p.id : 'nr' + p.nr, dbId: p.id, produkt: p.produkt, hersteller: p.hersteller, beschreibung: p.beschreibung,
-        verfuegbar: p.verfuegbar || [], loesungAktiv: !!p.loesungAktiv, detailPage: p.detailPage, image: p.imageUrl || null,
-        themes: (p.themen && p.themen.length) ? p.themen.map(x => x.slug) : themesAll.filter(x => x.pref && p[x.pref]).map(x => x.slug) }));
-    THEMES = themesAll;
-    const s = JSON.stringify([THEMES.map(x => x.slug), PRODUCTS.map(p => p.id)]);
+  /* ---------- Daten übernehmen und alles aufbauen ---------- */
+  let sig = '';
+  function render(data) {
+    const s = JSON.stringify([data.themes.map(t => t.slug), data.products.map(p => p.id), data.bgrows.map(b => b.nr + (b.gruppe || ''))]);
     if (s === sig) return;
     sig = s;
+    THEMES = data.themes; PRODUCTS = data.products; BGROWS = data.bgrows; buildGroups();
     if (!PRODUCTS.length || !THEMES.length) {
       grid.setAttribute('aria-busy', 'false');
       grid.innerHTML = `<div class="lx-error"><b>Die Produkte konnten gerade nicht geladen werden.</b> Bitte laden Sie die Seite neu, oder nutzen Sie den Produktfinder.</div>`;
       return;
     }
-    tabBox.innerHTML = THEMES.map((x, i) => `<button class="lx-sol" role="tab" id="lx-tab-${esc(x.slug)}" data-id="${esc(x.slug)}" aria-selected="false" aria-controls="lxDetail" tabindex="-1"><span class="ehs-mark" aria-hidden="true"><i style="--m:var(${PIECES[i % 3]})"></i></span><span><b>${esc(x.name)}</b><small class="lx-cnt">${cntLabel(productsOf(x.slug).length)}</small></span><span class="lx-arr" aria-hidden="true">→</span></button>`).join('');
-    tabs = [...tabBox.querySelectorAll('.lx-sol')]; wireTabs();
-      tabBox.classList.toggle('lx-many', THEMES.length > 5);
+    renderTabs(); renderLefts(); renderOrgSelect(); renderChips(); renderCards();
     const lead = THEMES.filter(x => productsOf(x.slug).length);
-      page.querySelectorAll('.lx-tag').forEach((tag, i) => { if (lead[i]) tag.textContent = lead[i].name; });
-    Object.keys(ORGS).forEach(o => { const el = page.querySelector(`[data-sub="${o}"]`); if (el) el.textContent = plural(PRODUCTS.filter(p => fitsOrg(p, o)).length); });
-    if (state.theme !== 'alle' && !THEMES.some(x => x.slug === state.theme)) state.theme = 'alle';
-    renderChips(); renderCards();
-    showTheme(THEMES.some(x => x.slug === sel) ? sel : THEMES[0].slug); build(); apply();
+    page.querySelectorAll('.lx-tag').forEach((tag, i) => { if (lead[i]) tag.textContent = lead[i].name; });
+    if (!nrsOf(state.org) && state.org !== 'alle') state.org = 'alle';
+    if (state.theme !== 'alle' && !themeOf(state.theme)) state.theme = 'alle';
+    if (sel.kind === 'group' && GROUPS.some(g => g.key === sel.id)) showGroup(sel.id);
+    else if (sel.kind === 'bg' && BGROWS.some(b => b.nr === sel.id)) showBg(sel.id);
+    else showTheme(themeOf(sel.id) ? sel.id : (lead[0] || THEMES[0]).slug);
+    build(); apply();
   }
+  function fail() {
+    grid.setAttribute('aria-busy', 'false');
+    grid.innerHTML = `<div class="lx-error"><b>Die Produkte konnten gerade nicht geladen werden.</b> Bitte laden Sie die Seite neu, oder nutzen Sie den Produktfinder.</div>`;
+  }
+
+  wireLefts(); wireTabs();
+  /* ---------- Daten: übernimmt LOESUNGEN_DATA / ALL_THEMEN der Live-Seite (inkl. Partner-Filter) ---------- */
+  let bgRows = [];
+  function detailLinks(p) {
+    if (p.loesungAktiv && p.dbId) return `<a class="btn btn-ghost" href="loesung-public.html?id=${encodeURIComponent(p.dbId)}">Ausführliche Lösungsseite</a>`;
+    if (/^https?:\/\//.test(p.detailPage || '')) return `<a class="btn btn-ghost" href="${esc(p.detailPage)}" target="_blank" rel="noopener">Mehr erfahren</a>`;
+    if (p.detailPage && typeof DETAIL_SLUGS !== 'undefined' && DETAIL_SLUGS.includes(p.detailPage)) return `<button type="button" class="btn btn-ghost lx-page" data-page="${esc(p.detailPage)}">Mehr erfahren</button>`;
+    return '';
+  }
+  function sync() {
+    const themesAll = (typeof ALL_THEMEN !== 'undefined' && ALL_THEMEN.length)
+      ? ALL_THEMEN.map(x => ({ slug: x.id, name: x.label, farbe: x.color, pref: x.pref }))
+      : Object.entries(KATEGORIE_LABELS).map(([k, v]) => ({ slug: k, name: v, farbe: '#156082', pref: k }));
+    const products = (LOESUNGEN_DATA || [])
+      .filter(p => p.produkt && !/finder/i.test(p.detailPage || ''))
+      .map(p => ({ id: p.id != null ? p.id : 'nr' + p.nr, dbId: p.id, produkt: p.produkt, hersteller: p.hersteller, beschreibung: p.beschreibung,
+        verfuegbar: p.verfuegbar || [], loesungAktiv: !!p.loesungAktiv, detailPage: p.detailPage, image: p.imageUrl || null,
+        themes: (p.themen && p.themen.length) ? p.themen.map(x => x.slug) : themesAll.filter(x => x.pref && p[x.pref]).map(x => x.slug) }));
+    const bgrows = bgRows.length ? bgRows
+      : Object.entries(BERUFSGRUPPEN_NAMES).map(([nr, name]) => ({ nr: Number(nr), name, gruppe: 'Leistungserbringer' }));
+    render({ themes: themesAll, products, bgrows });
+  }
+  // Berufsgruppen mit Gruppe und TI-Förderung (öffentlich lesbar)
+  _sb.from('berufsgruppen').select('nr,name,gruppe,ti_foerderbetrag,ti_foerdergeber,ti_rechtsgrundlage').order('nr', { ascending: true })
+    .then(({ data }) => { if (data && data.length) { bgRows = data; sync(); } });
+  sync();
+
 
   /* ---------- Animationsschleife (nur bei sichtbarer Seite) ---------- */
   function loop(ts) {
@@ -6478,12 +6589,10 @@ window.addEventListener('scroll', function() {
     requestAnimationFrame(loop);
   }
 
-  sync();
   new ResizeObserver(() => { size(); build(); }).observe(hub);
   window.addEventListener('resize', size);
   if (document.fonts) document.fonts.ready.then(build);
   requestAnimationFrame(loop);
-
   // Die Live-Seite ruft renderLoesungen() nach dem Laden aus Supabase und beim Öffnen der Seite auf
   renderLoesungen = function() { sync(); };
   const original = showPage;
@@ -6492,6 +6601,7 @@ window.addEventListener('scroll', function() {
     original(id);
     if (id === 'loesungen') { size(); build(); replay(); }
   };
+
 })();
 </script>
 </body>
