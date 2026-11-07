@@ -2370,6 +2370,20 @@ button, input, select, textarea { font-family: inherit; }
 .pf-pr.plain:not(.on){opacity:.42;filter:grayscale(1)}
 .pf-prio-cta{justify-self:start;font:inherit;font-size:.82rem;font-weight:600;color:var(--accent);background:none;border:0;padding:4px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .pf-prio-cta:focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:4px}
+
+/* ── eHealth Alliance: Siegel „Strategischer Partner“ ─────────────── */
+.ea-seal{position:relative;overflow:hidden;line-height:0;border-radius:999px 24px 24px 999px}
+.ea-seal img{width:100%;height:auto;display:block;filter:drop-shadow(0 10px 22px rgba(0,0,0,.28))}
+.ea-seal::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgba(255,255,255,.55) 50%,transparent 65%);transform:translateX(-120%);pointer-events:none;mix-blend-mode:soft-light}
+.ea-hero{width:min(100%,420px);margin-top:30px;animation:eaIn .9s cubic-bezier(.2,.8,.2,1) .35s both}
+.ea-hero::after,.ea-partner::after{animation:eaShine 1.6s ease-in-out 1.2s both}
+.ea-partner{width:min(100%,380px);margin-top:10px}
+.ea-footer{width:220px;filter:none}
+.ea-footer img{filter:none}
+@keyframes eaIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes eaShine{to{transform:translateX(120%)}}
+@media (max-width:600px){.ea-hero{width:100%;margin-top:24px}.ea-footer{width:200px}}
+@media (prefers-reduced-motion: reduce){.ea-seal,.ea-seal::after{animation:none!important}}
 </style>
 </head>
 <body>
@@ -2438,6 +2452,7 @@ button, input, select, textarea { font-family: inherit; }
             <a href="#" class="btn btn-primary" onclick="showPage('kontakt'); return false;">Jetzt Beratung anfragen</a>
             <a href="#" class="btn btn-outline-white" onclick="showPage('leistungen'); return false;">Unsere Leistungen</a>
           </div>
+          <div class="ea-seal ea-hero"><img src="logos/ehealth-alliance-siegel-strategisch-2400px.png" srcset="logos/ehealth-alliance-siegel-strategisch-600px.png 600w, logos/ehealth-alliance-siegel-strategisch-1200px.png 1200w, logos/ehealth-alliance-siegel-strategisch-2400px.png 2400w" sizes="(max-width: 600px) 86vw, 420px" alt="eHealth Alliance – Strategischer Partner" width="2400" height="677" decoding="async"></div>
         </div>
         <div class="hero-visual">
           <div class="hero-ekg-card">
@@ -3183,6 +3198,7 @@ button, input, select, textarea { font-family: inherit; }
             <a href="#pt-netzwerk" class="btn btn-primary">Partner entdecken</a>
             <a href="#pt-werden" class="btn btn-outline-white">Partner werden</a>
           </div>
+          <div class="ea-seal ea-partner"><img src="logos/ehealth-alliance-siegel-strategisch-2400px.png" srcset="logos/ehealth-alliance-siegel-strategisch-600px.png 600w, logos/ehealth-alliance-siegel-strategisch-1200px.png 1200w, logos/ehealth-alliance-siegel-strategisch-2400px.png 2400w" sizes="(max-width: 600px) 86vw, 380px" alt="eHealth Alliance – Strategischer Partner" width="2400" height="677" decoding="async"></div>
         </div>
         <div class="pt-orbit" aria-label="Partner im Netzwerk von ehealth Sales">
           <div class="pt-ring r1"></div><div class="pt-ring r2"></div>
@@ -3901,6 +3917,7 @@ button, input, select, textarea { font-family: inherit; }
       <div class="footer-brand">
         <span class="ehs-mark" aria-hidden="true"><i style="--m:var(--pc-top)"></i><i style="--m:var(--pc-bl)"></i><i style="--m:var(--pc-br)"></i></span><div><div class="footer-brand-name">ehealth Sales GmbH</div><div class="footer-brand-sub">Wir verbinden das Gesundheitswesen</div></div>
       </div>
+      <div class="ea-seal ea-footer"><img src="logos/ehealth-alliance-siegel-strategisch-2400px.png" srcset="logos/ehealth-alliance-siegel-strategisch-600px.png 600w, logos/ehealth-alliance-siegel-strategisch-1200px.png 1200w, logos/ehealth-alliance-siegel-strategisch-2400px.png 2400w" sizes="220px" alt="eHealth Alliance – Strategischer Partner" width="2400" height="677" decoding="async"></div>
       <div class="footer-links">
         <a href="#" onclick="showPage('impressum'); return false;">Impressum</a>
         <a href="#" onclick="showPage('datenschutz'); return false;">Datenschutz</a>
