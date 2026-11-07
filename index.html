@@ -1821,6 +1821,10 @@ button.lx-node:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 .lx-ti dd{margin:2px 0 0;color:var(--ink)}
 .lx-note{color:var(--slate)}
 #lx-katalog{scroll-margin-top:84px}
+.lx-pin{display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:.9rem;color:#F4F6F9;background:var(--navy);border:0;border-radius:999px;padding:9px 14px;cursor:pointer}
+.lx-pin[hidden]{display:none}
+.lx-pin b{font-weight:600}
+.lx-pin:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
 .lx-right.lx-many{gap:8px}
 .lx-right.lx-many .lx-sol{padding:10px 14px}
 .lx-right.lx-many .lx-sol b{font-size:.98rem}
@@ -2227,6 +2231,7 @@ button, input, select, textarea { font-family: inherit; }
 .pt-card h3{margin:6px 0 0;color:var(--ink);font-size:1.2rem}
 .pt-card p{font-size:.95rem;flex:1}
 .pt-card-foot{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;border-top:1px solid var(--border);padding-top:12px;margin-top:4px}
+.pt-card-foot{row-gap:4px}
 .pt-link,.pt-prod{font-family:inherit;font-weight:600;font-size:.92rem;line-height:1;color:var(--accent);background:none;border:0;padding:6px 0;cursor:pointer;text-decoration:none}
 .pt-link:hover,.pt-prod:hover{text-decoration:underline;text-underline-offset:3px}
 .pt-link:focus-visible,.pt-prod:focus-visible{outline:3px solid var(--teal);outline-offset:3px;border-radius:4px}
@@ -3098,59 +3103,59 @@ button, input, select, textarea { font-family: inherit; }
       </div>
       <div class="pt-chips" role="group" aria-label="Nach Kategorie filtern"><button type="button" class="pt-chip" data-cat="alle" aria-pressed="true">Alle Partner</button><button type="button" class="pt-chip" data-cat="ti" aria-pressed="false"><i style="background:#156082"></i>Telematikinfrastruktur</button><button type="button" class="pt-chip" data-cat="security" aria-pressed="false"><i style="background:#DC2626"></i>IT-Sicherheit</button><button type="button" class="pt-chip" data-cat="hardware" aria-pressed="false"><i style="background:#475569"></i>Hardware</button><button type="button" class="pt-chip" data-cat="ki" aria-pressed="false"><i style="background:#7C3AED"></i>Künstliche Intelligenz</button><button type="button" class="pt-chip" data-cat="it" aria-pressed="false"><i style="background:#3A7F22"></i>IT &amp; Systemhaus</button><button type="button" class="pt-chip" data-cat="vernetzung" aria-pressed="false"><i style="background:#0891B2"></i>Vernetzung</button></div>
       <div class="pt-grid" id="ptGrid">
-        <article class="pt-card" data-cat="ti" data-maker="" style="--tc:#156082">
+        <article class="pt-card" data-cat="ti" data-vendor="tih" data-label="TI-Healthcare" data-maker="" style="--tc:#156082">
           <div class="pt-card-top"><span class="pt-logo"><img src="logos/ti-healthcare.png" alt="" loading="lazy"></span><span class="pt-cat"><i></i>Telematikinfrastruktur</span></div>
           <h3>TI-Healthcare</h3>
           <p>gematik-zugelassener TI-Gateway-Anbieter mit 24/7-Support und Beratung für Kliniken, Praxen und Pflege.</p>
-          <div class="pt-card-foot"><a href="https://www.ti-healthcare.de" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+          <div class="pt-card-foot"><a href="https://www.ti-healthcare.de" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" data-role="maker" hidden></button><button type="button" class="pt-prod" data-role="vendor" hidden></button></div>
         </article>
-        <article class="pt-card" data-cat="ti" data-maker="ehex" style="--tc:#156082">
+        <article class="pt-card" data-cat="ti" data-vendor="ehex" data-label="eHealth Experts" data-maker="ehex" style="--tc:#156082">
           <div class="pt-card-top"><span class="pt-logo"><img src="logos/ehex.png" alt="" loading="lazy"></span><span class="pt-cat"><i></i>Telematikinfrastruktur</span></div>
           <h3>eHealth Experts</h3>
           <p>Hersteller von TI-Lösungen wie easyTI und easyTI Hub für Einrichtungen jeder Größe.</p>
-          <div class="pt-card-foot"><a href="https://ehex.de" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+          <div class="pt-card-foot"><a href="https://ehex.de" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" data-role="maker" hidden></button><button type="button" class="pt-prod" data-role="vendor" hidden></button></div>
         </article>
-        <article class="pt-card" data-cat="ti" data-maker="" style="--tc:#156082">
+        <article class="pt-card" data-cat="ti" data-vendor="infinity" data-label="infinity" data-maker="" style="--tc:#156082">
           <div class="pt-card-top"><span class="pt-logo"><img src="logos/infinity.svg" alt="" loading="lazy"></span><span class="pt-cat"><i></i>Telematikinfrastruktur</span></div>
           <h3>infinity</h3>
           <p>Betreibt das TI-Gateway im zertifizierten Rechenzentrum und sorgt für einen stabilen Betrieb.</p>
-          <div class="pt-card-foot"><a href="https://infinity-managed.services" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+          <div class="pt-card-foot"><a href="https://infinity-managed.services" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" data-role="maker" hidden></button><button type="button" class="pt-prod" data-role="vendor" hidden></button></div>
         </article>
-        <article class="pt-card" data-cat="vernetzung" data-maker="" style="--tc:#0891B2">
+        <article class="pt-card" data-cat="vernetzung" data-vendor="ehealth connect" data-label="ehealth Connect" data-maker="" style="--tc:#0891B2">
           <div class="pt-card-top"><span class="pt-logo"><img src="logos/ehc.jpeg" alt="" loading="lazy"></span><span class="pt-cat"><i></i>Vernetzung</span></div>
           <h3>ehealth Connect</h3>
           <p>Verknüpft eHealth-Anwendungen zu durchgängigen Abläufen zwischen Einrichtungen.</p>
-          <div class="pt-card-foot"><a href="https://www.ehealth-connect.de" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+          <div class="pt-card-foot"><a href="https://www.ehealth-connect.de" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" data-role="maker" hidden></button><button type="button" class="pt-prod" data-role="vendor" hidden></button></div>
         </article>
-        <article class="pt-card" data-cat="hardware" data-maker="cherry" style="--tc:#475569">
+        <article class="pt-card" data-cat="hardware" data-vendor="cherry" data-label="Cherry" data-maker="cherry" style="--tc:#475569">
           <div class="pt-card-top"><span class="pt-logo"><img src="logos/cherry.svg" alt="" loading="lazy"></span><span class="pt-cat"><i></i>Hardware</span></div>
           <h3>Cherry</h3>
           <p>eHealth-Kartenterminals und das Terminal-Management-System Cherry TMS.</p>
-          <div class="pt-card-foot"><a href="https://www.cherry.de/de-de/produkte/software-services/cherry-tms" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+          <div class="pt-card-foot"><a href="https://www.cherry.de/de-de/produkte/software-services/cherry-tms" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" data-role="maker" hidden></button><button type="button" class="pt-prod" data-role="vendor" hidden></button></div>
         </article>
-        <article class="pt-card" data-cat="security" data-maker="pitnas" style="--tc:#DC2626">
+        <article class="pt-card" data-cat="security" data-vendor="pitnas" data-label="PITNAS" data-maker="pitnas" style="--tc:#DC2626">
           <div class="pt-card-top"><span class="pt-logo"><img src="logos/pitnas-new.jpg" alt="" loading="lazy"></span><span class="pt-cat"><i></i>IT-Sicherheit</span></div>
           <h3>PITNAS</h3>
           <p>UTM-Firewall, Backup und IT-Sicherheit für Praxen, als Security Box monatlich mietbar.</p>
-          <div class="pt-card-foot"><a href="https://pitnas.de" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+          <div class="pt-card-foot"><a href="https://pitnas.de" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" data-role="maker" hidden></button><button type="button" class="pt-prod" data-role="vendor" hidden></button></div>
         </article>
-        <article class="pt-card" data-cat="ki" data-maker="prof. valmed" style="--tc:#7C3AED">
+        <article class="pt-card" data-cat="ki" data-vendor="prof. valmed" data-label="Prof. Valmed" data-maker="prof. valmed" style="--tc:#7C3AED">
           <div class="pt-card-top"><span class="pt-logo"><img src="logos/profvalmed.jpg" alt="" loading="lazy"></span><span class="pt-cat"><i></i>Künstliche Intelligenz</span></div>
           <h3>Prof. Valmed</h3>
           <p>KI-gestützte medizinische Dokumentation, zum Beispiel für den Arztbrief.</p>
-          <div class="pt-card-foot"><a href="https://profvalmed.com" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+          <div class="pt-card-foot"><a href="https://profvalmed.com" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" data-role="maker" hidden></button><button type="button" class="pt-prod" data-role="vendor" hidden></button></div>
         </article>
-        <article class="pt-card" data-cat="it" data-maker="" style="--tc:#3A7F22">
+        <article class="pt-card" data-cat="it" data-vendor="concat" data-label="Concat" data-maker="" style="--tc:#3A7F22">
           <div class="pt-card-top"><span class="pt-logo"><img src="logos/concat.png" alt="" loading="lazy"></span><span class="pt-cat"><i></i>IT &amp; Systemhaus</span></div>
           <h3>Concat</h3>
           <p>IT-Systemhaus für Infrastruktur, Netzwerke und Sicherheit.</p>
-          <div class="pt-card-foot"><a href="https://www.concat.de" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+          <div class="pt-card-foot"><a href="https://www.concat.de" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" data-role="maker" hidden></button><button type="button" class="pt-prod" data-role="vendor" hidden></button></div>
         </article>
-        <article class="pt-card" data-cat="it" data-maker="" style="--tc:#3A7F22">
+        <article class="pt-card" data-cat="it" data-vendor="bechtle" data-label="Bechtle" data-maker="" style="--tc:#3A7F22">
           <div class="pt-card-top"><span class="pt-logo"><img src="logos/bechtle.svg" alt="" loading="lazy"></span><span class="pt-cat"><i></i>IT &amp; Systemhaus</span></div>
           <h3>Bechtle</h3>
           <p>IT-Dienstleister mit Schwerpunkt auf Public Sector und Gesundheitswesen.</p>
-          <div class="pt-card-foot"><a href="https://www.bechtle.com/public-sector/healthcare" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" hidden></button></div>
+          <div class="pt-card-foot"><a href="https://www.bechtle.com/public-sector/healthcare" target="_blank" rel="noopener" class="pt-link">Website <span aria-hidden="true">↗</span></a><button type="button" class="pt-prod" data-role="maker" hidden></button><button type="button" class="pt-prod" data-role="vendor" hidden></button></div>
         </article>
       </div>
     </div>
@@ -6489,6 +6494,7 @@ window.addEventListener('scroll', function() {
           id:              p.id,
           nr:              p.nr,
           hersteller:      p.hersteller,
+          unternehmen:     p.unternehmen || null,
           produkt:         p.produkt,
           beschreibung:    p.beschreibung,
           verfuegbar:      p.verfuegbar || [],
@@ -6860,7 +6866,7 @@ window.addEventListener('scroll', function() {
   const orgSel = document.getElementById('lxOrg'), search = document.getElementById('lxSearch');
   const count = document.getElementById('lxCount'), empty = document.getElementById('lxEmpty');
   const dlg = document.getElementById('lxDlg'), dlgBody = document.getElementById('lxDlgBody');
-  const state = { theme: 'alle', org: 'alle', q: '' };
+  const state = { theme: 'alle', org: 'alle', q: '', maker: '', vendor: '', label: '' };
   let cards = new Map();
   const themeOf = slug => THEMES.find(t => t.slug === slug);
   const badge = slug => { const t = themeOf(slug); return t ? `<span class="lx-badge"><i style="background:${esc(t.farbe || '#156082')}"></i>${esc(t.name)}</span>` : ''; };
@@ -6907,6 +6913,8 @@ window.addEventListener('scroll', function() {
   function matches(p) {
     if (state.theme !== 'alle' && !p.themes.includes(state.theme)) return false;
     if (!fitsOrg(p, state.org)) return false;
+    if (state.maker && !String(p.hersteller || '').toLowerCase().startsWith(state.maker)) return false;
+    if (state.vendor && !String(p.vendor || '').toLowerCase().startsWith(state.vendor)) return false;
     if (state.q) { const q = state.q.toLowerCase(); if (!(`${p.produkt} ${p.hersteller || ''} ${p.beschreibung || ''}`.toLowerCase().includes(q))) return false; }
     return true;
   }
@@ -6914,6 +6922,12 @@ window.addEventListener('scroll', function() {
     chips.querySelectorAll('.lx-chip').forEach(c => c.setAttribute('aria-pressed', String(c.dataset.theme === state.theme)));
     if ([...orgSel.options].some(o => o.value === state.org)) orgSel.value = state.org;
     if (search.value !== state.q) search.value = state.q;
+    let pin = document.getElementById('lxPin');
+    if (!pin) { pin = document.createElement('button'); pin.type = 'button'; pin.id = 'lxPin'; pin.className = 'lx-pin'; search.closest('.lx-bar-row').insertBefore(pin, count);
+      pin.addEventListener('click', () => setFilter({ maker: '', vendor: '', label: '' })); }
+    pin.hidden = !(state.maker || state.vendor);
+    pin.innerHTML = `${state.maker ? 'Hersteller' : 'Anbieter'}: <b>${esc(state.label)}</b> <span aria-hidden="true">×</span>`;
+    pin.setAttribute('aria-label', `Filter ${state.maker ? 'Hersteller' : 'Anbieter'} ${state.label} entfernen`);
     if (!PRODUCTS.length) return;
     const before = new Map(), anim = moving();
     if (anim) cards.forEach(el => { if (!el.hidden) before.set(el, el.getBoundingClientRect()); });
@@ -6934,7 +6948,12 @@ window.addEventListener('scroll', function() {
   chips.addEventListener('click', e => { const c = e.target.closest('.lx-chip'); if (c) setFilter({ theme: c.dataset.theme }); });
   orgSel.addEventListener('change', () => setFilter({ org: orgSel.value }));
   let qt; search.addEventListener('input', () => { clearTimeout(qt); qt = setTimeout(() => setFilter({ q: search.value.trim() }), 160); });
-  document.getElementById('lxReset').addEventListener('click', () => setFilter({ theme: 'alle', org: 'alle', q: '' }));
+  document.getElementById('lxReset').addEventListener('click', () => setFilter({ theme: 'alle', org: 'alle', q: '', maker: '', vendor: '', label: '' }));
+  // Von außen (Partnerseite): Katalog nach Hersteller oder Anbieter filtern
+  window.lxShowCompany = function(o) {
+    setFilter({ theme: 'alle', org: 'alle', q: '', maker: (o.maker || '').toLowerCase(), vendor: (o.vendor || '').toLowerCase(), label: o.label || '' });
+    requestAnimationFrame(toCatalog);
+  };
 
   // Details als Dialog
   function openDetails(id) {
@@ -6943,6 +6962,7 @@ window.addEventListener('scroll', function() {
       <div class="lx-dlg-head">${p.image ? `<img src="${esc(p.image)}" alt="" onerror="this.remove()">` : ''}<div><div class="lx-badges">${p.themes.map(badge).join('')}</div><h3 id="lxDlgTitle">${esc(p.produkt)}</h3>${p.hersteller ? `<div class="lx-maker">${esc(p.hersteller)}</div>` : ''}</div></div>
       <p>${esc(p.beschreibung || 'Eine Beschreibung folgt. Sprechen Sie uns gern direkt an.')}</p>
       <div class="lx-fit"><span>Geeignet für</span>${esc(groups(p, 99))}</div>
+      ${p.vendor && !String(p.vendor).toLowerCase().startsWith(String(p.hersteller || '').toLowerCase().slice(0, 4)) ? `<div class="lx-fit"><span>Erhältlich über</span>${esc(p.vendor)}</div>` : ''}
       <div class="lx-dlg-actions"><button type="button" class="btn btn-primary lx-ask">Anfrage stellen</button>${detailLinks(p)}</div>`;
     dlg.showModal();
   }
@@ -6994,7 +7014,7 @@ window.addEventListener('scroll', function() {
       : Object.entries(KATEGORIE_LABELS).map(([k, v]) => ({ slug: k, name: v, farbe: '#156082', pref: k }));
     const products = (LOESUNGEN_DATA || [])
       .filter(p => p.produkt && !/finder/i.test(p.detailPage || ''))
-      .map(p => ({ id: p.id != null ? p.id : 'nr' + p.nr, dbId: p.id, produkt: p.produkt, hersteller: p.hersteller, beschreibung: p.beschreibung,
+      .map(p => ({ id: p.id != null ? p.id : 'nr' + p.nr, dbId: p.id, produkt: p.produkt, hersteller: p.hersteller, vendor: p.unternehmen || '', beschreibung: p.beschreibung,
         verfuegbar: p.verfuegbar || [], loesungAktiv: !!p.loesungAktiv, detailPage: p.detailPage, image: p.imageUrl || null,
         themes: (p.themen && p.themen.length) ? p.themen.map(x => x.slug) : themesAll.filter(x => x.pref && p[x.pref]).map(x => x.slug) }));
     const bgrows = bgRows.length ? bgRows
@@ -7347,16 +7367,26 @@ window.addEventListener('scroll', function() {
   // Produktzahl je Partner aus dem Katalog
   function counts() {
     const list = (typeof LOESUNGEN_DATA !== 'undefined' ? LOESUNGEN_DATA : []).filter(p => p.produkt && !/finder/i.test(p.detailPage || ''));
+    const pl = n => n === 1 ? '1 Produkt' : n + ' Produkte';
     cards.forEach(c => {
-      const key = (c.dataset.maker || '').toLowerCase(), btn = c.querySelector('.pt-prod');
-      if (!key) return;
-      const n = list.filter(p => (p.hersteller || '').toLowerCase().startsWith(key)).length;
-      btn.hidden = !n; btn.textContent = n === 1 ? '1 Produkt ansehen' : `${n} Produkte ansehen`;
+      const mk = (c.dataset.maker || '').toLowerCase(), vd = (c.dataset.vendor || '').toLowerCase();
+      const made = mk ? list.filter(p => (p.hersteller || '').toLowerCase().startsWith(mk)) : [];
+      const sold = vd ? list.filter(p => (p.unternehmen || '').toLowerCase().startsWith(vd)) : [];
+      const bm = c.querySelector('[data-role="maker"]'), bv = c.querySelector('[data-role="vendor"]');
+      const same = made.length && made.length === sold.length && made.every(p => sold.includes(p));
+      bm.hidden = !made.length; bv.hidden = !sold.length || same;
+      bm.textContent = same ? `${pl(made.length)}: Hersteller & Anbieter` : `Stellt ${pl(made.length)} her`;
+      bv.textContent = `Vertreibt ${pl(sold.length)}`;
     });
     const set = (k, v) => { const el = page.querySelector(`[data-pt="${k}"]`); if (el && v) el.textContent = v; };
     set('products', list.length);
   }
-  grid.addEventListener('click', e => { if (e.target.closest('.pt-prod')) showPage('loesungen'); });
+  grid.addEventListener('click', e => {
+    const b = e.target.closest('.pt-prod'); if (!b) return;
+    const c = b.closest('.pt-card'), role = b.dataset.role;
+    showPage('loesungen');
+    if (window.lxShowCompany) window.lxShowCompany({ maker: role === 'maker' ? c.dataset.maker : '', vendor: role === 'vendor' ? c.dataset.vendor : '', label: c.dataset.label });
+  });
   if (typeof _sb !== 'undefined') _sb.from('berufsgruppen').select('nr', { count: 'exact', head: true }).then(({ count }) => { const el = page.querySelector('[data-pt="groups"]'); if (el && count) el.textContent = count; });
 
   // Filter nach Kategorie mit weichem Umsortieren
