@@ -2282,6 +2282,13 @@ button, input, select, textarea { font-family: inherit; }
 .lv-map-on .lv-pin{animation:lvPop .5s cubic-bezier(.2,.8,.2,1.4) both;animation-delay:calc(1s + var(--i) * 80ms);transform-box:fill-box;transform-origin:center}
 .lv-center-sub{fill:var(--slate);font:500 15px 'Source Sans 3',system-ui,sans-serif;text-anchor:middle}
 @media (max-width:700px){#lvMapLabels .lv-label{display:none}#lvMapLabels{display:inline}#lvMapLines{display:inline}}
+
+/* Karte: Logos statt Namen */
+.lv-label .lv-logo-bg{fill:#fff;stroke:var(--border-mid);stroke-width:1.2;transition:stroke .2s}
+.lv-label.hot .lv-logo-bg{stroke:var(--accent);stroke-width:2.5}
+.lv-label image{pointer-events:none}
+.lv-chip-logo{display:inline-flex;align-items:center;justify-content:center;background:#fff;width:96px;height:44px;padding:6px 10px}
+.lv-chip-logo img{max-width:100%;max-height:30px;object-fit:contain}
 </style>
 </head>
 <body>
@@ -7271,7 +7278,7 @@ window.addEventListener('scroll', function() {
     const vals = { products: d.products, makers: d.makers.length, groups: d.groups, themes: d.themes };
     page.querySelectorAll('[data-lv]').forEach(el => { const v = vals[el.dataset.lv]; if (v) el.dataset.to = v; else el.dataset.to = el.textContent; if (!el.dataset.done) el.textContent = el.dataset.to; });
     const mk = document.getElementById('lvMakers');
-    if (mk && d.makers.length) mk.innerHTML = d.makers.map(m => { const l = window.lvLocOf && window.lvLocOf(m); return `<span class="lv-chip">${esc(m)}${l ? ` · ${esc(l[1])}` : ''}</span>`; }).join('');
+    if (mk && d.makers.length) mk.innerHTML = d.makers.map(m => { const l = window.lvLocOf && window.lvLocOf(m), src = window.lvLogoOf && window.lvLogoOf(m), tip = `${m}${l ? ' · ' + l[1] : ''}`; return src ? `<span class="lv-chip lv-chip-logo" title="${esc(tip)}"><img src="${src}" alt="${esc(tip)}" loading="lazy"></span>` : `<span class="lv-chip">${esc(m)}</span>`; }).join('');
     const gr = document.getElementById('lvGroups');
     if (gr) gr.innerHTML = (window.lvCustomers || []).map(g => `<span class="lv-chip">${esc(g)}</span>`).join('');
     if (window.lvBuildMap && d.makers.length) window.lvBuildMap(d.makers);
@@ -7333,7 +7340,15 @@ window.addEventListener('scroll', function() {
     ['samsung', 'Eschborn', 50.1430, 8.5700],
     ['ehealth alliance', 'Georgsmarienhütte', 52.2017, 8.0450]
   ];
+  const LOGO = [
+    ['ti-healthcare', 'logos/ti-healthcare-trim.png'], ['ehealth experts', 'logos/ehex.png'], ['ehex', 'logos/ehex.png'],
+    ['infinity', 'logos/infinity.svg'], ['ims', 'logos/infinity.svg'], ['ehealth connect', 'logos/ehc-trim.png'],
+    ['cherry', 'logos/cherry.svg'], ['pitnas', 'logos/pitnas-new.jpg'], ['prof. valmed', 'logos/profvalmed.jpg'],
+    ['concat', 'logos/concat.png'], ['bechtle', 'logos/bechtle.svg'], ['arvato', 'logos/arvato-trim.png'],
+    ['samsung', 'logos/samsung-trim.png'], ['ehealth alliance', 'alliance-logo.png']
+  ];
   const locOf = name => { const n = String(name).toLowerCase(); return LOC.find(l => n.startsWith(l[0])); };
+  const logoOf = name => { const n = String(name).toLowerCase(); const l = LOGO.find(x => n.startsWith(x[0])); return l ? l[1] : null; };
   const el = (tag, attrs, parent) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (parent) parent.appendChild(n); return n; };
   let sig = '';
 
@@ -7359,20 +7374,22 @@ window.addEventListener('scroll', function() {
       const n = list.length, top = 80, bottom = 730, edge = dir === 'l' ? -40 : 621;
       list.forEach((p, i) => {
         const y = n === 1 ? p.y : top + (bottom - top) * i / Math.max(1, n - 1);
-        const w = Math.max(120, Math.max(p.name.length * 10.6, p.city.length * 8) + 46);
-        const x = dir === 'l' ? edge - w : edge;
+        const w = 170, x = dir === 'l' ? edge - w : edge;
         const g = el('g', { class: `lv-label ${dir}`, 'data-link': p.link || '', 'data-name': p.name, style: `--i:${i};--from:${dir === 'l' ? '-14px' : '14px'}`, tabindex: '0' }, labels);
         el('path', { class: 'lv-leader', d: `M${dir === 'l' ? edge : edge},${y} C${dir === 'l' ? edge + 60 : edge - 60},${y} ${p.x + (dir === 'l' ? -40 : 40)},${p.y} ${p.x},${p.y}` }, g);
-        el('rect', { x, y: y - 26, width: w, height: 52, rx: 14 }, g);
-        const tx = dir === 'l' ? x + w - 18 : x + 18, anchor = dir === 'l' ? 'end' : 'start';
-        el('text', { class: 'lv-n', x: tx, y: y - 7, 'text-anchor': anchor }, g).textContent = p.name;
-        el('text', { class: 'lv-c', x: tx, y: y + 13, 'text-anchor': anchor }, g).textContent = p.city;
+        el('title', {}, g).textContent = `${p.name} · ${p.city}`;
+        g.setAttribute('aria-label', `${p.name}, ${p.city}`); g.setAttribute('role', 'img');
+        el('rect', { class: 'lv-logo-bg', x, y: y - 30, width: w, height: 60, rx: 14 }, g);
+        const src = logoOf(p.name);
+        if (src) el('image', { href: src, x: x + 12, y: y - 23, width: w - 24, height: 46, preserveAspectRatio: 'xMidYMid meet' }, g);
+        else { const tx = x + w / 2; const t = el('text', { class: 'lv-n', x: tx, y, 'text-anchor': 'middle' }, g); t.textContent = p.name; }
       });
     };
     place(left, 'l'); place(right, 'r');
     // Standort-Punkte über den Linien
     pts.filter(p => !p.home).forEach((p, i) => {
       const g = el('g', { class: 'lv-pin', transform: `translate(${p.x} ${p.y})`, style: `--i:${i}`, 'data-name': p.name }, labels);
+      el('title', {}, g).textContent = `${p.name} · ${p.city}`;
       el('circle', { class: 'lv-pin-ring', r: 9 }, g); el('circle', { class: 'lv-pin-dot', r: 6.5 }, g);
     });
   }
@@ -7394,6 +7411,7 @@ window.addEventListener('scroll', function() {
 
   window.lvBuildMap = build;
   window.lvLocOf = locOf;
+  window.lvLogoOf = logoOf;
   window.lvCustomers = [];
   if (window.lvFill) window.lvFill();
 })();
