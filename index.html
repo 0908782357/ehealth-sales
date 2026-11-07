@@ -2587,7 +2587,7 @@ button, input, select, textarea { font-family: inherit; }
   <section class="lv-stats" aria-label="Kennzahlen">
     <div class="container">
       <div class="lv-stat"><b data-lv="products">28</b><span>Produkte im Portfolio</span></div>
-      <div class="lv-stat"><b data-lv="makers">8</b><span>Hersteller &amp; Partner</span></div>
+      <div class="lv-stat"><b data-lv="makers">13</b><span>Hersteller &amp; Partner</span></div>
       <div class="lv-stat"><b data-lv="groups">25</b><span>Berufsgruppen</span></div>
       <div class="lv-stat"><b data-lv="themes">10</b><span>Themengebiete</span></div>
     </div>
@@ -7245,7 +7245,10 @@ window.addEventListener('scroll', function() {
 
   function data() {
     const prods = (typeof LOESUNGEN_DATA !== 'undefined' ? LOESUNGEN_DATA : []).filter(p => p.produkt && !/finder/i.test(p.detailPage || ''));
-    const makers = [...new Set(prods.map(p => p.hersteller).filter(h => h && !/^(diverse|ehs|ehealth sales)/i.test(h)))];
+    // Netzwerk = alle Partnerkarten + alle Hersteller aus dem Katalog (ohne Doppelte, ohne eHS/Diverse)
+    const cards = [...document.querySelectorAll('#page-partner .pt-card')].map(c => ({ label: c.dataset.label, key: (c.dataset.maker || '').toLowerCase() })).filter(c => c.label);
+    const hersteller = [...new Set(prods.map(p => p.hersteller).filter(h => h && !/^(diverse|ehs|ehealth sales)/i.test(h)))];
+    const makers = [...cards.map(c => c.label), ...hersteller.filter(h => !cards.some(c => c.key && h.toLowerCase().startsWith(c.key)))];
     const groups = dbGroups || (typeof BERUFSGRUPPEN_NAMES !== 'undefined' ? Object.keys(BERUFSGRUPPEN_NAMES).length : 0);
     const themes = typeof ALL_THEMEN !== 'undefined' ? ALL_THEMEN.length : 0;
     return { products: prods.length, makers, groups, themes };
@@ -7255,7 +7258,7 @@ window.addEventListener('scroll', function() {
     const vals = { products: d.products, makers: d.makers.length, groups: d.groups, themes: d.themes };
     page.querySelectorAll('[data-lv]').forEach(el => { const v = vals[el.dataset.lv]; if (v) el.dataset.to = v; else el.dataset.to = el.textContent; if (!el.dataset.done) el.textContent = el.dataset.to; });
     const mk = document.getElementById('lvMakers');
-    if (mk && d.makers.length) mk.innerHTML = d.makers.slice(0, 9).map(m => `<span class="lv-chip">${esc(m)}</span>`).join('') + (d.makers.length > 9 ? `<span class="lv-chip">+${d.makers.length - 9}</span>` : '');
+    if (mk && d.makers.length) mk.innerHTML = d.makers.map(m => `<span class="lv-chip">${esc(m)}</span>`).join('');
     const gr = document.getElementById('lvGroups');
     if (gr) gr.innerHTML = (window.lvCustomers || []).map(g => `<span class="lv-chip">${esc(g)}</span>`).join('');
     if (window.lvBuildMap && d.makers.length) window.lvBuildMap(d.makers);
@@ -7310,7 +7313,7 @@ window.addEventListener('scroll', function() {
     const lines = document.getElementById('lvMapLines'), labels = document.getElementById('lvMapLabels');
     lines.innerHTML = ''; labels.innerHTML = '';
     const side = (items, dir) => {
-      const n = items.length, top = 110, bottom = 690, edge = dir === 'l' ? -36 : 617;
+      const n = items.length, top = n > 9 ? 96 : 110, bottom = n > 9 ? 712 : 690, edge = dir === 'l' ? -36 : 617;
       el('text', { class: 'lv-side-title', x: dir === 'l' ? edge : edge, y: 62, 'text-anchor': dir === 'l' ? 'end' : 'start' }, labels).textContent = dir === 'l' ? 'Partner & Hersteller' : 'Kunden';
       items.forEach((name, i) => {
         const y = n === 1 ? CY : top + (bottom - top) * i / (n - 1);
@@ -7333,7 +7336,7 @@ window.addEventListener('scroll', function() {
         t.textContent = name;
       });
     };
-    side(makers.slice(0, 9), 'l');
+    side(makers, 'l');
     side(CUSTOMERS, 'r');
   }
   // Linie beim Überfahren hervorheben
