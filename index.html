@@ -2303,6 +2303,54 @@ button, input, select, textarea { font-family: inherit; }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .lv-logo{background:#fff}}
 :root[data-theme="dark"] .lv-logo{background:#fff}
 @media (max-width:700px){.lv-logo-layer{display:none}}
+
+/* ══ Assessment-Ergebnis: Hauptfokus-Ring und Rangliste statt Spinnennetz ══ */
+@property --pp{syntax:'<number>';inherits:false;initial-value:0}
+.pf-result{max-width:760px;margin:0 auto 32px;display:grid;gap:22px;text-align:left}
+.pf-result .pf-res-note{text-align:center}
+.pf-res-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:center;background:linear-gradient(135deg,#0E2841,#17375A);color:#F4F6F9;border-radius:22px;padding:26px 28px;box-shadow:0 18px 44px rgba(14,40,65,.22)}
+.pf-res-hero::before{content:"";position:absolute;inset:-30%;background:radial-gradient(closest-side,color-mix(in srgb,var(--tc) 45%,transparent),transparent 70%) 10% 50%/55% 90% no-repeat;opacity:.55;pointer-events:none}
+.pf-ring{--pp:var(--to);position:relative;width:132px;height:132px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--tc-l) calc(var(--pp) * 1%),rgba(255,255,255,.14) 0)}
+.pf-ring::after{content:"";position:absolute;inset:11px;border-radius:50%;background:#12304E}
+.pf-ring span{position:relative;z-index:1;font-family:'ADLaM Display','Avenir Next',system-ui,sans-serif;font-size:2.1rem;line-height:1;font-variant-numeric:tabular-nums}
+.pf-ring small{font-size:1rem}
+.pf-go .pf-ring{animation:pfRing 1.4s cubic-bezier(.2,.8,.2,1) .2s both}
+@keyframes pfRing{from{--pp:0}to{--pp:var(--to)}}
+.pf-res-txt{position:relative;display:grid;gap:8px}
+.pf-res-txt .k{font-size:.74rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#7FD35B}
+.pf-res-txt h3{display:flex;align-items:center;gap:10px;margin:0;color:#fff;font-family:'ADLaM Display','Avenir Next',system-ui,sans-serif;font-weight:400;font-size:clamp(1.5rem,3vw,2rem)}
+.pf-res-txt h3 .ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:rgba(255,255,255,.12);color:var(--tc-l)}
+.pf-res-txt h3 .ic svg{width:22px;height:22px}
+.pf-res-txt p{color:rgba(244,246,249,.8);margin:0;max-width:36em}
+@media (max-width:560px){.pf-res-hero{grid-template-columns:1fr;justify-items:start}.pf-ring{width:112px;height:112px}}
+
+.pf-ranks{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.pf-rank{display:grid;grid-template-columns:36px minmax(0,1fr) auto;grid-template-areas:"ic name val" "ic track track";column-gap:12px;row-gap:6px;align-items:center;background:var(--surface);border:1px solid var(--border-mid);border-radius:14px;padding:12px 16px}
+.pf-rank .ic{grid-area:ic;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:color-mix(in srgb,var(--tc) 13%,transparent);color:var(--tc)}
+.pf-rank .ic svg{width:20px;height:20px}
+.pf-rank .name{grid-area:name;font-weight:600;color:var(--ink);min-width:0}
+.pf-rank .lvl{display:inline-block;margin-left:8px;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 8px;vertical-align:middle}
+.pf-rank .lvl.hoch{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+.pf-rank .lvl.mittel{background:color-mix(in srgb,var(--teal) 14%,transparent);color:var(--teal)}
+.pf-rank .lvl.gering{background:var(--bg);color:var(--slate)}
+.pf-rank b{grid-area:val;font-variant-numeric:tabular-nums;color:var(--ink);font-size:1.05rem}
+.pf-rank .track{grid-area:track;height:8px;border-radius:8px;background:var(--bg);overflow:hidden}
+.pf-rank .track i{display:block;height:100%;width:0;border-radius:8px;background:linear-gradient(90deg,color-mix(in srgb,var(--tc) 70%,#fff),var(--tc));transition:width 1s cubic-bezier(.2,.8,.2,1);transition-delay:calc(.35s + var(--i) * 90ms)}
+.pf-go .pf-rank .track i{width:var(--w)}
+.pf-go .pf-rank{animation:pfIn .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(.2s + var(--i) * 70ms)}
+.pf-rank.top{border-color:color-mix(in srgb,var(--tc) 55%,transparent);box-shadow:0 8px 22px color-mix(in srgb,var(--tc) 16%,transparent)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .pf-rank .ic{color:color-mix(in srgb,var(--tc) 55%,#fff);background:color-mix(in srgb,var(--tc) 24%,transparent)}}
+:root[data-theme="dark"] .pf-rank .ic{color:color-mix(in srgb,var(--tc) 55%,#fff);background:color-mix(in srgb,var(--tc) 24%,transparent)}
+.pf-res-note{text-align:center;color:var(--slate);font-size:.9rem;margin:0}
+#assessment-result-top:empty,#assessment-result-top.pf-hide{display:none}
+
+/* Seitenleiste: Top-Themen als kleine Balken */
+.pf-mini{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.pf-mini li{display:grid;grid-template-columns:1fr auto;gap:4px 8px;font-size:.82rem;color:var(--ink)}
+.pf-mini li b{font-variant-numeric:tabular-nums;font-weight:600;color:var(--slate)}
+.pf-mini .t{grid-column:1/-1;height:5px;border-radius:5px;background:var(--bg);overflow:hidden}
+.pf-mini .t i{display:block;height:100%;border-radius:5px;background:var(--tc)}
+@media (prefers-reduced-motion: reduce){.pf-go .pf-ring,.pf-go .pf-rank{animation:none!important}.pf-rank .track i{transition:none}}
 </style>
 </head>
 <body>
@@ -7505,6 +7553,63 @@ window.addEventListener('scroll', function() {
   const prevShow = showPage;
   showPage = function(id) { prevShow(id); if (id === 'partner') { counts(); replay(); } };
   if (page.classList.contains('active')) replay();
+})();
+// ── Assessment-Ergebnis: Hauptfokus-Ring und Rangliste statt Spinnennetz ─────
+(function() {
+  const rm = matchMedia('(prefers-reduced-motion: reduce)');
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const iconOf = id => { const t = (typeof ALL_THEMEN !== 'undefined' ? ALL_THEMEN : []).find(x => x.id === id); return (t && t.icon) || (typeof defaultTopicIcon === 'function' ? defaultTopicIcon() : ''); };
+  const level = s => s >= 67 ? ['hoch', 'Hohe Priorität'] : s >= 34 ? ['mittel', 'Mittlere Priorität'] : ['gering', 'Geringe Priorität'];
+  const lighten = c => `color-mix(in srgb, ${c} 55%, #fff)`;
+  function countUp(el, to) {
+    if (rm.matches) { el.textContent = to; return; }
+    const t0 = performance.now(), d = 1300;
+    (function step(t) { const p = Math.min(1, (t - t0) / d), e = 1 - Math.pow(1 - p, 3); el.textContent = Math.round(to * e); if (p < 1) requestAnimationFrame(step); })(t0);
+  }
+
+  // Ergebnis-Seite
+  renderSpiderDiagram = function(scores) {
+    const old = document.getElementById('assessment-spider-svg');
+    const box = old ? old.closest('.spider-wrap') || old.parentElement : document.querySelector('#wiz-assessment-result .pf-result');
+    if (!box) return;
+    box.className = 'pf-result';
+    const rows = ASSESSMENT_TOPICS.map((t, i) => ({ ...t, score: Math.max(0, Math.min(100, scores[i] || 0)) })).sort((a, b) => b.score - a.score);
+    const top = rows[0];
+    box.innerHTML = `
+      <div class="pf-res-hero" style="--tc:${esc(top.color)};--tc-l:${lighten(top.color)}">
+        <div class="pf-ring" style="--to:${top.score}" role="img" aria-label="Priorität ${top.score} Prozent"><span><span class="pf-num" data-to="${top.score}">${top.score}</span><small>%</small></span></div>
+        <div class="pf-res-txt"><span class="k">Ihr Hauptfokus</span><h3><span class="ic" aria-hidden="true">${iconOf(top.id)}</span>${esc(top.label)}</h3>
+          <p>Nach Ihren Antworten hat dieses Thema für Ihre Einrichtung die höchste Priorität. Im nächsten Schritt zeigen wir Ihnen passende Lösungen dazu.</p></div>
+      </div>
+      <ol class="pf-ranks" aria-label="Priorität aller Themen">
+        ${rows.map((r, i) => { const [cls, txt] = level(r.score); return `<li class="pf-rank${i === 0 ? ' top' : ''}" style="--tc:${esc(r.color)};--w:${Math.max(r.score, 2)}%;--i:${i}">
+          <span class="ic" aria-hidden="true">${iconOf(r.id)}</span>
+          <span class="name">${esc(r.label)}<span class="lvl ${cls}">${cls}</span></span>
+          <b><span class="pf-num" data-to="${r.score}">${r.score}</span> %</b>
+          <span class="track" role="img" aria-label="${txt}: ${r.score} Prozent"><i></i></span></li>`; }).join('')}
+      </ol>
+      <p class="pf-res-note">Je höher der Wert, desto wichtiger ist das Thema nach Ihren Antworten.</p>`;
+    // Animation starten, sobald die Seite sichtbar ist
+    const go = () => { box.classList.remove('pf-go'); void box.offsetWidth; box.classList.add('pf-go'); box.querySelectorAll('.pf-num').forEach(n => countUp(n, +n.dataset.to)); };
+    requestAnimationFrame(() => requestAnimationFrame(go));
+  };
+  // Der alte Hauptfokus-Hinweis unter der Grafik ist jetzt in der Karte enthalten
+  const prevShow = showAssessmentResult;
+  showAssessmentResult = function() { prevShow.apply(this, arguments); const el = document.getElementById('assessment-result-top'); if (el) el.classList.add('pf-hide'); };
+
+  // Seitenleiste: Top-Themen als kleine Balken statt Mini-Spinnennetz
+  renderResultSpider = function() {
+    const wrap = document.getElementById('wiz-sum-spider');
+    if (!wrap) return;
+    const onResults = typeof wizBGName !== 'undefined' && wizBGName && document.getElementById('wiz-step2').classList.contains('active');
+    if (typeof assessmentScores === 'undefined' || !assessmentScores || !onResults) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    const rows = ASSESSMENT_TOPICS.map((t, i) => ({ ...t, score: assessmentScores[i] || 0 })).sort((a, b) => b.score - a.score).slice(0, 5);
+    const holder = wrap.querySelector('.result-spider-svg-wrap') || wrap;
+    holder.className = 'pf-mini-wrap';
+    holder.innerHTML = `<ul class="pf-mini">${rows.map(r => `<li style="--tc:${esc(r.color)}"><span>${esc(r.label)}</span><b>${r.score} %</b><span class="t"><i style="width:${Math.max(r.score, 2)}%"></i></span></li>`).join('')}</ul>`;
+    const lbl = wrap.querySelector('.wiz-sum-label'); if (lbl) lbl.textContent = 'Ihre Prioritäten';
+  };
 })();
 </script>
 </body>
