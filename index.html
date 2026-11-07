@@ -2351,6 +2351,25 @@ button, input, select, textarea { font-family: inherit; }
 .pf-mini .t{grid-column:1/-1;height:5px;border-radius:5px;background:var(--bg);overflow:hidden}
 .pf-mini .t i{display:block;height:100%;border-radius:5px;background:var(--tc)}
 @media (prefers-reduced-motion: reduce){.pf-go .pf-ring,.pf-go .pf-rank{animation:none!important}.pf-rank .track i{transition:none}}
+
+/* Seitenleiste: Schwerpunkt & Prioritäten */
+.pf-prio-row{display:block!important}
+.pf-prio{display:grid;gap:8px;width:100%}
+.pf-prio-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.pf-pr{display:grid;grid-template-columns:1fr auto;gap:3px 8px;align-items:center;padding:6px 8px;border-radius:9px;border:1px solid transparent;transition:background .2s}
+.pf-pr .n{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:.84rem;color:var(--ink);min-width:0}
+.pf-pr b{font-size:.8rem;font-weight:600;color:var(--slate);font-variant-numeric:tabular-nums}
+.pf-pr .t{grid-column:1/-1;height:5px;border-radius:5px;background:var(--bg);overflow:hidden}
+.pf-pr .t i{display:block;height:100%;border-radius:5px;background:var(--tc)}
+.pf-pr em{font-style:normal;font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--tc);border-radius:999px;padding:2px 7px}
+.pf-pr.on{background:color-mix(in srgb,var(--tc) 9%,transparent);border-color:color-mix(in srgb,var(--tc) 40%,transparent)}
+.pf-pr.on .n{font-weight:700}
+.pf-pr.on b{color:var(--ink)}
+.pf-pr .d{width:8px;height:8px;border-radius:50%;background:var(--tc);flex:none}
+.pf-pr.plain{grid-template-columns:1fr;padding:5px 8px}
+.pf-pr.plain:not(.on){opacity:.42;filter:grayscale(1)}
+.pf-prio-cta{justify-self:start;font:inherit;font-size:.82rem;font-weight:600;color:var(--accent);background:none;border:0;padding:4px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.pf-prio-cta:focus-visible{outline:3px solid var(--teal);outline-offset:2px;border-radius:4px}
 </style>
 </head>
 <body>
@@ -7610,6 +7629,51 @@ window.addEventListener('scroll', function() {
     holder.innerHTML = `<ul class="pf-mini">${rows.map(r => `<li style="--tc:${esc(r.color)}"><span>${esc(r.label)}</span><b>${r.score} %</b><span class="t"><i style="width:${Math.max(r.score, 2)}%"></i></span></li>`).join('')}</ul>`;
     const lbl = wrap.querySelector('.wiz-sum-label'); if (lbl) lbl.textContent = 'Ihre Prioritäten';
   };
+})();
+// ── Seitenleiste: Schwerpunkt und Prioritäten in einem Block ─────
+(function() {
+  const box = document.getElementById('wiz-summary');
+  if (!box) return;
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const labelOf = row => ((row.querySelector('.wiz-sum-label') || {}).textContent || '').trim();
+  // Alte Mini-Grafik wird nicht mehr gebraucht
+  renderResultSpider = function() { const w = document.getElementById('wiz-sum-spider'); if (w) w.style.display = 'none'; };
+
+  const prev = renderWizSummary;
+  renderWizSummary = function() {
+    prev.apply(this, arguments);
+    const items = document.getElementById('wiz-sum-items'); if (!items) return;
+    const row = [...items.children].find(r => labelOf(r) === 'Schwerpunkt');
+    const focus = typeof wizStep0TopicId !== 'undefined' ? wizStep0TopicId : null;
+    if (!row || !focus) return;
+    const scores = typeof assessmentScores !== 'undefined' && assessmentScores ? assessmentScores : null;
+    let list, html;
+    if (scores) {
+      // Mit Assessment: ganze Matrix nach Priorität, Schwerpunkt hervorgehoben
+      list = ASSESSMENT_TOPICS.map((t, i) => ({ id: t.id, label: t.label, color: t.color, score: scores[i] || 0 })).sort((a, b) => b.score - a.score);
+      html = list.map(t => `<li class="pf-pr${t.id === focus ? ' on' : ''}" style="--tc:${esc(t.color)}">
+          <span class="n">${esc(t.label)}${t.id === focus ? '<em>Schwerpunkt</em>' : ''}</span><b>${t.score} %</b>
+          <span class="t"><i style="width:${Math.max(t.score, 2)}%"></i></span></li>`).join('');
+    } else {
+      // Ohne Assessment: alle Themen, nur der Schwerpunkt hervorgehoben
+      list = (typeof ALL_THEMEN !== 'undefined' ? ALL_THEMEN : []).map(t => ({ id: t.id, label: t.label, color: t.color }));
+      list.sort((a, b) => (b.id === focus) - (a.id === focus));
+      html = list.map(t => `<li class="pf-pr plain${t.id === focus ? ' on' : ''}" style="--tc:${esc(t.color)}">
+          <span class="n"><i class="d"></i>${esc(t.label)}${t.id === focus ? '<em>Schwerpunkt</em>' : ''}</span></li>`).join('');
+    }
+    row.classList.add('pf-prio-row');
+    row.innerHTML = `<div class="pf-prio">
+        <div class="wiz-sum-label">${scores ? 'Schwerpunkt &amp; Prioritäten' : 'Schwerpunkt'}</div>
+        <ul class="pf-prio-list">${html}</ul>
+        ${scores ? '' : '<button type="button" class="pf-prio-cta">Prioritäten per Assessment ermitteln</button>'}
+      </div>`;
+  };
+  box.addEventListener('click', e => {
+    if (!e.target.closest('.pf-prio-cta')) return;
+    document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+    startAssessment();
+  });
+  try { renderWizSummary(); } catch (e) {}
 })();
 </script>
 </body>
