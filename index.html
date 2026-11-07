@@ -7184,7 +7184,11 @@ window.addEventListener('scroll', function() {
 // ── Produktfinder im Lösungsdesign: Zähler, Lichtschein, Puzzle-Fortschritt ─────
 (function() {
   const plural = n => n === 1 ? '1 Produkt' : n + ' Produkte';
-  const products = () => (typeof LOESUNGEN_DATA !== 'undefined' ? LOESUNGEN_DATA : []).filter(p => p.produkt && !/finder/i.test(p.detailPage || ''));
+  // Auf Landingpages (?bg=…) nur Produkte der freigegebenen Berufsgruppen zählen
+  const bgNrs = typeof BG_FILTER !== 'undefined' && BG_FILTER.length ? [...new Set(BG_FILTER.map(b => b.nr))] : null;
+  const products = () => (typeof LOESUNGEN_DATA !== 'undefined' ? LOESUNGEN_DATA : [])
+    .filter(p => p.produkt && !/finder/i.test(p.detailPage || ''))
+    .filter(p => !bgNrs || bgNrs.some(n => (p.verfuegbar || []).includes(n)));
   const inTheme = (p, slug) => (p.themen || []).some(t => t.slug === slug);
 
   // Zähler auf Kacheln und Berufsgruppen (läuft nach jedem Rendern und nach dem Laden der Produkte)
