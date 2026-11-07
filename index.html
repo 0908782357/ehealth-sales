@@ -2384,6 +2384,12 @@ button, input, select, textarea { font-family: inherit; }
 @keyframes eaShine{to{transform:translateX(120%)}}
 @media (max-width:600px){.ea-hero{width:100%;margin-top:24px}.ea-footer{width:200px}}
 @media (prefers-reduced-motion: reduce){.ea-seal,.ea-seal::after{animation:none!important}}
+
+/* Siegel als Link */
+a.ea-seal{display:block;transition:transform .25s cubic-bezier(.2,.8,.2,1),filter .25s}
+a.ea-seal:hover{transform:translateY(-2px) scale(1.02);filter:brightness(1.05)}
+a.ea-seal:focus-visible{outline:3px solid var(--green-light);outline-offset:4px}
+a.ea-seal:hover::after{animation:eaShine 1s ease-in-out both}
 </style>
 </head>
 <body>
@@ -2452,7 +2458,7 @@ button, input, select, textarea { font-family: inherit; }
             <a href="#" class="btn btn-primary" onclick="showPage('kontakt'); return false;">Jetzt Beratung anfragen</a>
             <a href="#" class="btn btn-outline-white" onclick="showPage('leistungen'); return false;">Unsere Leistungen</a>
           </div>
-          <div class="ea-seal ea-hero"><img src="logos/ehealth-alliance-siegel-strategisch-2400px.png" srcset="logos/ehealth-alliance-siegel-strategisch-600px.png 600w, logos/ehealth-alliance-siegel-strategisch-1200px.png 1200w, logos/ehealth-alliance-siegel-strategisch-2400px.png 2400w" sizes="(max-width: 600px) 86vw, 420px" alt="eHealth Alliance – Strategischer Partner" width="2400" height="677" decoding="async"></div>
+          <a class="ea-seal ea-hero" href="https://ehealth-alliance.de" target="_blank" rel="noopener" title="eHealth Alliance – öffnet in neuem Tab"><img src="logos/ehealth-alliance-siegel-strategisch-2400px.png" srcset="logos/ehealth-alliance-siegel-strategisch-600px.png 600w, logos/ehealth-alliance-siegel-strategisch-1200px.png 1200w, logos/ehealth-alliance-siegel-strategisch-2400px.png 2400w" sizes="(max-width: 600px) 86vw, 420px" alt="eHealth Alliance – Strategischer Partner" width="2400" height="677" decoding="async"></a>
         </div>
         <div class="hero-visual">
           <div class="hero-ekg-card">
@@ -3198,7 +3204,7 @@ button, input, select, textarea { font-family: inherit; }
             <a href="#pt-netzwerk" class="btn btn-primary">Partner entdecken</a>
             <a href="#pt-werden" class="btn btn-outline-white">Partner werden</a>
           </div>
-          <div class="ea-seal ea-partner"><img src="logos/ehealth-alliance-siegel-strategisch-2400px.png" srcset="logos/ehealth-alliance-siegel-strategisch-600px.png 600w, logos/ehealth-alliance-siegel-strategisch-1200px.png 1200w, logos/ehealth-alliance-siegel-strategisch-2400px.png 2400w" sizes="(max-width: 600px) 86vw, 380px" alt="eHealth Alliance – Strategischer Partner" width="2400" height="677" decoding="async"></div>
+          <a class="ea-seal ea-partner" href="https://ehealth-alliance.de" target="_blank" rel="noopener" title="eHealth Alliance – öffnet in neuem Tab"><img src="logos/ehealth-alliance-siegel-strategisch-2400px.png" srcset="logos/ehealth-alliance-siegel-strategisch-600px.png 600w, logos/ehealth-alliance-siegel-strategisch-1200px.png 1200w, logos/ehealth-alliance-siegel-strategisch-2400px.png 2400w" sizes="(max-width: 600px) 86vw, 380px" alt="eHealth Alliance – Strategischer Partner" width="2400" height="677" decoding="async"></a>
         </div>
         <div class="pt-orbit" aria-label="Partner im Netzwerk von ehealth Sales">
           <div class="pt-ring r1"></div><div class="pt-ring r2"></div>
@@ -3917,7 +3923,7 @@ button, input, select, textarea { font-family: inherit; }
       <div class="footer-brand">
         <span class="ehs-mark" aria-hidden="true"><i style="--m:var(--pc-top)"></i><i style="--m:var(--pc-bl)"></i><i style="--m:var(--pc-br)"></i></span><div><div class="footer-brand-name">ehealth Sales GmbH</div><div class="footer-brand-sub">Wir verbinden das Gesundheitswesen</div></div>
       </div>
-      <div class="ea-seal ea-footer"><img src="logos/ehealth-alliance-siegel-strategisch-2400px.png" srcset="logos/ehealth-alliance-siegel-strategisch-600px.png 600w, logos/ehealth-alliance-siegel-strategisch-1200px.png 1200w, logos/ehealth-alliance-siegel-strategisch-2400px.png 2400w" sizes="220px" alt="eHealth Alliance – Strategischer Partner" width="2400" height="677" decoding="async"></div>
+      <a class="ea-seal ea-footer" href="https://ehealth-alliance.de" target="_blank" rel="noopener" title="eHealth Alliance – öffnet in neuem Tab"><img src="logos/ehealth-alliance-siegel-strategisch-2400px.png" srcset="logos/ehealth-alliance-siegel-strategisch-600px.png 600w, logos/ehealth-alliance-siegel-strategisch-1200px.png 1200w, logos/ehealth-alliance-siegel-strategisch-2400px.png 2400w" sizes="220px" alt="eHealth Alliance – Strategischer Partner" width="2400" height="677" decoding="async"></a>
       <div class="footer-links">
         <a href="#" onclick="showPage('impressum'); return false;">Impressum</a>
         <a href="#" onclick="showPage('datenschutz'); return false;">Datenschutz</a>
